@@ -10,9 +10,9 @@ import logging.Logger;
 
 public class PooledDataSourceWrapper {
 
-	private static final String JDBC_URL = "jdbc:postgresql://localhost/testdb";
-	private static final String USER_NAME = "";
-	private static final String PASSWORD = "";
+	private static final String JDBC_URL = "jdbc:postgresql://localhost/checkersplusplus";
+	private static final String USER_NAME = "checkers";
+	private static final String PASSWORD = "Ch3ckers123!";
 	
 	private static PooledDataSourceWrapper me = null;
 	
