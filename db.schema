@@ -285,6 +285,41 @@ ALTER TABLE ONLY public.sessions
 
 
 --
+-- Name: TABLE game; Type: ACL; Schema: public; Owner: elias
+--
+
+GRANT ALL ON TABLE public.game TO checkers;
+
+
+--
+-- Name: TABLE game_moves; Type: ACL; Schema: public; Owner: elias
+--
+
+GRANT ALL ON TABLE public.game_moves TO checkers;
+
+
+--
+-- Name: TABLE record; Type: ACL; Schema: public; Owner: elias
+--
+
+GRANT ALL ON TABLE public.record TO checkers;
+
+
+--
+-- Name: TABLE sessions; Type: ACL; Schema: public; Owner: elias
+--
+
+GRANT ALL ON TABLE public.sessions TO checkers;
+
+
+--
+-- Name: TABLE users; Type: ACL; Schema: public; Owner: elias
+--
+
+GRANT ALL ON TABLE public.users TO checkers;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
