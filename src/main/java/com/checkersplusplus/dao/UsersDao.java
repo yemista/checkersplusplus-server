@@ -1,10 +1,10 @@
 package com.checkersplusplus.dao;
 
-import com.checkersplusplus.dao.models.UserModel;
+import com.checkersplusplus.service.models.User;
 
 public interface UsersDao {
 	
-	UserModel getUserByEmail(String email);
+	User getUserByEmail(String email);
 	
 	boolean isAliasInUse(String alias);
 	

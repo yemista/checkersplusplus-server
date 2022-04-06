@@ -16,8 +16,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.checkersplusplus.crypto.PasswordCryptoUtil;
 import com.checkersplusplus.dao.UsersDao;
 import com.checkersplusplus.dao.models.UserModel;
+import com.checkersplusplus.service.models.User;
 
 @Repository
 @Transactional
@@ -28,25 +30,26 @@ public class UsersDaoImpl implements UsersDao {
 	private SessionFactory sessionFactory;
 
 	@Override
-	public UserModel getUserByEmail(String email) {
+	public User getUserByEmail(String email) {
 		CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
 		CriteriaQuery<UserModel> query = builder.createQuery(UserModel.class);
 		Root<UserModel> root = query.from(UserModel.class);
 		query.select(root).where(builder.equal(root.get("email"), email));
 		Query<UserModel> q = sessionFactory.getCurrentSession().createQuery(query);
 		List<UserModel> listResult = q.getResultList();
-		return listResult.isEmpty() ? null : listResult.get(0);
+		UserModel userModel = listResult.isEmpty() ? null : listResult.get(0);
+		return userModel == null ? null : new User(userModel.getId(), userModel.getEmail(), userModel.getPassword(), userModel.getAlias());
 	}
 
 	@Override
 	public boolean isAliasInUse(String alias) {
-		sessionFactory.getCurrentSession().createNativeQuery("SELECT user_id FROM users where alias)
 		CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
 		CriteriaQuery<UserModel> query = builder.createQuery(UserModel.class);
 		Root<UserModel> root = query.from(UserModel.class);
 		query.select(root).where(builder.equal(root.get("alias"), alias));
 		Query<UserModel> q = sessionFactory.getCurrentSession().createQuery(query);
-		return !q.getResultList().isEmpty();
+		List<UserModel> listResult = q.getResultList();
+		return listResult.isEmpty() ? false : true;
 	}
 
 	@Override
@@ -57,12 +60,12 @@ public class UsersDaoImpl implements UsersDao {
 	@Override
 	public void createUser(String email, String password, String alias) {
 		UserModel user = new UserModel();
-		user.setId(UUID.randomUUID());
+		user.setId(UUID.randomUUID().toString());
 		user.setEmail(email);
-		user.setPassword(password);
+		user.setPassword(PasswordCryptoUtil.encryptPasswordForDatabase(password));
 		user.setAlias(alias);
 		user.setCreateDate(new Date());
-		sessionFactory.getCurrentSession().save(user);
+		sessionFactory.getCurrentSession().persist(user);
 	}
  
 }

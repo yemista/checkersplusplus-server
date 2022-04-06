@@ -1,13 +1,17 @@
 package com.checkersplusplus.service.models;
 
 public class User {
-	private String email, password, alias;
+	private String id, email, password, alias;
 	
-	public User(String email, String password, String alias) {
+	public User(String id, String email, String password, String alias) {
 		super();
 		this.email = email;
 		this.password = password;
 		this.alias = alias;
+	}
+	
+	public String getId() {
+		return id;
 	}
 
 	public String getEmail() {

@@ -26,11 +26,11 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.game (
     game_id uuid NOT NULL,
-    red_id uuid NOT NULL,
-    black_id uuid NOT NULL,
+    red_id character varying NOT NULL,
+    black_id character varying NOT NULL,
     created timestamp without time zone DEFAULT now() NOT NULL,
     state character varying NOT NULL,
-    winner_id uuid NOT NULL
+    winner_id character varying NOT NULL
 );
 
 
@@ -43,7 +43,7 @@ ALTER TABLE public.game OWNER TO elias;
 CREATE TABLE public.game_moves (
     game_move_id integer NOT NULL,
     game_id uuid NOT NULL,
-    user_id uuid NOT NULL,
+    user_id character varying NOT NULL,
     from_row integer NOT NULL,
     from_col integer NOT NULL,
     to_row integer NOT NULL,
@@ -82,7 +82,7 @@ ALTER SEQUENCE public.game_moves_game_move_id_seq OWNED BY public.game_moves.gam
 
 CREATE TABLE public.record (
     record_id uuid NOT NULL,
-    user_id uuid NOT NULL,
+    user_id character varying NOT NULL,
     win integer NOT NULL,
     loss integer NOT NULL,
     draw integer NOT NULL
@@ -96,19 +96,45 @@ ALTER TABLE public.record OWNER TO elias;
 --
 
 CREATE TABLE public.sessions (
-    session_id uuid NOT NULL,
-    user_id uuid NOT NULL
+    session_id integer NOT NULL,
+    user_id character varying NOT NULL,
+    token character varying NOT NULL,
+    heartbeat timestamp without time zone NOT NULL,
+    active boolean NOT NULL,
+    create_date timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
 ALTER TABLE public.sessions OWNER TO elias;
 
 --
+-- Name: sessions_session_id_seq; Type: SEQUENCE; Schema: public; Owner: elias
+--
+
+CREATE SEQUENCE public.sessions_session_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.sessions_session_id_seq OWNER TO elias;
+
+--
+-- Name: sessions_session_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: elias
+--
+
+ALTER SEQUENCE public.sessions_session_id_seq OWNED BY public.sessions.session_id;
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: elias
 --
 
 CREATE TABLE public.users (
-    user_id uuid NOT NULL,
+    user_id character varying NOT NULL,
     email character varying NOT NULL,
     password character varying NOT NULL,
     alias character varying NOT NULL,
@@ -123,6 +149,13 @@ ALTER TABLE public.users OWNER TO elias;
 --
 
 ALTER TABLE ONLY public.game_moves ALTER COLUMN game_move_id SET DEFAULT nextval('public.game_moves_game_move_id_seq'::regclass);
+
+
+--
+-- Name: sessions session_id; Type: DEFAULT; Schema: public; Owner: elias
+--
+
+ALTER TABLE ONLY public.sessions ALTER COLUMN session_id SET DEFAULT nextval('public.sessions_session_id_seq'::regclass);
 
 
 --
@@ -153,7 +186,7 @@ COPY public.record (record_id, user_id, win, loss, draw) FROM stdin;
 -- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: elias
 --
 
-COPY public.sessions (session_id, user_id) FROM stdin;
+COPY public.sessions (session_id, user_id, token, heartbeat, active, create_date) FROM stdin;
 \.
 
 
@@ -162,6 +195,9 @@ COPY public.sessions (session_id, user_id) FROM stdin;
 --
 
 COPY public.users (user_id, email, password, alias, created) FROM stdin;
+63485ba2-1775-4c44-8255-aeceef393727	test	password1	alias	2022-04-04 21:05:54.693
+eb04580d-84c4-4353-a2ac-29689c83f2ba	test2	password1	alias2	2022-04-05 20:57:18.292
+e7c74c48-a7fe-44bd-b3e0-f95d34db371a	test3	password1	alias3	2022-04-05 21:04:58.401
 \.
 
 
@@ -170,6 +206,13 @@ COPY public.users (user_id, email, password, alias, created) FROM stdin;
 --
 
 SELECT pg_catalog.setval('public.game_moves_game_move_id_seq', 1, false);
+
+
+--
+-- Name: sessions_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: elias
+--
+
+SELECT pg_catalog.setval('public.sessions_session_id_seq', 1, false);
 
 
 --
@@ -229,27 +272,51 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: game fk_black_id_to_users; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: game fk_black_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
 --
 
 ALTER TABLE ONLY public.game
-    ADD CONSTRAINT fk_black_id_to_users FOREIGN KEY (black_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT fk_black_id FOREIGN KEY (black_id) REFERENCES public.users(user_id);
 
 
 --
--- Name: game fk_red_id_to_users; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: game_moves fk_move_user_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+--
+
+ALTER TABLE ONLY public.game_moves
+    ADD CONSTRAINT fk_move_user_id FOREIGN KEY (user_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: record fk_record_user_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+--
+
+ALTER TABLE ONLY public.record
+    ADD CONSTRAINT fk_record_user_id FOREIGN KEY (user_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: game fk_red_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
 --
 
 ALTER TABLE ONLY public.game
-    ADD CONSTRAINT fk_red_id_to_users FOREIGN KEY (red_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT fk_red_id FOREIGN KEY (red_id) REFERENCES public.users(user_id);
 
 
 --
--- Name: game fk_winner_id_to_users; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: sessions fk_session_user_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT fk_session_user_id FOREIGN KEY (user_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: game fk_winner_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
 --
 
 ALTER TABLE ONLY public.game
-    ADD CONSTRAINT fk_winner_id_to_users FOREIGN KEY (winner_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT fk_winner_id FOREIGN KEY (winner_id) REFERENCES public.users(user_id);
 
 
 --
@@ -258,30 +325,6 @@ ALTER TABLE ONLY public.game
 
 ALTER TABLE ONLY public.game_moves
     ADD CONSTRAINT game_moves_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.game(game_id);
-
-
---
--- Name: game_moves game_moves_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: elias
---
-
-ALTER TABLE ONLY public.game_moves
-    ADD CONSTRAINT game_moves_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id);
-
-
---
--- Name: record record_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: elias
---
-
-ALTER TABLE ONLY public.record
-    ADD CONSTRAINT record_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id);
-
-
---
--- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: elias
---
-
-ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id);
 
 
 --
@@ -303,13 +346,6 @@ GRANT ALL ON TABLE public.game_moves TO checkers;
 --
 
 GRANT ALL ON TABLE public.record TO checkers;
-
-
---
--- Name: TABLE sessions; Type: ACL; Schema: public; Owner: elias
---
-
-GRANT ALL ON TABLE public.sessions TO checkers;
 
 
 --
