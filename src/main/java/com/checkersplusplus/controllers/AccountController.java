@@ -1,8 +1,7 @@
 package com.checkersplusplus.controllers;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,7 +20,7 @@ import com.checkersplusplus.service.AccountService;
 @RequestMapping("/api/account")
 public class AccountController {
 	
-	private Logger logger = LoggerFactory.getLogger(AccountController.class);
+	private static final Logger logger = Logger.getLogger(AccountController.class);
 	
 	@Autowired
 	private AccountService accountService;
@@ -37,7 +36,7 @@ public class AccountController {
 	                    .body("Please fill out all fields");
 			}
 			
-			if (!accountService.isValidLogin(payload)) {
+			if (!accountService.isLoginValid(payload)) {
 				return ResponseEntity
 		    			.status(HttpStatus.BAD_REQUEST)
 		    			.body("Invalid login");
@@ -52,6 +51,7 @@ public class AccountController {
 	                .build();
 		} catch (Exception e) {
 			logger.debug("Exception occurred during login: " + e.getMessage());
+			e.printStackTrace();
 			return unknownError();
 		}
 	}
@@ -65,6 +65,12 @@ public class AccountController {
 				return ResponseEntity
 	                    .status(HttpStatus.BAD_REQUEST)
 	                    .body("Please fill out all fields");
+			}
+			
+			if (!accountService.isEmailValid(payload.getEmail())) {
+				return ResponseEntity
+	                    .status(HttpStatus.BAD_REQUEST)
+	                    .body("Invalid email address");
 			}
 			
 			if (!accountService.isAliasValid(payload.getAlias())) {
@@ -101,7 +107,6 @@ public class AccountController {
 			return unknownError();
 		}
 	}
-	
 
 	private boolean loginInputNotPopulated(LoginInput payload) {
 		return StringUtils.isBlank(payload.getEmail())

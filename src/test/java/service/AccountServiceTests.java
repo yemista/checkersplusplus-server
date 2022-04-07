@@ -27,8 +27,8 @@ public class AccountServiceTests {
 	
 	@Test
 	public void assertCreateUser() {
-		accountService.createAccount("test", "test", "test");
-		User createdUser = accountService.getAccount("test");
+		accountService.createAccount("test@test.com", "test", "test");
+		User createdUser = accountService.getAccount("test@test.com");
 		assertNotNull(createdUser);
 		assertEquals(createdUser.getAlias(), "test");
 	}
@@ -46,5 +46,15 @@ public class AccountServiceTests {
 		assertFalse(accountService.isPasswordSafe("aaaaaaaaaaaaaaaaaaaaa"));
 		assertTrue(accountService.isPasswordSafe("aaaaaaa12"));
 		assertFalse(accountService.isPasswordSafe("aaaaaaa^^^"));
+	}
+	
+	@Test
+	public void assertIsLoginValid() {
+		
+	}
+	
+	@Test
+	public void assertLogin() {
+		
 	}
 }

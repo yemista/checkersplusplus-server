@@ -1,5 +1,6 @@
 package com.checkersplusplus.service.impl;
 
+import org.apache.commons.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -57,6 +58,11 @@ public class AccountServiceImpl implements AccountService {
 	public User getAccount(String email) {
 		return usersDao.getUserByEmail(email);
 	}
+	
+	@Override
+	public boolean isEmailValid(String email) {
+		return EmailValidator.getInstance().isValid(email);
+	}
 
 	@Override
 	public boolean isAliasValid(String alias) {
@@ -70,8 +76,13 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
-	public boolean isValidLogin(LoginInput payload) {
+	public boolean isLoginValid(LoginInput payload) {
 		User user = usersDao.getUserByEmail(payload.getEmail());
+		
+		if (user == null) {
+			return false;
+		}
+		
 		return PasswordCryptoUtil.encryptPasswordForDatabase(payload.getPassword()).equals(user.getPassword());
 	}
 }

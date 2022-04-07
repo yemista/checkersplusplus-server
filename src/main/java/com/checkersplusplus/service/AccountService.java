@@ -19,5 +19,7 @@ public interface AccountService {
 
 	String login(LoginInput payload);
 
-	boolean isValidLogin(LoginInput payload);
+	boolean isLoginValid(LoginInput payload);
+	
+	boolean isEmailValid(String email);
 }
