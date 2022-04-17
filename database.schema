@@ -65,7 +65,8 @@ CREATE TABLE public.game (
     black_id character varying NOT NULL,
     created timestamp without time zone DEFAULT now() NOT NULL,
     state character varying NOT NULL,
-    winner_id character varying NOT NULL
+    winner_id character varying NOT NULL,
+    forfeit character varying
 );
 
 
@@ -212,7 +213,7 @@ COPY public.active_games (active_game_id, user_id, game_id) FROM stdin;
 -- Data for Name: game; Type: TABLE DATA; Schema: public; Owner: elias
 --
 
-COPY public.game (game_id, red_id, black_id, created, state, winner_id) FROM stdin;
+COPY public.game (game_id, red_id, black_id, created, state, winner_id, forfeit) FROM stdin;
 \.
 
 
@@ -355,6 +356,14 @@ ALTER TABLE ONLY public.active_games
 
 ALTER TABLE ONLY public.game
     ADD CONSTRAINT fk_black_id FOREIGN KEY (black_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: game fk_forfeit_to_users; Type: FK CONSTRAINT; Schema: public; Owner: elias
+--
+
+ALTER TABLE ONLY public.game
+    ADD CONSTRAINT fk_forfeit_to_users FOREIGN KEY (forfeit) REFERENCES public.users(user_id);
 
 
 --

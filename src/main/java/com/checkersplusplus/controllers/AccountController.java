@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkersplusplus.controllers.inputs.CreateUserInput;
 import com.checkersplusplus.controllers.inputs.LoginInput;
 import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.GameService;
+import com.checkersplusplus.service.models.Login;
+import com.checkersplusplus.util.ResponseUtil;
 
 
 @RestController
@@ -24,6 +27,9 @@ public class AccountController {
 	
 	@Autowired
 	private AccountService accountService;
+	
+	@Autowired
+	private GameService gameService;
 	
 	@PostMapping(value = "login", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity login(@RequestBody LoginInput payload) {
@@ -36,23 +42,27 @@ public class AccountController {
 	                    .body("Please fill out all fields");
 			}
 			
-			if (!accountService.isLoginValid(payload)) {
+			if (!accountService.isLoginValid(payload.getEmail(), payload.getPassword())) {
 				return ResponseEntity
 		    			.status(HttpStatus.BAD_REQUEST)
 		    			.body("Invalid login");
 			}
 			
-			String sessionId = accountService.login(payload);
+			Login login = accountService.login(payload.getEmail());
+			
+			if (gameService.hasActiveGame(login.getUserId())) {
+				deleteActiveGameIfObsolete();
+			}
+			
 			logger.debug("Successfully logged in account: " + payload.getEmail());
-			logger.debug("Session id is: " + sessionId);
+			logger.debug("Session id is: " + login.getSessionId());
 			return ResponseEntity
 	    			.status(HttpStatus.OK)
-	    			.eTag(sessionId)
-	                .build();
+	    			.body(login.convertToJson());
 		} catch (Exception e) {
 			logger.debug("Exception occurred during login: " + e.getMessage());
 			e.printStackTrace();
-			return unknownError();
+			return ResponseUtil.unknownError();
 		}
 	}
 
@@ -104,7 +114,7 @@ public class AccountController {
 	                    .build();
 		} catch (Exception e) {
 			logger.debug("Exception occurred during create account: " + e.getMessage());
-			return unknownError();
+			return ResponseUtil.unknownError();
 		}
 	}
 
@@ -119,9 +129,8 @@ public class AccountController {
 				|| StringUtils.isBlank(payload.getPassword());
 	}
 	
-	private ResponseEntity unknownError() {
-		return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body("An unknown error has occurred");
+	private void deleteActiveGameIfObsolete() {
+		// TODO Auto-generated method stub
+		
 	}
 }

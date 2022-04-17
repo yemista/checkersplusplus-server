@@ -1,6 +1,6 @@
 package com.checkersplusplus.service;
 
-import com.checkersplusplus.controllers.inputs.LoginInput;
+import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
 public interface AccountService {
@@ -17,9 +17,9 @@ public interface AccountService {
 
 	boolean isAliasValid(String alias);
 
-	String login(LoginInput payload);
+	Login login(String email);
 
-	boolean isLoginValid(LoginInput payload);
+	boolean isLoginValid(String email, String password);
 	
 	boolean isEmailValid(String email);
 }

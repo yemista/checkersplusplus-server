@@ -3,6 +3,7 @@ package service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -50,11 +51,20 @@ public class AccountServiceTests {
 	
 	@Test
 	public void assertIsLoginValid() {
-		
+		String email = "test2@test.com";
+		String password = "test";
+		accountService.createAccount(email, password, "test2");
+		assertTrue(accountService.isLoginValid(email, password));
+		assertFalse(accountService.isLoginValid(email + "1", password));
+		assertFalse(accountService.isLoginValid(email + "1", password + "1"));
 	}
 	
 	@Test
 	public void assertLogin() {
-		
+		String email = "test3@test.com";
+		String password = "test";
+		accountService.createAccount(email, password, "test3");
+		assertNotNull(accountService.login(email));
+		assertNull(accountService.login(email + "1"));
 	}
 }

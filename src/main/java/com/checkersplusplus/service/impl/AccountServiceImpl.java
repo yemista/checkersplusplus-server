@@ -4,11 +4,11 @@ import org.apache.commons.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.checkersplusplus.controllers.inputs.LoginInput;
 import com.checkersplusplus.crypto.PasswordCryptoUtil;
 import com.checkersplusplus.dao.SessionDao;
 import com.checkersplusplus.dao.UsersDao;
 import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
 @Component
@@ -70,20 +70,26 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
-	public String login(LoginInput payload) {
-		User user = usersDao.getUserByEmail(payload.getEmail());
-		return sessionDao.createUserSession(user.getId());
+	public Login login(String email) {
+		User user = usersDao.getUserByEmail(email);
+		
+		if (user == null) {
+			return null;
+		}
+		
+		String sessionId = sessionDao.createUserSession(user.getId());
+		return new Login(user.getId(), sessionId);
 	}
 
 	@Override
-	public boolean isLoginValid(LoginInput payload) {
-		User user = usersDao.getUserByEmail(payload.getEmail());
+	public boolean isLoginValid(String email, String password) {
+		User user = usersDao.getUserByEmail(email);
 		
 		if (user == null) {
 			return false;
 		}
 		
-		return PasswordCryptoUtil.encryptPasswordForDatabase(payload.getPassword()).equals(user.getPassword());
+		return PasswordCryptoUtil.encryptPasswordForDatabase(password).equals(user.getPassword());
 	}
 }
 
