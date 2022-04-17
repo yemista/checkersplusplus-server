@@ -10,26 +10,29 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 @Entity
-@Table(name = "games")
+@Table(name = "game")
 public class GameModel {
 
 	@Id
 	@Column(name = "game_id", updatable = false, nullable = false)
     private String id;
 	
-	@Column(name = "red_id", updatable = false, nullable = false)
+	@Column(name = "red_id", updatable = false, nullable = true)
 	private String redId;
 	
-	@Column(name = "black_id", updatable = true, nullable = true)
+	@Column(name = "black_id", updatable = true, nullable = false)
 	private String blackId;
 	
 	@Column(name = "winner_id", updatable = true, nullable = true)
 	private String winnerId;
 	
+	@Column(name = "forfeit", updatable = true, nullable = true)
+	private String forfeitId;
+	
 	@Column(name = "state", updatable = true, nullable = false)
 	private String state;
 	
-	@Column(name = "create", updatable = false, nullable = false)
+	@Column(name = "created", updatable = false, nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
     private Date created;
 
@@ -79,5 +82,13 @@ public class GameModel {
 
 	public void setCreated(Date created) {
 		this.created = created;
+	}
+
+	public String getForfeitId() {
+		return forfeitId;
+	}
+
+	public void setForfeitId(String forfeitId) {
+		this.forfeitId = forfeitId;
 	}
 }

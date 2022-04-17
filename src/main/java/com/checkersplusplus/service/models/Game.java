@@ -1,6 +1,5 @@
 package com.checkersplusplus.service.models;
 
-import com.checkersplusplus.service.enums.GameStatus;
 import com.google.gson.annotations.Expose;
 
 public class Game extends Jsonifiable {
@@ -12,12 +11,12 @@ public class Game extends Jsonifiable {
 	public String state;
 	
 	@Expose(serialize = true, deserialize = true)
-	public GameStatus status;
+	public String status;
 	
 	@Expose(serialize = true, deserialize = true)
 	public String nextToAct;
 
-	public Game(String id, String state, GameStatus status, String nextToAct) {
+	public Game(String id, String state, String status, String nextToAct) {
 		super();
 		this.id = id;
 		this.state = state;
@@ -41,11 +40,11 @@ public class Game extends Jsonifiable {
 		this.state = state;
 	}
 
-	public GameStatus getStatus() {
+	public String getStatus() {
 		return status;
 	}
 
-	public void setStatus(GameStatus status) {
+	public void setStatus(String status) {
 		this.status = status;
 	}
 

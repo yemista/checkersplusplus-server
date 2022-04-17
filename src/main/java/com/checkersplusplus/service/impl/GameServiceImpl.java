@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import com.checkersplusplus.dao.GameDao;
 import com.checkersplusplus.dao.SessionDao;
 import com.checkersplusplus.service.GameService;
-import com.checkersplusplus.service.models.ActiveGame;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Session;
 
@@ -29,8 +28,8 @@ public class GameServiceImpl implements GameService {
 			return false;
 		}
 		
-		ActiveGame activeGame = gameDao.getActiveGameByUser(session.getUserId());
-		logger.debug("Found game " + (activeGame == null ? "none" : activeGame.getGameId()) + " for session " + token);
+		Game activeGame = gameDao.getActiveGame(token);
+		logger.debug("Found game " + (activeGame == null ? "none" : activeGame.getId()) + " for session " + token);
 		return activeGame != null;
 	}
 
@@ -38,7 +37,7 @@ public class GameServiceImpl implements GameService {
 	public Game createGame(String token) {
 		if (!sessionActive(token)) {
 			logger.debug("createGame(String) failed due to inactive session");
-			return false;
+			return null;
 		}
 		
 		return gameDao.initializeGame(token);
@@ -46,8 +45,7 @@ public class GameServiceImpl implements GameService {
 
 	@Override
 	public Game getActiveGame(String token) {
-		// TODO Auto-generated method stub
-		return null;
+		return gameDao.getActiveGame(token);
 	}
 	
 	private boolean sessionActive(String token) {

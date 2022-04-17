@@ -35,6 +35,7 @@ public class SessionDaoImpl implements SessionDao {
 		session.setCreateDate(new Date());
 		session.setToken(UUID.randomUUID().toString());
 		session.setUserId(userId);
+		session.setHeartbeat(new Date());
 		sessionFactory.getCurrentSession().persist(session);
 		return session.getToken();
 	}

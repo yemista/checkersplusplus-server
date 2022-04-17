@@ -2,7 +2,6 @@ package service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -20,14 +19,15 @@ import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
 import config.HibernateConfig;
+import util.UserNameTestUtil;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { HibernateConfig.class })
 @ComponentScan( "com.checkersplusplus.service" )
 public class GameServiceTests {
 
-	private static final String DEFAULT_GAME_STATE = "";
-	private static final String PENDING_STATUS = null;
+	private static final String DEFAULT_GAME_STATE = "NX|OEOEOEOEEOEOEOEOOEOEOEOEEEEEEEEEEEEEEEEEEXEXEXEXXEXEXEXEEXEXEXEX";
+	private static final String PENDING_STATUS = "PENDING";
 
 	@Autowired
 	private GameService gameService;
@@ -37,9 +37,11 @@ public class GameServiceTests {
 	
 	@Test
 	public void assertLogin() {
-		accountService.createAccount("test5@test.com", "test", "test");
-		User user = accountService.getAccount("test5@test.com");
-		Login login = accountService.login("test@test.com");
+		String userName = UserNameTestUtil.getTestUserName();
+		String email = String.format("%s@test.com", userName);
+		accountService.createAccount(email, "test", userName);
+		User user = accountService.getAccount(email);
+		Login login = accountService.login(email);
 		assertEquals(user.getId(), login.getUserId());
 		assertNotNull(login.getSessionId());
 		assertTrue(login.getSessionId().length() > 0);
@@ -47,19 +49,25 @@ public class GameServiceTests {
 	
 	@Test
 	public void assertCreateGame() {
-		accountService.createAccount("test6@test.com", "test", "test");
-		Login login = accountService.login("test6@test.com");
+		String userName = UserNameTestUtil.getTestUserName();
+		String email = String.format("%s@test.com", userName);
+		accountService.createAccount(email, "test", userName);
+		User user = accountService.getAccount(email);
+		Login login = accountService.login(email);
 		Game game = gameService.createGame(login.getSessionId());
 		assertEquals(game.getState(), DEFAULT_GAME_STATE);
 		assertNotNull(game.getId());
 		assertEquals(game.getStatus(), PENDING_STATUS);
-		assertNotEquals(game.getNextToAct(), login.getUserId());
+		assertEquals(game.getNextToAct(), user.getId());
 	}
 	
 	@Test
 	public void assertHasActiveGame() {
-		accountService.createAccount("test7@test.com", "test", "test");
-		Login login = accountService.login("test6@test.com");
+		String userName = UserNameTestUtil.getTestUserName();
+		String email = String.format("%s@test.com", userName);
+		accountService.createAccount(email, "test", userName);
+		User user = accountService.getAccount(email);
+		Login login = accountService.login(email);
 		boolean hasActiveGame = gameService.hasActiveGame(login.getSessionId());
 		assertFalse(hasActiveGame);
 		Game game = gameService.createGame(login.getSessionId());

@@ -5,6 +5,7 @@ public class User {
 	
 	public User(String id, String email, String password, String alias) {
 		super();
+		this.id = id;
 		this.email = email;
 		this.password = password;
 		this.alias = alias;

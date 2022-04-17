@@ -1,8 +1,19 @@
 package com.checkersplusplus.service.enums;
 
 public enum GameStatus {
-	PENDING,
-	ABORTED,
-	RUNNING,
-	COMPLETE;
+	PENDING("PENDING"),
+	ABORTED("ABORTED"),
+	RUNNING("RUNNING"),
+	COMPLETE("COMPLETE");
+	
+	private String strVal;
+	
+	GameStatus(String strVal) {
+		this.strVal = strVal;
+	}
+	
+	@Override
+	public String toString() {
+		return strVal;
+	}
 }

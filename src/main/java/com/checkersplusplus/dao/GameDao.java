@@ -1,11 +1,10 @@
 package com.checkersplusplus.dao;
 
-import com.checkersplusplus.service.models.ActiveGame;
 import com.checkersplusplus.service.models.Game;
 
 public interface GameDao {
 
-	ActiveGame getActiveGameByUser(String userId);
+	Game getActiveGame(String token);
 
 	Game initializeGame(String token);
 

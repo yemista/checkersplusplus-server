@@ -14,9 +14,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
 import config.HibernateConfig;
+import util.UserNameTestUtil;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { HibernateConfig.class })
@@ -28,10 +30,14 @@ public class AccountServiceTests {
 	
 	@Test
 	public void assertCreateUser() {
-		accountService.createAccount("test@test.com", "test", "test");
-		User createdUser = accountService.getAccount("test@test.com");
+		String userName = UserNameTestUtil.getTestUserName();
+		String email = String.format("%s@test.com", userName);
+		accountService.createAccount(email, "test", userName);
+		User user = accountService.getAccount(email);
+		Login login = accountService.login(email);
+		User createdUser = accountService.getAccount(email);
 		assertNotNull(createdUser);
-		assertEquals(createdUser.getAlias(), "test");
+		assertEquals(createdUser.getAlias(), userName);
 	}
 	
 	@Test
@@ -61,9 +67,11 @@ public class AccountServiceTests {
 	
 	@Test
 	public void assertLogin() {
-		String email = "test3@test.com";
-		String password = "test";
-		accountService.createAccount(email, password, "test3");
+		String userName = UserNameTestUtil.getTestUserName();
+		String email = String.format("%s@test.com", userName);
+		accountService.createAccount(email, "test", userName);
+		User user = accountService.getAccount(email);
+		Login login = accountService.login(email);
 		assertNotNull(accountService.login(email));
 		assertNull(accountService.login(email + "1"));
 	}
