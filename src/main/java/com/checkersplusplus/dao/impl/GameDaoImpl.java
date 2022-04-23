@@ -1,13 +1,16 @@
 package com.checkersplusplus.dao.impl;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -40,6 +43,36 @@ public class GameDaoImpl implements GameDao {
 	private SessionFactory sessionFactory;
 	
 	@Override
+	@Transactional(readOnly = true)
+	public List<Game> getActiveGames() {
+		logger.debug("fetching all active games");
+		CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
+		CriteriaQuery<ActiveGameModel> query = builder.createQuery(ActiveGameModel.class);
+		Root<ActiveGameModel> root = query.from(ActiveGameModel.class);
+		query.select(root);
+		Query<ActiveGameModel> q = sessionFactory.getCurrentSession().createQuery(query);
+		List<ActiveGameModel> listResult = q.getResultList();
+		List<String> gameIds = listResult.stream()
+						 			 .map(agm -> agm.getGameId())
+						 			 .collect(Collectors.toList());
+		
+		if (CollectionUtils.isEmpty(gameIds)) {
+			return Collections.emptyList();
+		}
+		
+		CriteriaBuilder gameCriteriaBuilder = sessionFactory.getCriteriaBuilder();
+		CriteriaQuery<GameModel> gameCriteriaQuery = gameCriteriaBuilder.createQuery(GameModel.class);
+		Root<GameModel> gameRoot = gameCriteriaQuery.from(GameModel.class);
+		gameCriteriaQuery.select(gameRoot).where(gameRoot.get("id").in(gameIds));
+		Query<GameModel> gameQuery = sessionFactory.getCurrentSession().createQuery(gameCriteriaQuery);
+		List<GameModel> gameListResult = gameQuery.getResultList();
+		return gameListResult.stream()
+							 .map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), getNextToAct(gameModel)))
+							 .collect(Collectors.toList());
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
 	public Game getActiveGame(String token) {
 		Session session = sessionDao.getSessionByTokenId(token);
 		logger.debug("fetching active game for userId: " + session.getUserId());
@@ -60,21 +93,14 @@ public class GameDaoImpl implements GameDao {
 		return activeGameModel == null ? null : getGameById(activeGameModel.getGameId());
 	}
 
-	private ActiveGame insertIntoActiveGames(String userId) {
-		ActiveGameModel activeGameModel = new ActiveGameModel();
-		activeGameModel.setUserId(userId);
-		activeGameModel.setGameId(UUID.randomUUID().toString());
-		sessionFactory.getCurrentSession().persist(activeGameModel);
-		return new ActiveGame(activeGameModel.getUserId(), activeGameModel.getGameId());
-	}
-
 	@Override
+	@Transactional
 	public Game initializeGame(String token) {
 		Session session = sessionDao.getSessionByTokenId(token);
 		logger.debug("initializing game for userId: " + session.getUserId());
 		ActiveGame activeGame = insertIntoActiveGames(session.getUserId());
 		GameModel gameModel = new GameModel();
-		gameModel.setBlackId(session.getUserId());
+		gameModel.setRedId(session.getUserId());
 		gameModel.setCreated(new Date());
 		gameModel.setId(activeGame.getGameId());
 		com.checkersplusplus.engine.Game gameEngine = new com.checkersplusplus.engine.Game();
@@ -85,6 +111,7 @@ public class GameDaoImpl implements GameDao {
 	}
 	
 	@Override
+	@Transactional(readOnly = true)
 	public Game getGameById(String gameId) {
 		logger.debug("fetching game by id: " + gameId);
 		CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
@@ -138,4 +165,12 @@ public class GameDaoImpl implements GameDao {
 		return GameStatus.RUNNING.toString();
 	}
 
+
+	private ActiveGame insertIntoActiveGames(String userId) {
+		ActiveGameModel activeGameModel = new ActiveGameModel();
+		activeGameModel.setUserId(userId);
+		activeGameModel.setGameId(UUID.randomUUID().toString());
+		sessionFactory.getCurrentSession().persist(activeGameModel);
+		return new ActiveGame(activeGameModel.getUserId(), activeGameModel.getGameId());
+	}
 }

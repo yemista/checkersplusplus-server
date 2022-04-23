@@ -8,4 +8,6 @@ public interface SessionDao {
 	
 	Session getSessionByTokenId(String tokenId);
 
+	Session getLatestActiveSessionByUserId(String userId);
+
 }

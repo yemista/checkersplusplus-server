@@ -1,5 +1,7 @@
 package com.checkersplusplus.dao;
 
+import java.util.List;
+
 import com.checkersplusplus.service.models.Game;
 
 public interface GameDao {
@@ -9,5 +11,7 @@ public interface GameDao {
 	Game initializeGame(String token);
 
 	Game getGameById(String gameId);
+	
+	List<Game> getActiveGames();
 
 }
