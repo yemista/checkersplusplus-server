@@ -2,6 +2,8 @@ package com.checkersplusplus.service.models;
 
 import java.util.Date;
 
+import com.checkersplusplus.util.HeartbeatUtil;
+
 public class Session {
 	private String userId;
 	private String tokenId;
@@ -24,5 +26,13 @@ public class Session {
 
 	public Date getHeartbeat() {
 		return heartbeat;
+	}
+
+	public boolean isOlder(Session session) {
+		return heartbeat.before(session.heartbeat);
+	}
+
+	public boolean isExpired() {
+		return HeartbeatUtil.heartbeatExpired(heartbeat);
 	}
 }

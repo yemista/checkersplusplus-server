@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.checkersplusplus.controllers.inputs.JoinGameInput;
 import com.checkersplusplus.controllers.inputs.SecurityInput;
 import com.checkersplusplus.service.GameService;
 import com.checkersplusplus.service.models.Game;
+import com.checkersplusplus.service.models.OpenGames;
 import com.checkersplusplus.util.ResponseUtil;
 
 @RestController
@@ -24,6 +26,46 @@ public class GameController {
 	
 	@Autowired
 	private GameService gameService;
+	
+	@GetMapping(value = "getOpen", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity getOpenGames(@RequestBody SecurityInput payload) {
+		try {
+			logger.debug("Attempting to get open games for sessionId: " + payload.getToken());
+			OpenGames games = gameService.getOpenGames(payload.getToken());
+			logger.debug("Got open games for sessionId: " + payload.getToken());
+			return ResponseEntity
+	    			.status(HttpStatus.OK)
+	                .body(games.convertToJson());
+		} catch (Exception e) {
+			logger.debug("Exception occurred during get open games: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseUtil.unexpectedError(e);
+		}
+	}
+	
+	@PostMapping(value = "join", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) 
+	public ResponseEntity joinGame(@RequestBody JoinGameInput payload) {
+		try {
+			logger.debug(String.format("Attempting to join game %s for session %s ", payload.getGameId(), payload.getTokenId()));
+			Game game = gameService.joinGame(payload.getTokenId(), payload.getGameId());
+			
+			if (game == null) {
+				logger.debug(String.format("Failed to join game %s for session %s ", payload.getGameId(), payload.getTokenId()));
+				return ResponseEntity
+		    			.status(HttpStatus.BAD_REQUEST)
+		                .body("Unable to join game");
+			}
+			
+			logger.debug(String.format("Joined game %s for session %s ", payload.getGameId(), payload.getTokenId()));
+			return ResponseEntity
+	    			.status(HttpStatus.OK)
+	                .build();
+		} catch (Exception e) {
+			logger.debug("Exception occurred during join game: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseUtil.unexpectedError(e);
+		}
+	}
 	
 	@GetMapping(value = "getActive", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity getActiveGame(@RequestBody SecurityInput payload) {
@@ -44,7 +86,7 @@ public class GameController {
 		} catch (Exception e) {
 			logger.debug("Exception occurred during create: " + e.getMessage());
 			e.printStackTrace();
-			return ResponseUtil.unknownError();
+			return ResponseUtil.unexpectedError(e);
 		}
 	}
 
@@ -75,7 +117,7 @@ public class GameController {
 		} catch (Exception e) {
 			logger.debug("Exception occurred during create: " + e.getMessage());
 			e.printStackTrace();
-			return ResponseUtil.unknownError();
+			return ResponseUtil.unexpectedError(e);
 		}
 	}
 }

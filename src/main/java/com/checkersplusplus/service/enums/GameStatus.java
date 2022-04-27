@@ -4,7 +4,8 @@ public enum GameStatus {
 	PENDING("PENDING"),
 	ABORTED("ABORTED"),
 	RUNNING("RUNNING"),
-	COMPLETE("COMPLETE");
+	COMPLETE("COMPLETE"),
+	CANCELED("CANCELED");
 	
 	private String strVal;
 	

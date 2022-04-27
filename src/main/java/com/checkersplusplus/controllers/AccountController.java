@@ -62,7 +62,7 @@ public class AccountController {
 		} catch (Exception e) {
 			logger.debug("Exception occurred during login: " + e.getMessage());
 			e.printStackTrace();
-			return ResponseUtil.unknownError();
+			return ResponseUtil.unexpectedError(e);
 		}
 	}
 
@@ -114,7 +114,7 @@ public class AccountController {
 	                    .build();
 		} catch (Exception e) {
 			logger.debug("Exception occurred during create account: " + e.getMessage());
-			return ResponseUtil.unknownError();
+			return ResponseUtil.unexpectedError(e);
 		}
 	}
 

@@ -89,6 +89,7 @@ public class SessionDaoImpl implements SessionDao {
 		return sessionModel == null ? null : new Session(sessionModel.getUserId(), sessionModel.getToken(), sessionModel.getHeartbeat());
 	}
 
+	// TODO- unit test this
 	private void invalidateExistingSessions(String userId) {
 		logger.debug(String.format("Invalidating sessions for user %s", userId));
 		CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();

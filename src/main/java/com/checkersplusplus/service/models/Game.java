@@ -1,5 +1,6 @@
 package com.checkersplusplus.service.models;
 
+import com.checkersplusplus.service.enums.GameStatus;
 import com.google.gson.annotations.Expose;
 
 public class Game extends Jsonifiable {
@@ -11,17 +12,21 @@ public class Game extends Jsonifiable {
 	public String state;
 	
 	@Expose(serialize = true, deserialize = true)
-	public String status;
+	public GameStatus status;
 	
 	@Expose(serialize = true, deserialize = true)
-	public String nextToAct;
+	public String redId;
+	
+	@Expose(serialize = true, deserialize = true)
+	public String blackId;
 
-	public Game(String id, String state, String status, String nextToAct) {
+	public Game(String id, String state, GameStatus status, String redId, String blackId) {
 		super();
 		this.id = id;
 		this.state = state;
 		this.status = status;
-		this.nextToAct = nextToAct;
+		this.redId = redId;
+		this.blackId = blackId;
 	}
 
 	public String getId() {
@@ -40,19 +45,27 @@ public class Game extends Jsonifiable {
 		this.state = state;
 	}
 
-	public String getStatus() {
+	public GameStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(GameStatus status) {
 		this.status = status;
 	}
 
-	public String getNextToAct() {
-		return nextToAct;
+	public String getRedId() {
+		return redId;
 	}
 
-	public void setNextToAct(String nextToAct) {
-		this.nextToAct = nextToAct;
+	public void setRedId(String redId) {
+		this.redId = redId;
+	}
+	
+	public String getBlackId() {
+		return blackId;
+	}
+
+	public void setBlackId(String blackId) {
+		this.blackId = blackId;
 	}
 }

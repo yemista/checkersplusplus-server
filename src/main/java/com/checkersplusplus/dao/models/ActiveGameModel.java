@@ -16,7 +16,7 @@ public class ActiveGameModel {
 	@Column(name = "active_game_id", updatable = false, nullable = false)
     private Long id;
 	
-	@Column(name = "user_id", updatable = false, nullable = false)
+	@Column(name = "user_id", updatable = false, nullable = false, unique = true)
 	private String userId;
 	
 	@Column(name = "game_id", updatable = false, nullable = false)

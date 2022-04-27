@@ -37,7 +37,7 @@ public class GameDaoTests {
 	private GameService gameService;
 	
 	@Test
-	public void assertGetActiveGames() {
+	public void assertGetActiveGames() throws Exception {
 		List<Game> activeGames = gameDao.getActiveGames();
 		Game game1 = createGame();
 		Game game2 = createGame();
@@ -47,7 +47,7 @@ public class GameDaoTests {
 		assertTrue(activeGamesAfterCreation.stream().anyMatch(g -> game2.getId().equals(g.getId())));
 	}
 	
-	private Game createGame() {
+	private Game createGame() throws Exception {
 		String userName = UserNameTestUtil.getTestUserName();
 		String email = String.format("%s@test.com", userName);
 		accountService.createAccount(email, "test", userName);

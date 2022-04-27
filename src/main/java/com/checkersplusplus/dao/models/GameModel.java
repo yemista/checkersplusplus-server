@@ -1,5 +1,6 @@
 package com.checkersplusplus.dao.models;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -11,16 +12,16 @@ import javax.persistence.TemporalType;
 
 @Entity
 @Table(name = "game")
-public class GameModel {
+public class GameModel implements Serializable {
 
 	@Id
 	@Column(name = "game_id", updatable = false, nullable = false)
     private String id;
 	
-	@Column(name = "red_id", updatable = false, nullable = true)
+	@Column(name = "red_id", updatable = false, nullable = false)
 	private String redId;
 	
-	@Column(name = "black_id", updatable = true, nullable = false)
+	@Column(name = "black_id", updatable = true, nullable = true)
 	private String blackId;
 	
 	@Column(name = "winner_id", updatable = true, nullable = true)
