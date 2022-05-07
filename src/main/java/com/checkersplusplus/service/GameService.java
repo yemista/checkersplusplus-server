@@ -9,7 +9,7 @@ public interface GameService {
 
 	Game createGame(String token) throws Exception;
 
-	Game getActiveGame(String token);
+	Game getActiveGame(String token) throws Exception;
 
 	Game joinGame(String tokenId, String gameId) throws Exception;
 

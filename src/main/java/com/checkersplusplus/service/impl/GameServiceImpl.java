@@ -25,7 +25,7 @@ public class GameServiceImpl implements GameService {
 	
 	@Override
 	public boolean hasActiveGame(String token) throws Exception {
-		if (!sessionActive(token)) {
+		if (getSession(token) == null) {
 			logger.debug("hasActiveGame(String) failed due to inactive session");
 			throw new SessionExpiredException();
 		}
@@ -37,7 +37,7 @@ public class GameServiceImpl implements GameService {
 
 	@Override
 	public Game createGame(String token) throws Exception {
-		if (!sessionActive(token)) {
+		if (getSession(token) == null) {
 			logger.debug("createGame(String) failed due to inactive session");
 			throw new SessionExpiredException();
 		}
@@ -46,13 +46,21 @@ public class GameServiceImpl implements GameService {
 	}
 
 	@Override
-	public Game getActiveGame(String token) {
-		return gameDao.getActiveGame(token);
+	public Game getActiveGame(String token) throws Exception {
+		Session session = getSession(token);
+		
+		if (session == null) {
+			logger.debug("getActiveGame(String) failed due to inactive session");
+			throw new SessionExpiredException();
+		}
+		
+		Game game = gameDao.getActiveGame(token);
+		return game;
 	}
 	
 	@Override
 	public Game joinGame(String tokenId, String gameId) throws Exception {
-		if (!sessionActive(tokenId)) {
+		if (getSession(tokenId) == null) {
 			logger.debug("createGame(String) failed due to inactive session");
 			throw new SessionExpiredException();
 		}
@@ -63,7 +71,7 @@ public class GameServiceImpl implements GameService {
 
 	@Override
 	public OpenGames getOpenGames(String tokenId) throws Exception {
-		if (!sessionActive(tokenId)) {
+		if (getSession(tokenId) == null) {
 			logger.debug("createGame(String) failed due to inactive session");
 			throw new SessionExpiredException();
 		}
@@ -71,15 +79,14 @@ public class GameServiceImpl implements GameService {
 		return gameDao.getOpenGames();
 	}
 	
-	private boolean sessionActive(String token) {
+	private Session getSession(String token) {
 		logger.debug("Looking up session for token: " + token);
 		Session session = sessionDao.getSessionByTokenId(token);
 		
 		if (session == null) {
 			logger.debug("Unable to find session for token: " + token);
-			return false;
 		}
 		
-		return true;
+		return session;
 	}
 }

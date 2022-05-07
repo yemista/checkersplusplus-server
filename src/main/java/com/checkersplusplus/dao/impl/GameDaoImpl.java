@@ -57,7 +57,7 @@ public class GameDaoImpl implements GameDao {
 		
 		gameModel.setBlackId(userId);
 		sessionFactory.getCurrentSession().merge(gameModel);
-		return new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId());
+		return new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId());
 	}
 	
 	@Override
@@ -85,7 +85,7 @@ public class GameDaoImpl implements GameDao {
 		Query<GameModel> gameQuery = sessionFactory.getCurrentSession().createQuery(gameCriteriaQuery);
 		List<GameModel> gameListResult = gameQuery.getResultList();
 		return gameListResult.stream()
-							 .map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId()))
+							 .map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId()))
 							 .collect(Collectors.toList());
 	}
 	
@@ -125,7 +125,7 @@ public class GameDaoImpl implements GameDao {
 		gameModel.setState(gameEngine.getGameState());
 		sessionFactory.getCurrentSession().persist(gameModel);
 		logger.debug("successfully initialized game for userId: " + session.getUserId());
-		return new Game(gameModel.getId(), gameModel.getState(), GameStatus.PENDING, gameModel.getRedId(), null);
+		return new Game(gameModel.getId(), gameModel.getState(), GameStatus.PENDING, gameModel.getRedId(), null, null);
 	}
 	
 	@Override
@@ -146,7 +146,7 @@ public class GameDaoImpl implements GameDao {
 			logger.debug("found game by id: " + gameId);
 		}
 		
-		return gameModel == null ? null : new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId());
+		return gameModel == null ? null : new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId());
 	}
 
 	private GameStatus getGameStatus(GameModel gameModel) {
@@ -222,7 +222,7 @@ public class GameDaoImpl implements GameDao {
 		Query<GameModel> gameQuery = sessionFactory.getCurrentSession().createQuery(gameCriteriaQuery);
 		List<GameModel> gameListResult = gameQuery.getResultList();
 		return new OpenGames(gameListResult.stream()
-							 .map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId()))
+							 .map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId()))
 							 .collect(Collectors.toList()));
 	}
 }

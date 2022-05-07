@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 
 public class Game extends Jsonifiable {
 	
-	@Expose(serialize = false, deserialize = false)
+	@Expose(serialize = true, deserialize = true)
 	public String id;
 	
 	@Expose(serialize = true, deserialize = true)
@@ -19,14 +19,18 @@ public class Game extends Jsonifiable {
 	
 	@Expose(serialize = true, deserialize = true)
 	public String blackId;
+	
+	@Expose(serialize = true, deserialize = true)
+	public String winnerId;
 
-	public Game(String id, String state, GameStatus status, String redId, String blackId) {
+	public Game(String id, String state, GameStatus status, String redId, String blackId, String winnerId) {
 		super();
 		this.id = id;
 		this.state = state;
 		this.status = status;
 		this.redId = redId;
 		this.blackId = blackId;
+		this.winnerId = winnerId;
 	}
 
 	public String getId() {
@@ -67,5 +71,13 @@ public class Game extends Jsonifiable {
 
 	public void setBlackId(String blackId) {
 		this.blackId = blackId;
+	}
+
+	public String getWinnerId() {
+		return winnerId;
+	}
+
+	public void setWinnerId(String winnerId) {
+		this.winnerId = winnerId;
 	}
 }
