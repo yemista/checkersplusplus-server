@@ -15,7 +15,7 @@ public class SerializationTests {
 		com.checkersplusplus.engine.Game gameEngine = new com.checkersplusplus.engine.Game();
 		String state = gameEngine.getGameState();
 		String redId = UUID.randomUUID().toString();
-		Game game = new Game(id, state, GameStatus.PENDING, redId, null);
+		Game game = new Game(id, state, GameStatus.PENDING, redId, null, null);
 		String json = game.convertToJson();
 		System.out.println(json);
 	}
