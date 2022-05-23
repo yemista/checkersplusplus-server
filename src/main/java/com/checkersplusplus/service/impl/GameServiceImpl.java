@@ -89,4 +89,16 @@ public class GameServiceImpl implements GameService {
 		
 		return session;
 	}
+
+	@Override
+	public void forfeit(Game game, String tokenId) throws Exception {
+		Session session = getSession(tokenId);
+		
+		if (session == null) {
+			logger.debug("createGame(String) failed due to inactive session");
+			throw new SessionExpiredException();
+		}
+		
+		gameDao.forfeitGame(game.getId(), session.getUserId());
+	}
 }

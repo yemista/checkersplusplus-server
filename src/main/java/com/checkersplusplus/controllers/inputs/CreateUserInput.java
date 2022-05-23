@@ -6,6 +6,12 @@ public class CreateUserInput {
 	private String alias;
 	private String password;
 
+	public CreateUserInput(String email, String alias, String password) {
+		this.email = email;
+		this.alias = alias;
+		this.password = password;
+	}
+
 	public String getEmail() {
 		return email;
 	}

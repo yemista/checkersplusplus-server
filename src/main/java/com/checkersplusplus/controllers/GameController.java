@@ -1,201 +1,204 @@
 package com.checkersplusplus.controllers;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-import com.checkersplusplus.controllers.inputs.GameMoveInput;
-import com.checkersplusplus.controllers.inputs.JoinGameInput;
-import com.checkersplusplus.controllers.inputs.SecurityInput;
 import com.checkersplusplus.exceptions.ErrorCodes;
 import com.checkersplusplus.service.GameService;
 import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.OpenGames;
-import com.checkersplusplus.util.ResponseUtil;
 
-@RestController
-@RequestMapping("/api/game")
-public class GameController {
+@WebServlet(name = "GameController", urlPatterns = "/api/game/action")
+public class GameController extends HttpServlet {
 	
 	private static final Logger logger = Logger.getLogger(GameController.class);
 	
 	@Autowired
 	private GameService gameService;
 	
-	@PostMapping(value = "move", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity movePiece(@RequestBody GameMoveInput payload) {
+	@Override
+	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		PrintWriter out = response.getWriter();
+		String token = request.getParameter("token");
+		
+		if (StringUtils.isBlank(token)) {
+			CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.INVALID_TOKEN);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			out.print(error.convertToJson());
+			return;
+		}
+		
+		String gameId = request.getParameter("game");
+		
+		if (StringUtils.isBlank(gameId)) {
+			CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.INVALID_GAME);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			out.print(error.convertToJson());
+			return;
+		}
+		
 		try {
-			logger.debug(String.format("Attempting to move piece in game %s for sessionId %s", payload.getGameId(), payload.getSessionId()));
+			logger.debug(String.format("Attempting to move piece in game %s for sessionId %s", gameId, token));
 			
-			if (!gameService.hasActiveGame(payload.getSessionId())) {
+			if (!gameService.hasActiveGame(token)) {
 				logger.debug(String.format("Cannot move piece for game %s and session %s because user not in active game",
-						payload.getGameId(), payload.getSessionId()));
+						gameId, token));
 				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.NO_ACTIVE_GAME);
-				return ResponseEntity
-	                    .status(HttpStatus.BAD_REQUEST)
-	                    .body(error.convertToJson());
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				out.print(error.convertToJson());
+				return;
 			}
 			
-			Game game = gameService.getActiveGame(payload.getSessionId());
+			Game game = gameService.getActiveGame(token);
 			
 			if (game == null) {
-				logger.error("Verified but failed to get active game for sessionId: " + payload.getSessionId());
+				logger.error("Verified but failed to get active game for sessionId: " + token);
 				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.NO_ACTIVE_GAME);
-				return ResponseEntity
-	                    .status(HttpStatus.BAD_REQUEST)
-	                    .body(error.convertToJson());
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				out.print(error.convertToJson());
+				return;
 			}
 			
-			logger.debug("Created game for sessionId: " + payload.getSessionId());
-			return ResponseEntity
-	    			.status(HttpStatus.OK)
-	                .build();
+			logger.debug("Created game for sessionId: " + token);
+			response.setStatus(HttpServletResponse.SC_OK);
+			return;
 		} catch (Exception e) {
 			logger.debug("Exception occurred during create: " + e.getMessage());
 			e.printStackTrace();
-			return ResponseUtil.unexpectedError(e);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			out.print("An unknown error has occurred");
+			return;
 		}
 	}
 	
-	@PostMapping(value = "forfeit", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity forfeit(@RequestBody SecurityInput payload) {
+	@Override
+	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		PrintWriter out = response.getWriter();
+		String token = request.getParameter("token");
+		
+		if (StringUtils.isBlank(token)) {
+			CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.INVALID_TOKEN);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			out.print(error.convertToJson());
+			return;
+		}
+		
 		try {
-			logger.debug("Attempting to create game for sessionId: " + payload.getToken());
+			logger.debug("Attempting to create game for sessionId: " + token);
 			
-			if (!gameService.hasActiveGame(payload.getToken())) {
-				logger.debug(String.format("Cannot forfeit game for session %s because there is no active game", payload.getToken()));
+			if (!gameService.hasActiveGame(token)) {
+				logger.debug(String.format("Cannot forfeit game for session %s because there is no active game", token));
 				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.NO_ACTIVE_GAME);
-				return ResponseEntity
-	                    .status(HttpStatus.BAD_REQUEST)
-	                    .body(error.convertToJson());
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				out.print(error.convertToJson());
+				return;
 			}
 			
-			Game game = gameService.getActiveGame(payload.getToken());
+			Game game = gameService.getActiveGame(token);
 			
 			if (game == null) {
-				logger.debug("Failed to forfeit game for sessionId: " + payload.getToken() + " because game was null");
+				logger.debug("Failed to forfeit game for sessionId: " + token + " because game was null");
 				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.NO_ACTIVE_GAME);
-				return ResponseEntity
-	                    .status(HttpStatus.BAD_REQUEST)
-	                    .body(error.convertToJson());
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				out.print(error.convertToJson());
+				return;
 			}
 			
-			logger.debug("Created game for sessionId: " + payload.getToken());
-			return ResponseEntity
-	    			.status(HttpStatus.OK)
-	                .build();
+			gameService.forfeit(game, token);
+			logger.debug("Forfeited game for game " + game.getId() + " and sessionId " + token);
+			response.setStatus(HttpServletResponse.SC_OK);
+			return;
 		} catch (Exception e) {
 			logger.debug("Exception occurred during create: " + e.getMessage());
 			e.printStackTrace();
-			return ResponseUtil.unexpectedError(e);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			out.print("An unknown error has occurred");
+			return;
 		}
 	}
 	
-	@GetMapping(value = "getOpen", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity getOpenGames(@RequestBody SecurityInput payload) {
+	@Override
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		PrintWriter out = response.getWriter();
+		String token = request.getParameter("token");
+		
+		if (StringUtils.isBlank(token)) {
+			CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.INVALID_TOKEN);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			out.print(error.convertToJson());
+			return;
+		}
+		
 		try {
-			logger.debug("Attempting to get open games for sessionId: " + payload.getToken());
-			OpenGames games = gameService.getOpenGames(payload.getToken());
-			logger.debug("Got open games for sessionId: " + payload.getToken());
-			return ResponseEntity
-	    			.status(HttpStatus.OK)
-	                .body(games.convertToJson());
+			logger.debug("Attempting to get open games for sessionId: " + token);
+			OpenGames games = gameService.getOpenGames(token);
+			logger.debug("Got open games for sessionId: " + token);
+			response.setStatus(HttpServletResponse.SC_OK);
+			return;
 		} catch (Exception e) {
 			logger.debug("Exception occurred during get open games: " + e.getMessage());
 			e.printStackTrace();
-			return ResponseUtil.unexpectedError(e);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			out.print("An unknown error has occurred");
+			return;
 		}
 	}
 	
-	@PostMapping(value = "join", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) 
-	public ResponseEntity joinGame(@RequestBody JoinGameInput payload) {
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		PrintWriter out = response.getWriter();
+		String token = request.getParameter("token");
+		
+		if (StringUtils.isBlank(token)) {
+			CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.INVALID_TOKEN);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			out.print(error.convertToJson());
+			return;
+		}
+		
+		String gameId = request.getParameter("game");
+		
+		if (StringUtils.isBlank(token)) {
+			CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.INVALID_GAME);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			out.print(error.convertToJson());
+			return;
+		}
+		
 		try {
-			logger.debug(String.format("Attempting to join game %s for session %s ", payload.getGameId(), payload.getTokenId()));
-			Game game = gameService.joinGame(payload.getTokenId(), payload.getGameId());
+			logger.debug(String.format("Attempting to join game %s for session %s ", gameId, token));
+			Game game = gameService.joinGame(token, gameId);
 			
 			if (game == null) {
-				logger.debug(String.format("Failed to join game %s for session %s ", payload.getGameId(), payload.getTokenId()));
+				logger.debug(String.format("Failed to join game %s for session %s ", gameId, token));
 				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.CANNOT_JOIN_GAME);
-				return ResponseEntity
-	                    .status(HttpStatus.BAD_REQUEST)
-	                    .body(error.convertToJson());
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				out.print(error.convertToJson());
+				return;
 			}
 			
-			logger.debug(String.format("Joined game %s for session %s ", payload.getGameId(), payload.getTokenId()));
-			return ResponseEntity
-	    			.status(HttpStatus.OK)
-	                .build();
+			logger.debug(String.format("Joined game %s for session %s ", gameId, token));
+			response.setStatus(HttpServletResponse.SC_OK);
+			return;
 		} catch (Exception e) {
 			logger.debug("Exception occurred during join game: " + e.getMessage());
 			e.printStackTrace();
-			return ResponseUtil.unexpectedError(e);
-		}
-	}
-	
-	@GetMapping(value = "getActive", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity getActiveGame(@RequestBody SecurityInput payload) {
-		try {
-			logger.debug("Attempting to get active game for sessionId: " + payload.getToken());
-			
-			if (!gameService.hasActiveGame(payload.getToken())) {
-				logger.debug("Failed to find active game for session " + payload.getToken());
-				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.NO_ACTIVE_GAME);
-				return ResponseEntity
-	                    .status(HttpStatus.BAD_REQUEST)
-	                    .body(error.convertToJson());
-			}
-			
-			Game game = gameService.getActiveGame(payload.getToken());
-			logger.debug("Fetched active game: " + game.getId() + " for sessionId: " + payload.getToken());
-			return ResponseEntity
-	    			.status(HttpStatus.OK)
-	                .body(game.convertToJson());
-		} catch (Exception e) {
-			logger.debug("Exception occurred during create: " + e.getMessage());
-			e.printStackTrace();
-			return ResponseUtil.unexpectedError(e);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			out.print("An unknown error has occurred");
+			return;
 		}
 	}
 
-	@PostMapping(value = "create", consumes = MediaType.APPLICATION_JSON_VALUE) 
-	public ResponseEntity createGame(@RequestBody SecurityInput payload) {
-		try {
-			logger.debug("Attempting to create game for sessionId: " + payload.getToken());
-			
-			if (gameService.hasActiveGame(payload.getToken())) {
-				logger.debug(String.format("Session %s already has an active game", payload.getToken()));
-				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.ACTIVE_GAME_EXISTS);
-				return ResponseEntity
-	                    .status(HttpStatus.BAD_REQUEST)
-	                    .body(error.convertToJson());
-			}
-			
-			Game game = gameService.createGame(payload.getToken());
-			
-			if (game == null) {
-				logger.debug("Failed to create game for sessionId: " + payload.getToken());
-				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.CANNOT_CREATE_GAME);
-				return ResponseEntity
-	                    .status(HttpStatus.BAD_REQUEST)
-	                    .body(error.convertToJson());
-			}
-			
-			logger.debug("Created game for sessionId: " + payload.getToken());
-			return ResponseEntity
-	    			.status(HttpStatus.OK)
-	                .build();
-		} catch (Exception e) {
-			logger.debug("Exception occurred during create: " + e.getMessage());
-			e.printStackTrace();
-			return ResponseUtil.unexpectedError(e);
-		}
-	}
+	
 }

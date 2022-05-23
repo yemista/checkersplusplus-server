@@ -14,5 +14,7 @@ public interface GameService {
 	Game joinGame(String tokenId, String gameId) throws Exception;
 
 	OpenGames getOpenGames(String tokenId) throws Exception;
+	
+	void forfeit(Game game, String tokenId) throws Exception;
 
 }

@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
@@ -195,6 +196,15 @@ public class GameDaoImpl implements GameDao {
         update.where(builder.equal(root.get("id"), id));
         int numSessionsDeactivated = sessionFactory.getCurrentSession().createQuery(update).executeUpdate();
         logger.debug(String.format("Forfeited game %s by %s", id, userId));
+	}
+	
+	@SuppressWarnings("unused")
+	private void deleteActiveGames(String...  ids) {
+		CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
+        CriteriaDelete<ActiveGameModel> delete = builder.createCriteriaDelete(ActiveGameModel.class);
+        Root root = delete.from(ActiveGameModel.class);
+        delete.where(builder.and(root.get("userId").in(ids)));
+        sessionFactory.getCurrentSession().createQuery(delete).executeUpdate();
 	}
 
 	@Override
