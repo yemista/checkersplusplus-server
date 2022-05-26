@@ -15,4 +15,5 @@ public class ErrorCodes {
 	public static final int INVALID_ALIAS_IN_USE = 12;
 	public static final int INVALID_LOGIN_INPUT = 13;
 	public static final int INVALID_TOKEN = 14;
+	public static final int INVALID_GAME = 15;
 }

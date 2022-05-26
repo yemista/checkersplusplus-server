@@ -19,7 +19,7 @@ import com.checkersplusplus.service.GameService;
 import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Game;
 
-@WebServlet(name = "CreateAccountController", urlPatterns = "/api/game/active")
+@WebServlet(name = "ActiveGameController", urlPatterns = "/api/game/active")
 public class ActiveGameController extends HttpServlet {
 	
 	private static final Logger logger = Logger.getLogger(ActiveGameController.class);

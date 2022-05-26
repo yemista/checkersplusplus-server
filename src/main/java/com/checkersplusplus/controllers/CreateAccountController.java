@@ -3,6 +3,7 @@ package com.checkersplusplus.controllers;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 import com.checkersplusplus.controllers.inputs.CreateUserInput;
 import com.checkersplusplus.exceptions.ErrorCodes;
@@ -92,10 +94,16 @@ public class CreateAccountController extends HttpServlet {
 		} catch (Exception e) {
 			logger.debug("Exception occurred during create account: " + e.getMessage());
 			e.printStackTrace();
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			out.print("An unknown error has occurred");
 			return;
 		}	
+	}
+	
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+	    super.init(config);
+	    SpringBeanAutowiringSupport.processInjectionBasedOnServletContext(this, this.getServletContext());
 	}
 	
 
