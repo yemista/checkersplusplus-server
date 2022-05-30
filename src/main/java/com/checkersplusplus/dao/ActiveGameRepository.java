@@ -1,5 +1,9 @@
 package com.checkersplusplus.dao;
 
-public class ActiveGameRepository {
+import org.springframework.data.repository.CrudRepository;
+
+import com.checkersplusplus.dao.models.ActiveGameModel;
+
+public interface ActiveGameRepository extends CrudRepository<ActiveGameModel, Long> {
 
 }
