@@ -10,7 +10,7 @@ import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.checkersplusplus.dao.GameDao;
-import com.checkersplusplus.dao.SessionDao;
+import com.checkersplusplus.service.SessionService;
 import com.checkersplusplus.service.enums.GameStatus;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Session;
@@ -25,7 +25,7 @@ public class ActiveGamesJob implements Job {
 	private GameDao gamesDao;
 	
 	@Autowired
-	private SessionDao sessionDao;
+	private SessionService sessionService;
 	
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -40,7 +40,7 @@ public class ActiveGamesJob implements Job {
 			}
 			
 			if (GameStatus.PENDING == game.getStatus()) {
-				Session redSession = sessionDao.getLatestActiveSessionByUserId(game.getRedId());
+				Session redSession = sessionService.getLatestActiveSessionByUserId(game.getRedId());
 				
 				if (redSession.isExpired()) {
 					gamesDao.forfeitGame(game.getId(), redSession.getUserId());
@@ -49,8 +49,8 @@ public class ActiveGamesJob implements Job {
 			}
 			
 			if (GameStatus.RUNNING == game.getStatus()) {
-				Session redSession = sessionDao.getLatestActiveSessionByUserId(game.getRedId());
-				Session blackSession = sessionDao.getLatestActiveSessionByUserId(game.getBlackId());
+				Session redSession = sessionService.getLatestActiveSessionByUserId(game.getRedId());
+				Session blackSession = sessionService.getLatestActiveSessionByUserId(game.getBlackId());
 				
 				if (redSession.isExpired() && blackSession.isExpired()) {
 					if (redSession.isOlder(blackSession)) {

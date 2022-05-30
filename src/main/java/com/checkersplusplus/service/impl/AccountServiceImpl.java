@@ -1,13 +1,17 @@
 package com.checkersplusplus.service.impl;
 
+import java.util.Date;
+import java.util.UUID;
+
 import org.apache.commons.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.checkersplusplus.crypto.PasswordCryptoUtil;
-import com.checkersplusplus.dao.SessionDao;
-import com.checkersplusplus.dao.UsersDao;
+import com.checkersplusplus.dao.UserRepository;
+import com.checkersplusplus.dao.models.UserModel;
 import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.SessionService;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
@@ -15,10 +19,10 @@ import com.checkersplusplus.service.models.User;
 public class AccountServiceImpl implements AccountService {
 	
 	@Autowired
-	private UsersDao usersDao;
+	private UserRepository userRepository;
 	
 	@Autowired
-	private SessionDao sessionDao;
+	private SessionService sessionService;
 	
 	public boolean isPasswordSafe(String password) {
 		return password != null && password.length() >= 8 && password.length() <= 20 && passwordContainsOnlyLettersAndDigits(password);
@@ -43,20 +47,32 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	public boolean isAliasUnique(String alias) {
-		return !usersDao.isAliasInUse(alias);
+		return userRepository.findByAlias(alias) == null;
 	}
 
 	public boolean isEmailUnique(String email) {
-		return !usersDao.isEmailInUse(email);
+		return userRepository.findByEmail(email) == null;
 	}
 
 	public void createAccount(String email, String password, String alias) {
-		usersDao.createUser(email, password, alias);
+		UserModel user = new UserModel();
+		user.setId(UUID.randomUUID().toString());
+		user.setEmail(email);
+		user.setPassword(PasswordCryptoUtil.encryptPasswordForDatabase(password));
+		user.setAlias(alias);
+		user.setCreateDate(new Date());
+		userRepository.save(user);
 	}
 
 	@Override
 	public User getAccount(String email) {
-		return usersDao.getUserByEmail(email);
+		UserModel userModel = userRepository.findByEmail(email);
+		
+		if (userModel == null) {
+			return null;
+		}
+		
+		return new User(userModel.getId(), userModel.getEmail(), userModel.getPassword(), userModel.getAlias());
 	}
 	
 	@Override
@@ -71,19 +87,19 @@ public class AccountServiceImpl implements AccountService {
 
 	@Override
 	public Login login(String email) {
-		User user = usersDao.getUserByEmail(email);
+		User user = getAccount(email);
 		
 		if (user == null) {
 			return null;
 		}
 		
-		String sessionId = sessionDao.createUserSession(user.getId());
+		String sessionId = sessionService.createUserSession(user.getId());
 		return new Login(user.getId(), sessionId);
 	}
 
 	@Override
 	public boolean isLoginValid(String email, String password) {
-		User user = usersDao.getUserByEmail(email);
+		User user = getAccount(email);
 		
 		if (user == null) {
 			return false;

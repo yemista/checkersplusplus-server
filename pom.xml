@@ -1,209 +1,205 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>checkersplusplus</groupId>
-  <artifactId>server</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>war</packaging>
-  
-  <properties>
-    <failOnMissingWebXml>false</failOnMissingWebXml>
-    <spring.version>5.2.0.RELEASE</spring.version>
-    <hibernate.version>5.2.11.Final</hibernate.version>
-    <hibernate.validator>5.4.1.Final</hibernate.validator>
-    <c3p0.version>0.9.5.2</c3p0.version>
-    <jstl.version>1.2.1</jstl.version>
-    <tld.version>1.1.2</tld.version>
-    <servlets.version>3.1.0</servlets.version>
-    <jsp.version>2.3.1</jsp.version>
-    <hsqldb.version>2.5.1</hsqldb.version>
-  </properties>
-  
-  <dependencies>
-    <!-- Spring MVC Dependency -->
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-webmvc</artifactId>
-      <version>${spring.version}</version>
-    </dependency>
- 
-    <!-- Spring ORM -->
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-orm</artifactId>
-      <version>${spring.version}</version>
-    </dependency>
- 
-    <!-- Hibernate Core -->
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-core</artifactId>
-      <version>${hibernate.version}</version>
-    </dependency>
- 
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-dbcp2</artifactId>
-      <version>2.1.1</version>
-   </dependency>
- 
-    <!-- Hibernate Validator  
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>checkersplusplus</groupId>
+	<artifactId>server</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<properties>
+		<failOnMissingWebXml>false</failOnMissingWebXml>
+		<spring.version>3.0.0.RELEASE</spring.version>
+		<hibernate.version>5.4.2.Final</hibernate.version>
+		<hibernate.validator>5.4.1.Final</hibernate.validator>
+		<c3p0.version>0.9.5.2</c3p0.version>
+		<jstl.version>1.2.1</jstl.version>
+		<tld.version>1.1.2</tld.version>
+		<servlets.version>3.1.0</servlets.version>
+		<jsp.version>2.3.1</jsp.version>
+		<hsqldb.version>2.5.1</hsqldb.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>1.8</java.version>
+	</properties>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.2.2.RELEASE</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+
+	<dependencies>
+
+
+		<!-- Spring ORM 
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-orm</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+-->
+		<!-- Hibernate Core -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>${hibernate.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+
+		<!-- Hibernate Validator  
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-validator</artifactId>
       <version>${hibernate.validator}</version>
     </dependency>
 -->
-    <!-- Servlet Dependency -->
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>${servlets.version}</version>
-      <scope>provided</scope>
-    </dependency>
- 
-    <!-- HSQL Dependency -->
-	<dependency>
-	    <groupId>org.hsqldb</groupId>
-	    <artifactId>hsqldb</artifactId>
-	    <version>2.6.1</version>
-	    <scope>test</scope>
-	</dependency>
-    
-    <dependency>
-	    <groupId>org.apache.commons</groupId>
-	    <artifactId>commons-lang3</artifactId>
-	    <version>3.12.0</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>commons-codec</groupId>
-	    <artifactId>commons-codec</artifactId>
-	    <version>1.15</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>com.h2database</groupId>
-	    <artifactId>h2</artifactId>
-	    <version>1.4.194</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>org.springframework</groupId>
-	    <artifactId>spring-test</artifactId>
-	    <version>5.1.5.RELEASE</version>
-	    <scope>test</scope>
-	</dependency>
-	
-	<dependency>
-	    <groupId>org.springframework.data</groupId>
-	    <artifactId>spring-data-jpa</artifactId>
-	    <version>2.1.5.RELEASE</version>
-	</dependency>
-	
-	<!-- API, java.xml.bind module -->
-	<dependency>
-	    <groupId>jakarta.xml.bind</groupId>
-	    <artifactId>jakarta.xml.bind-api</artifactId>
-	    <version>2.3.2</version>
-	</dependency>
-	
-	<!-- Runtime, com.sun.xml.bind module -->
-	<dependency>
-	    <groupId>org.glassfish.jaxb</groupId>
-	    <artifactId>jaxb-runtime</artifactId>
-	    <version>2.3.2</version>
-	</dependency>
-	    
-	<dependency>
-	    <groupId>junit</groupId>
-	    <artifactId>junit</artifactId>
-	    <version>4.13.2</version>
-	    <scope>test</scope>
-	</dependency>
-	
-	<dependency>
-	    <groupId>javax.validation</groupId>
-	    <artifactId>validation-api</artifactId>
-	    <version>2.0.1.Final</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>org.apache.commons</groupId>
-	    <artifactId>commons-lang3</artifactId>
-	    <version>3.12.0</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>commons-validator</groupId>
-	    <artifactId>commons-validator</artifactId>
-	    <version>1.7</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>log4j</groupId>
-	    <artifactId>log4j</artifactId>
-	    <version>1.2.17</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>com.google.code.gson</groupId>
-	    <artifactId>gson</artifactId>
-	    <version>2.9.0</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>checkersplusplus</groupId>
-	    <artifactId>checkersplusplus-engine</artifactId>
-	    <version>0.0.1-SNAPSHOT</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>org.quartz-scheduler</groupId>
-	    <artifactId>quartz</artifactId>
-	    <version>2.3.2</version>
-	</dependency>
-	
-	<dependency> 
-        <groupId>org.springframework.boot</groupId> 
-        <artifactId>spring-boot-starter-web</artifactId> 
-        <version>2.4.0</version> 
-    </dependency> 
-	
-  </dependencies>
-  <build>
-  		<finalName>checkersplusplus-server</finalName>
-        <plugins>
-        	<plugin>    
-		        <artifactId>maven-compiler-plugin</artifactId>
-		        <configuration>
-		            <source>1.8</source>
-		            <target>1.8</target>
-		        </configuration>
-		    </plugin>
+
+		<!-- HSQL Dependency -->
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>2.6.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.12.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.15</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.4.194</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.3.6</version>
+</dependency>
+
+<!--
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>${spring.version}</version>
+			<scope>test</scope>
+		</dependency>
+-->
+<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-jpa</artifactId>
+			</dependency>
+
+		<!-- API, java.xml.bind module -->
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+			<version>2.3.2</version>
+		</dependency>
+
+		<!-- Runtime, com.sun.xml.bind module -->
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>2.3.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.validation</groupId>
+			<artifactId>validation-api</artifactId>
+			<version>2.0.1.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.12.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-validator</groupId>
+			<artifactId>commons-validator</artifactId>
+			<version>1.7</version>
+		</dependency>
+
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.9.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>checkersplusplus</groupId>
+			<artifactId>checkersplusplus-engine</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+			<version>2.3.2</version>
+		</dependency>
+
+		<!--  Spring web dependency -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                </exclusion>
+            </exclusions>
+		</dependency>
+		<!--Servlet container has to be set as provided -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+	</dependencies>
+	<build>
+		<finalName>checkersplusplus-server</finalName>
+		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>3.3.1</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<configuration>
-							<attachClasses>true</attachClasses>
-							<failOnMissingWebXml>false</failOnMissingWebXml>
-							<webXml>${basedir}/src/main/webapp/WEB-INF/web.xml</webXml>
-						</configuration>
-						<goals>
-							<goal>inplace</goal>
-						</goals>
-					</execution>
-				</executions>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
-	 
+
 </project>
