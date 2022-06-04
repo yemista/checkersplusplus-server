@@ -3,7 +3,6 @@ package com.checkersplusplus.controllers.inputs;
 public class GameMoveInput {
 	
 	private String sessionId;
-	private String gameId;
 	private int startX;
 	private int startY;
 	private int endX;
@@ -15,14 +14,6 @@ public class GameMoveInput {
 	
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
-	}
-	
-	public String getGameId() {
-		return gameId;
-	}
-	
-	public void setGameId(String gameId) {
-		this.gameId = gameId;
 	}
 	
 	public int getStartX() {

@@ -16,11 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.checkersplusplus.controllers.inputs.CreateUserInput;
 import com.checkersplusplus.controllers.inputs.LoginInput;
-import com.checkersplusplus.dao.UserRepository;
 import com.checkersplusplus.dao.models.UserModel;
 import com.checkersplusplus.exceptions.ErrorCodes;
 import com.checkersplusplus.service.AccountService;
-import com.checkersplusplus.service.GameService;
+import com.checkersplusplus.service.NewGameService;
 import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.util.ResponseUtil;
@@ -36,10 +35,7 @@ public class AccountController {
 	private AccountService accountService;
 	
 	@Autowired
-	private GameService gameService;
-	
-	@Autowired
-	private UserRepository userRepository;
+	private NewGameService gameService;
 	
 	@PostMapping(value = "login", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity login(@RequestBody LoginInput payload) {

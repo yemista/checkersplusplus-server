@@ -1,5 +1,7 @@
 package com.checkersplusplus.service.models;
 
+import java.util.Objects;
+
 import com.checkersplusplus.service.enums.GameStatus;
 import com.google.gson.annotations.Expose;
 
@@ -79,5 +81,25 @@ public class Game extends Jsonifiable {
 
 	public void setWinnerId(String winnerId) {
 		this.winnerId = winnerId;
+	}
+	
+	@Override
+	public int hashCode() {
+		return id.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o != null && o instanceof Game) {
+			Game other = (Game) o;
+			return Objects.equals(other.id, this.id)
+					&& Objects.equals(other.blackId, this.blackId)
+					&& Objects.equals(other.redId, this.redId)
+					&& Objects.equals(other.state, this.state)
+					&& Objects.equals(other.winnerId, this.winnerId)
+					&& other.status == this.status;
+		}
+	
+		return false;
 	}
 }
