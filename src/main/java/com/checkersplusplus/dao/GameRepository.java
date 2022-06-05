@@ -15,7 +15,7 @@ public interface GameRepository extends JpaRepository<GameModel, String> {
 	@Query("SELECT g FROM GameModel g INNER JOIN ActiveGameModel a ON g.id = a.gameId ORDER BY g.created")
 	public List<GameModel> getActivesGames();
 	
-	@Query("SELECT g FROM SessionModel s LEFT JOIN ActiveGameModel a ON s.userId = a.userId LEFT JOIN GameModel g ON g.id = a.gameId WHERE s.token =  = :token")
+	@Query("SELECT g FROM SessionModel s LEFT JOIN ActiveGameModel a ON s.userId = a.userId LEFT JOIN GameModel g ON g.id = a.gameId WHERE s.token = :token")
 	public GameModel getActiveGameByToken(@Param("token") String token);
 	
 	public GameModel getById(String id);

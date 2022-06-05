@@ -8,40 +8,39 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.checkersplusplus.dao.GameDao;
-import com.checkersplusplus.service.AccountService;
-import com.checkersplusplus.service.GameService;
+import com.checkersplusplus.service.NewAccountService;
+import com.checkersplusplus.service.NewGameService;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
-import config.HibernateConfig;
+import config.TestJpaConfig;
 import util.UserNameTestUtil;
 
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { HibernateConfig.class })
-@ComponentScan( "com.checkersplusplus.service" )
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(
+  classes = { TestJpaConfig.class }, 
+  loader = AnnotationConfigContextLoader.class)
+@Transactional
 public class GameDaoTests {
-
-	@Autowired
-	private GameDao gameDao;
 	
 	@Autowired
-	private AccountService accountService;
+	private NewAccountService accountService;
 	
 	@Autowired
-	private GameService gameService;
+	private NewGameService gameService;
 	
 	@Test
 	public void assertGetActiveGames() throws Exception {
-		List<Game> activeGames = gameDao.getActiveGames();
+		List<Game> activeGames = gameService.getActiveGames();
 		Game game1 = createGame();
 		Game game2 = createGame();
-		List<Game> activeGamesAfterCreation = gameDao.getActiveGames();
+		List<Game> activeGamesAfterCreation = gameService.getActiveGames();
 		assertEquals(activeGamesAfterCreation.size(), activeGames.size() + 2);
 		assertTrue(activeGamesAfterCreation.stream().anyMatch(g -> game1.getId().equals(g.getId())));
 		assertTrue(activeGamesAfterCreation.stream().anyMatch(g -> game2.getId().equals(g.getId())));

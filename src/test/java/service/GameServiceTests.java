@@ -10,35 +10,36 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import com.checkersplusplus.exceptions.CannotJoinGameException;
-import com.checkersplusplus.service.AccountService;
-import com.checkersplusplus.service.GameService;
+import com.checkersplusplus.service.NewAccountService;
+import com.checkersplusplus.service.NewGameService;
 import com.checkersplusplus.service.enums.GameStatus;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.OpenGames;
 import com.checkersplusplus.service.models.User;
 
-import config.HibernateConfig;
+import config.TestJpaConfig;
 import util.UserNameTestUtil;
 
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { HibernateConfig.class })
-@ComponentScan( "com.checkersplusplus.service" )
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(
+  classes = { TestJpaConfig.class }, 
+  loader = AnnotationConfigContextLoader.class)
 public class GameServiceTests {
 
 	private static final String DEFAULT_GAME_STATE = "NX|OEOEOEOEEOEOEOEOOEOEOEOEEEEEEEEEEEEEEEEEEXEXEXEXXEXEXEXEEXEXEXEX";
 
 	@Autowired
-	private GameService gameService;
+	private NewGameService gameService;
 	
 	@Autowired
-	private AccountService accountService;
+	private NewAccountService accountService;
 	
 	@Test
 	public void assertLogin() {
@@ -65,10 +66,10 @@ public class GameServiceTests {
 	@Test
 	public void assertHasActiveGame() throws Exception {
 		Login login = createUserForTest();
-		boolean hasActiveGame = gameService.hasActiveGame(login.getSessionId());
+		boolean hasActiveGame = gameService.getActiveGame(login.getSessionId()) != null;
 		assertFalse(hasActiveGame);
 		Game game = gameService.createGame(login.getSessionId());
-		hasActiveGame = gameService.hasActiveGame(login.getSessionId());
+		hasActiveGame = gameService.getActiveGame(login.getSessionId()) != null;
 		assertTrue(hasActiveGame);
 	}
 	
@@ -105,10 +106,10 @@ public class GameServiceTests {
 		Login login2 = createUserForTest();
 		Game game2 = gameService.createGame(login2.getSessionId());
 		Login login3 = createUserForTest();
-		Game joinedGame = gameService.joinGame(login3.getSessionId(), game1.getId());
+		Game joinedGame = gameService.joinGame(login3.getUserId(), game1.getId());
 		
 		try {
-			gameService.joinGame(login3.getSessionId(), game2.getId());
+			gameService.joinGame(login3.getUserId(), game2.getId());
 			fail();
 		} catch (DataIntegrityViolationException e) {
 			
@@ -118,10 +119,10 @@ public class GameServiceTests {
 	@Test
 	public void assertGetOpenGames() throws Exception {
 		Login login1 = createUserForTest();
-		OpenGames openGamesBefore = gameService.getOpenGames(login1.getSessionId());
+		OpenGames openGamesBefore = gameService.getOpenGames(0);
 		int sizeBefore = openGamesBefore.getGames().size();
 		Game game1 = gameService.createGame(login1.getSessionId());
-		OpenGames openGamesAfter = gameService.getOpenGames(login1.getSessionId());
+		OpenGames openGamesAfter = gameService.getOpenGames(0);
 		assertEquals(openGamesAfter.getGames().size(), openGamesBefore.getGames().size() + 1);
 	}
 	

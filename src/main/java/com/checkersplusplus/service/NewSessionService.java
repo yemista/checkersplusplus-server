@@ -25,7 +25,8 @@ public class NewSessionService {
 	
 	public String createUserSession(String userId) {
 		logger.debug(String.format("Creating session for user %s", userId));
-		sessionRepository.invalidateExistingSessions(userId);
+		int numSessions = sessionRepository.invalidateExistingSessions(userId);
+		logger.debug(String.format("Invalidated %d sessions for user %s", numSessions, userId));
 		SessionModel session = new SessionModel();
 		session.setActive(Boolean.TRUE);
 		session.setCreateDate(new Date());

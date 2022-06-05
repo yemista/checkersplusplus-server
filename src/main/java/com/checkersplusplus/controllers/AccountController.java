@@ -18,7 +18,7 @@ import com.checkersplusplus.controllers.inputs.CreateUserInput;
 import com.checkersplusplus.controllers.inputs.LoginInput;
 import com.checkersplusplus.dao.models.UserModel;
 import com.checkersplusplus.exceptions.ErrorCodes;
-import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.NewAccountService;
 import com.checkersplusplus.service.NewGameService;
 import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Login;
@@ -32,7 +32,7 @@ public class AccountController {
 	private static final Logger logger = Logger.getLogger(AccountController.class);
 	
 	@Autowired
-	private AccountService accountService;
+	private NewAccountService accountService;
 	
 	@Autowired
 	private NewGameService gameService;

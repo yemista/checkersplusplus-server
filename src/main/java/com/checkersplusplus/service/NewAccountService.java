@@ -1,28 +1,31 @@
-package com.checkersplusplus.service.impl;
+package com.checkersplusplus.service;
 
 import java.util.Date;
 import java.util.UUID;
 
 import org.apache.commons.validator.EmailValidator;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.crypto.PasswordCryptoUtil;
 import com.checkersplusplus.dao.UserRepository;
 import com.checkersplusplus.dao.models.UserModel;
-import com.checkersplusplus.service.AccountService;
-import com.checkersplusplus.service.SessionService;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
-@Component
-public class AccountServiceImpl implements AccountService {
+@Service
+@Transactional
+public class NewAccountService {
+	
+	private static final Logger logger = Logger.getLogger(NewAccountService.class);
 	
 	@Autowired
 	private UserRepository userRepository;
 	
 	@Autowired
-	private SessionService sessionService;
+	private NewSessionService sessionService;
 	
 	public boolean isPasswordSafe(String password) {
 		return password != null && password.length() >= 8 && password.length() <= 20 && passwordContainsOnlyLettersAndDigits(password);
@@ -62,9 +65,10 @@ public class AccountServiceImpl implements AccountService {
 		user.setAlias(alias);
 		user.setCreateDate(new Date());
 		userRepository.save(user);
+		logger.debug("Created account for email: " + email);
+		
 	}
 
-	@Override
 	public User getAccount(String email) {
 		UserModel userModel = userRepository.findByEmail(email);
 		
@@ -75,17 +79,14 @@ public class AccountServiceImpl implements AccountService {
 		return new User(userModel.getId(), userModel.getEmail(), userModel.getPassword(), userModel.getAlias());
 	}
 	
-	@Override
 	public boolean isEmailValid(String email) {
 		return EmailValidator.getInstance().isValid(email);
 	}
 
-	@Override
 	public boolean isAliasValid(String alias) {
 		return alias != null && alias.length() >= 3 && alias.length() < 15;
 	}
 
-	@Override
 	public Login login(String email) {
 		User user = getAccount(email);
 		
@@ -97,7 +98,6 @@ public class AccountServiceImpl implements AccountService {
 		return new Login(user.getId(), sessionId);
 	}
 
-	@Override
 	public boolean isLoginValid(String email, String password) {
 		User user = getAccount(email);
 		
@@ -108,4 +108,3 @@ public class AccountServiceImpl implements AccountService {
 		return PasswordCryptoUtil.encryptPasswordForDatabase(password).equals(user.getPassword());
 	}
 }
-

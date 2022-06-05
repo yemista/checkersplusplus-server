@@ -91,7 +91,9 @@ public class NewGameService {
 	}
 
 	public Game joinGame(String userId, String gameId) throws Exception {
+		logger.debug(String.format("Joining game %s by user %s", gameId, userId));
 		insertIntoActiveGames(userId, gameId);
+		logger.debug(String.format("Inserted game %s by user %s into active_games", gameId, userId));
 		Optional<GameModel> gameModel = gameRepository.findById(gameId);
 		
 		if (!gameModel.isPresent()) {
@@ -106,6 +108,7 @@ public class NewGameService {
 		
 		gameModel.get().setBlackId(userId);
 		gameRepository.save(gameModel.get());
+		logger.debug(String.format("Joined game %s by user %s", gameId, userId));
 		return new Game(gameModel.get().getId(), gameModel.get().getState(), getGameStatus(gameModel.get()), gameModel.get().getRedId(), 
 				gameModel.get().getBlackId(), gameModel.get().getWinnerId());
 	}

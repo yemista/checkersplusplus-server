@@ -9,24 +9,25 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.NewAccountService;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
-import config.HibernateConfig;
+import config.TestJpaConfig;
 import util.UserNameTestUtil;
 
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { HibernateConfig.class })
-@ComponentScan( "com.checkersplusplus.service" )
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(
+  classes = { TestJpaConfig.class }, 
+  loader = AnnotationConfigContextLoader.class)
 public class AccountServiceTests {
 	
 	@Autowired
-	private AccountService accountService;
+	private NewAccountService accountService;
 	
 	@Test
 	public void assertCreateUser() {
