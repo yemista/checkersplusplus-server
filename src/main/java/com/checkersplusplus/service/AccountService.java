@@ -17,15 +17,15 @@ import com.checkersplusplus.service.models.User;
 
 @Service
 @Transactional
-public class NewAccountService {
+public class AccountService {
 	
-	private static final Logger logger = Logger.getLogger(NewAccountService.class);
+	private static final Logger logger = Logger.getLogger(AccountService.class);
 	
 	@Autowired
 	private UserRepository userRepository;
 	
 	@Autowired
-	private NewSessionService sessionService;
+	private SessionService sessionService;
 	
 	public boolean isPasswordSafe(String password) {
 		return password != null && password.length() >= 8 && password.length() <= 20 && passwordContainsOnlyLettersAndDigits(password);

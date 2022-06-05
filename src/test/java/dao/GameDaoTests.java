@@ -13,8 +13,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.checkersplusplus.service.NewAccountService;
-import com.checkersplusplus.service.NewGameService;
+import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.GameService;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
@@ -30,10 +30,10 @@ import util.UserNameTestUtil;
 public class GameDaoTests {
 	
 	@Autowired
-	private NewAccountService accountService;
+	private AccountService accountService;
 	
 	@Autowired
-	private NewGameService gameService;
+	private GameService gameService;
 	
 	@Test
 	public void assertGetActiveGames() throws Exception {

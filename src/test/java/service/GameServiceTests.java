@@ -16,8 +16,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import com.checkersplusplus.exceptions.CannotJoinGameException;
-import com.checkersplusplus.service.NewAccountService;
-import com.checkersplusplus.service.NewGameService;
+import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.GameService;
 import com.checkersplusplus.service.enums.GameStatus;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Login;
@@ -36,10 +36,10 @@ public class GameServiceTests {
 	private static final String DEFAULT_GAME_STATE = "NX|OEOEOEOEEOEOEOEOOEOEOEOEEEEEEEEEEEEEEEEEEXEXEXEXXEXEXEXEEXEXEXEX";
 
 	@Autowired
-	private NewGameService gameService;
+	private GameService gameService;
 	
 	@Autowired
-	private NewAccountService accountService;
+	private AccountService accountService;
 	
 	@Test
 	public void assertLogin() {

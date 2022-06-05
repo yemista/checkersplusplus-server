@@ -31,14 +31,14 @@ import com.checkersplusplus.service.models.Session;
 
 @Service
 @Transactional
-public class NewGameService {
+public class GameService {
 	
-	private static final Logger logger = Logger.getLogger(NewGameService.class);
+	private static final Logger logger = Logger.getLogger(GameService.class);
 
 	private static final int PAGE_SIZE = 20;
 
 	@Autowired
-	private NewSessionService sessionService;
+	private SessionService sessionService;
 	
 	@Autowired
 	private ActiveGameRepository activeGameRepository;

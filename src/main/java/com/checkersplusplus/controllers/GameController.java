@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkersplusplus.controllers.inputs.GameMoveInput;
 import com.checkersplusplus.controllers.inputs.SecurityInput;
 import com.checkersplusplus.exceptions.ErrorCodes;
-import com.checkersplusplus.service.NewGameService;
-import com.checkersplusplus.service.NewSessionService;
+import com.checkersplusplus.service.GameService;
+import com.checkersplusplus.service.SessionService;
 import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.OpenGames;
@@ -33,10 +33,10 @@ public class GameController extends HttpServlet {
 	private static final Logger logger = Logger.getLogger(GameController.class);
 	
 	@Autowired
-	private NewGameService gameService;
+	private GameService gameService;
 	
 	@Autowired
-	private NewSessionService sessionService;
+	private SessionService sessionService;
 	
 	@PostMapping(value = "/{gameId}/move", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity move(@PathVariable("gameId") String gameId, @RequestBody GameMoveInput payload) {

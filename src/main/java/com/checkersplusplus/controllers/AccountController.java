@@ -18,8 +18,8 @@ import com.checkersplusplus.controllers.inputs.CreateUserInput;
 import com.checkersplusplus.controllers.inputs.LoginInput;
 import com.checkersplusplus.dao.models.UserModel;
 import com.checkersplusplus.exceptions.ErrorCodes;
-import com.checkersplusplus.service.NewAccountService;
-import com.checkersplusplus.service.NewGameService;
+import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.GameService;
 import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.util.ResponseUtil;
@@ -32,10 +32,10 @@ public class AccountController {
 	private static final Logger logger = Logger.getLogger(AccountController.class);
 	
 	@Autowired
-	private NewAccountService accountService;
+	private AccountService accountService;
 	
 	@Autowired
-	private NewGameService gameService;
+	private GameService gameService;
 	
 	@PostMapping(value = "login", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity login(@RequestBody LoginInput payload) {

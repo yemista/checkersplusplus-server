@@ -13,7 +13,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import com.checkersplusplus.service.NewAccountService;
+import com.checkersplusplus.service.AccountService;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
@@ -27,7 +27,7 @@ import util.UserNameTestUtil;
 public class AccountServiceTests {
 	
 	@Autowired
-	private NewAccountService accountService;
+	private AccountService accountService;
 	
 	@Test
 	public void assertCreateUser() {

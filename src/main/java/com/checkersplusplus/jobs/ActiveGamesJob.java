@@ -9,8 +9,8 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.checkersplusplus.service.NewGameService;
-import com.checkersplusplus.service.NewSessionService;
+import com.checkersplusplus.service.GameService;
+import com.checkersplusplus.service.SessionService;
 import com.checkersplusplus.service.enums.GameStatus;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Session;
@@ -22,10 +22,10 @@ public class ActiveGamesJob implements Job {
 	public static final int MINUTES_BETWEEN_JOB_EXECUTION = 3;
 	
 	@Autowired
-	private NewGameService gameService;
+	private GameService gameService;
 	
 	@Autowired
-	private NewSessionService sessionService;
+	private SessionService sessionService;
 	
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {

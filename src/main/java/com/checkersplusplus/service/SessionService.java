@@ -16,9 +16,9 @@ import com.checkersplusplus.service.models.Session;
 
 @Service
 @Transactional
-public class NewSessionService {
+public class SessionService {
 
-	private static final Logger logger = Logger.getLogger(NewSessionService.class);
+	private static final Logger logger = Logger.getLogger(SessionService.class);
 	
 	@Autowired
 	private SessionRepository sessionRepository;
