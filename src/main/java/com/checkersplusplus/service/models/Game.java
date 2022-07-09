@@ -24,8 +24,11 @@ public class Game extends Jsonifiable {
 	
 	@Expose(serialize = true, deserialize = true)
 	public String winnerId;
+	
+	@Expose(serialize = true, deserialize = true)
+	public Integer version;
 
-	public Game(String id, String state, GameStatus status, String redId, String blackId, String winnerId) {
+	public Game(String id, String state, GameStatus status, String redId, String blackId, String winnerId, Integer version) {
 		super();
 		this.id = id;
 		this.state = state;
@@ -33,6 +36,7 @@ public class Game extends Jsonifiable {
 		this.redId = redId;
 		this.blackId = blackId;
 		this.winnerId = winnerId;
+		this.version = version;
 	}
 
 	public String getId() {
@@ -44,7 +48,7 @@ public class Game extends Jsonifiable {
 	}
 
 	public String getState() {
-		return state;
+		return state.replaceFirst("N", version.toString());
 	}
 
 	public void setState(String state) {
@@ -83,6 +87,14 @@ public class Game extends Jsonifiable {
 		this.winnerId = winnerId;
 	}
 	
+	public Integer getVersion() {
+		return version;
+	}
+
+	public void setVersion(Integer version) {
+		this.version = version;
+	}
+
 	@Override
 	public int hashCode() {
 		return id.hashCode();
@@ -97,7 +109,8 @@ public class Game extends Jsonifiable {
 					&& Objects.equals(other.redId, this.redId)
 					&& Objects.equals(other.state, this.state)
 					&& Objects.equals(other.winnerId, this.winnerId)
-					&& other.status == this.status;
+					&& other.status == this.status
+					&& Objects.equals(other.version, this.version);
 		}
 	
 		return false;

@@ -1,14 +1,16 @@
 package com.checkersplusplus.exceptions;
 
+import com.checkersplusplus.service.models.CheckersPlusPlusError;
+
 public class CheckersPlusPlusException extends Exception {
-	private int errorCode;
+	private CheckersPlusPlusError error;
 	
-	protected CheckersPlusPlusException(String message, int errorCode) {
-		super(String.format("%s: %d", message, errorCode));
-		this.errorCode = errorCode;
+	public CheckersPlusPlusException(CheckersPlusPlusError error) {
+		super(String.format("%s", error.convertToJson()));
+		this.error = error;
 	}
 	
-	public int getErrorCode() {
-		return errorCode;
+	public CheckersPlusPlusError getError() {
+		return error;
 	}
 }

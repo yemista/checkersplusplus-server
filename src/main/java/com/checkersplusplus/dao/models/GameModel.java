@@ -33,9 +33,15 @@ public class GameModel implements Serializable {
 	@Column(name = "state", updatable = true, nullable = false)
 	private String state;
 	
+	@Column(name = "status", updatable = true, nullable = false)
+	private String status;
+	
 	@Column(name = "created", updatable = false, nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
     private Date created;
+	
+	@Column(name = "move_num", updatable = true, nullable = false)
+	private Integer version;
 
 	public String getId() {
 		return id;
@@ -91,5 +97,21 @@ public class GameModel implements Serializable {
 
 	public void setForfeitId(String forfeitId) {
 		this.forfeitId = forfeitId;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public Integer getVersion() {
+		return version;
+	}
+
+	public void setVersion(Integer version) {
+		this.version = version;
 	}
 }

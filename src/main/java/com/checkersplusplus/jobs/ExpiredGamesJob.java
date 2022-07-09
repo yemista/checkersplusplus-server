@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.checkersplusplus.service.GameService;
@@ -15,9 +12,9 @@ import com.checkersplusplus.service.enums.GameStatus;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Session;
 
-public class ActiveGamesJob implements Job {
+public class ExpiredGamesJob {
 
-	private static final Logger logger = Logger.getLogger(ActiveGamesJob.class);
+	private static final Logger logger = Logger.getLogger(ExpiredGamesJob.class);
 	
 	public static final int MINUTES_BETWEEN_JOB_EXECUTION = 3;
 	
@@ -27,8 +24,17 @@ public class ActiveGamesJob implements Job {
 	@Autowired
 	private SessionService sessionService;
 	
-	@Override
-	public void execute(JobExecutionContext context) throws JobExecutionException {
+	/**
+	 * Algorithm:
+	 * 	1. Get all active sessions where now - heartbeat > 3 * heartbeat.
+	 * 	2. Mark such sessions as inactive
+	 * 
+	 *  Part 2:
+	 *   1. Get all games where now - last_modified > 7 * heartbeat
+	 *   2. If both players do not have an active session, mark game as abandoned
+	 *      If one player does not have an active session, mark game as forfeit by inactive player
+	 */
+	public void execute() {
 		List<Game> activeGames = gameService.getActiveGames();
 		List<String> activeGamesToDelete = new ArrayList<>();
 		
@@ -43,7 +49,7 @@ public class ActiveGamesJob implements Job {
 				Session redSession = sessionService.getLatestActiveSessionByUserId(game.getRedId());
 				
 				if (redSession.isExpired()) {
-					gameService.forfeitGame(game.getId(), redSession.getUserId());
+					gameService.cancelGame(game.getId());
 					activeGamesToDelete.add(game.getId());
 				}
 			}
@@ -53,11 +59,7 @@ public class ActiveGamesJob implements Job {
 				Session blackSession = sessionService.getLatestActiveSessionByUserId(game.getBlackId());
 				
 				if (redSession.isExpired() && blackSession.isExpired()) {
-					if (redSession.isOlder(blackSession)) {
-						gameService.forfeitGame(game.getId(), redSession.getUserId());
-					} else {
-						gameService.forfeitGame(game.getId(), blackSession.getUserId());
-					}
+					gameService.cancelGame(game.getId());
 				} else if (redSession.isExpired()) {
 					gameService.forfeitGame(game.getId(), redSession.getUserId());
 				} else if (blackSession.isExpired()) {

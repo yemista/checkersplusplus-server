@@ -16,10 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.checkersplusplus.controllers.inputs.CreateUserInput;
 import com.checkersplusplus.controllers.inputs.LoginInput;
+import com.checkersplusplus.controllers.inputs.SecurityInput;
 import com.checkersplusplus.dao.models.UserModel;
 import com.checkersplusplus.exceptions.ErrorCodes;
 import com.checkersplusplus.service.AccountService;
 import com.checkersplusplus.service.GameService;
+import com.checkersplusplus.service.HeartbeatService;
+import com.checkersplusplus.service.SessionService;
 import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.util.ResponseUtil;
@@ -36,6 +39,28 @@ public class AccountController {
 	
 	@Autowired
 	private GameService gameService;
+	
+	@Autowired
+	private SessionService sessionService;
+	
+	@Autowired
+	private HeartbeatService heartbeatService;
+	
+	@PostMapping(value = "heartbeat", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity heartbeat(@RequestBody SecurityInput payload) throws Exception {
+		String token = payload.getToken();
+		
+		try {
+			logger.debug(String.format("Heartbeat for %s", token));
+			sessionService.validateSession(token);
+			heartbeatService.updateHeartbeat(token);
+			return ResponseEntity.status(HttpStatus.OK).build();
+		} catch (Exception e) {
+			logger.debug("Exception occurred during heartbeat: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseUtil.unexpectedError(e);
+		}
+	}
 	
 	@PostMapping(value = "login", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity login(@RequestBody LoginInput payload) {

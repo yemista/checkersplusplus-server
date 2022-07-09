@@ -3,6 +3,7 @@ package service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -15,7 +16,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import com.checkersplusplus.exceptions.CannotJoinGameException;
 import com.checkersplusplus.service.AccountService;
 import com.checkersplusplus.service.GameService;
 import com.checkersplusplus.service.enums.GameStatus;
@@ -33,13 +33,18 @@ import util.UserNameTestUtil;
   loader = AnnotationConfigContextLoader.class)
 public class GameServiceTests {
 
-	private static final String DEFAULT_GAME_STATE = "NX|OEOEOEOEEOEOEOEOOEOEOEOEEEEEEEEEEEEEEEEEEXEXEXEXXEXEXEXEEXEXEXEX";
+	private static final String DEFAULT_GAME_STATE = "1X|OEOEOEOEEOEOEOEOOEOEOEOEEEEEEEEEEEEEEEEEEXEXEXEXXEXEXEXEEXEXEXEX";
 
 	@Autowired
 	private GameService gameService;
 	
 	@Autowired
 	private AccountService accountService;
+	
+	@Test
+	public void assertForfeitGame() {
+		
+	}
 	
 	@Test
 	public void assertLogin() {
@@ -90,13 +95,8 @@ public class GameServiceTests {
 		Login login2 = createUserForTest();
 		Game joinedGame = gameService.joinGame(login2.getSessionId(), game.getId());
 		Login login3 = createUserForTest();
-		
-		try {
-			gameService.joinGame(login3.getSessionId(), game.getId());
-			fail();
-		} catch (CannotJoinGameException e) {
-			
-		}
+		Game failedToJoinGame = gameService.joinGame(login3.getUserId(), game.getId());
+		assertNull(failedToJoinGame);
 	}
 	
 	@Test
@@ -109,7 +109,7 @@ public class GameServiceTests {
 		Game joinedGame = gameService.joinGame(login3.getUserId(), game1.getId());
 		
 		try {
-			gameService.joinGame(login3.getUserId(), game2.getId());
+			Game failedToJoinGame = gameService.joinGame(login3.getUserId(), game2.getId());
 			fail();
 		} catch (DataIntegrityViolationException e) {
 			

@@ -11,7 +11,7 @@ public class ResponseUtil {
 	public static ResponseEntity unexpectedError(Exception exception) {
 		if (exception instanceof CheckersPlusPlusException) {
 			CheckersPlusPlusException checkersPlusPlusException = (CheckersPlusPlusException) exception;
-			CheckersPlusPlusError error = new CheckersPlusPlusError(checkersPlusPlusException.getErrorCode());
+			CheckersPlusPlusError error = checkersPlusPlusException.getError();
 			return ResponseEntity
 	                .status(HttpStatus.BAD_REQUEST)
 	                .body(error.convertToJson());

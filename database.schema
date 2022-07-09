@@ -64,9 +64,11 @@ CREATE TABLE public.game (
     red_id character varying NOT NULL,
     black_id character varying NOT NULL,
     created timestamp without time zone DEFAULT now() NOT NULL,
+    last_modified timestamp without time zone DEFAULT now() NOT NULL,
     state character varying NOT NULL,
     winner_id character varying NOT NULL,
-    forfeit character varying
+    forfeit character varying,
+    move_num integer DEFAULT 1 NOT NULL
 );
 
 

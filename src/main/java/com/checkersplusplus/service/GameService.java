@@ -18,11 +18,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.checkersplusplus.controllers.inputs.GameMoveInput;
 import com.checkersplusplus.dao.ActiveGameRepository;
 import com.checkersplusplus.dao.GameRepository;
 import com.checkersplusplus.dao.models.ActiveGameModel;
 import com.checkersplusplus.dao.models.GameModel;
-import com.checkersplusplus.exceptions.CannotJoinGameException;
 import com.checkersplusplus.service.enums.GameStatus;
 import com.checkersplusplus.service.models.ActiveGame;
 import com.checkersplusplus.service.models.Game;
@@ -53,14 +53,14 @@ public class GameService {
 			return null;
 		}
 		
-		return new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId());
+		return new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId(), gameModel.getVersion());
 	}
 	
 	public List<Game> getActiveGames() {
 		List<GameModel> gameModels = gameRepository.getActivesGames();
 		return new ArrayList<>(
 					gameModels.stream()
-							.map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId()))
+							.map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId(), gameModel.getVersion()))
 							.collect(Collectors.toSet()));
 	}
 	
@@ -86,8 +86,10 @@ public class GameService {
 		gameModel.setId(gameId);
 		com.checkersplusplus.engine.Game gameEngine = new com.checkersplusplus.engine.Game();
 		gameModel.setState(gameEngine.getGameState());
+		gameModel.setStatus(GameStatus.PENDING.toString());
+		gameModel.setVersion(1);
 		gameRepository.save(gameModel);
-		return new Game(gameModel.getId(), gameModel.getState(), GameStatus.PENDING, gameModel.getRedId(), null, null);
+		return new Game(gameModel.getId(), gameModel.getState(), GameStatus.PENDING, gameModel.getRedId(), null, null, gameModel.getVersion());
 	}
 
 	public Game joinGame(String userId, String gameId) throws Exception {
@@ -98,19 +100,20 @@ public class GameService {
 		
 		if (!gameModel.isPresent()) {
 			logger.debug("Could not join game " + gameId + " because it was not found");
-			throw new CannotJoinGameException();
+			return null;
 		}
 		
 		if (StringUtils.isNotBlank(gameModel.get().getBlackId())) {
 			logger.debug("Could not join game " + gameId + " because it was full");
-			throw new CannotJoinGameException();
+			return null;
 		}
 		
 		gameModel.get().setBlackId(userId);
+		gameModel.get().setStatus(GameStatus.RUNNING.toString());
 		gameRepository.save(gameModel.get());
 		logger.debug(String.format("Joined game %s by user %s", gameId, userId));
 		return new Game(gameModel.get().getId(), gameModel.get().getState(), getGameStatus(gameModel.get()), gameModel.get().getRedId(), 
-				gameModel.get().getBlackId(), gameModel.get().getWinnerId());
+				gameModel.get().getBlackId(), gameModel.get().getWinnerId(), gameModel.get().getVersion());
 	}
 	
 	private ActiveGame insertIntoActiveGames(String userId, String gameId) {
@@ -151,8 +154,26 @@ public class GameService {
 		}
 		
 		List<Game> games = gameModels.stream()
-									 .map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId()))
+									 .map(gameModel -> new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId(), gameModel.getVersion()))
 									 .collect(Collectors.toList());
 		return new OpenGames(games);
+	}
+
+	public void cancelGame(String gameId) {
+		logger.debug("Canceling game " + gameId);
+		GameModel gameModel = gameRepository.getById(gameId);
+		
+		if (gameModel == null) {
+			logger.debug("Failed to cancel game. Game " + gameId + " was null");
+			return;
+		}
+		
+		gameModel.setStatus(GameStatus.CANCELED.toString());
+		gameRepository.save(gameModel);
+	}
+
+	public void move(Game game, GameMoveInput payload) {
+		// TODO Auto-generated method stub
+		
 	}
 }

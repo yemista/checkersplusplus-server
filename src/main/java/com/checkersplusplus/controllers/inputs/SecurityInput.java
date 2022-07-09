@@ -10,6 +10,4 @@ public class SecurityInput {
 	public void setToken(String token) {
 		this.token = token;
 	}
-	
-	
 }

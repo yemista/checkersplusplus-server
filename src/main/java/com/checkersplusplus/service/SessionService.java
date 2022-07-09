@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.dao.SessionRepository;
 import com.checkersplusplus.dao.models.SessionModel;
+import com.checkersplusplus.exceptions.CheckersPlusPlusException;
+import com.checkersplusplus.exceptions.ErrorCodes;
+import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Session;
 
 @Service
@@ -58,5 +62,18 @@ public class SessionService {
 		
 		SessionModel sessionModel = sessionModels.get(0);
 		return new Session(sessionModel.getUserId(), sessionModel.getToken(), sessionModel.getHeartbeat());
+	}
+
+	public void validateSession(String token) throws Exception {
+		if (StringUtils.isBlank(token)) {
+			throw new CheckersPlusPlusException(new CheckersPlusPlusError(ErrorCodes.INVALID_TOKEN));
+		}
+		
+		Session session = getSession(token);
+		
+		if (session == null) {
+			logger.debug("No active session for session id: " + token);
+			throw new CheckersPlusPlusException(new CheckersPlusPlusError(ErrorCodes.SESSION_EXPIRED));
+		}
 	}
 }
