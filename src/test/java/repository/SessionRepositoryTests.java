@@ -1,4 +1,4 @@
-package dao;
+package repository;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -30,7 +30,7 @@ import util.UserNameTestUtil;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { TestJpaConfig.class }, loader = AnnotationConfigContextLoader.class)
-public class SessionDaoTests {
+public class SessionRepositoryTests {
 
 	@Autowired
 	private AccountService accountService;
@@ -107,32 +107,19 @@ public class SessionDaoTests {
 	}
 	
 	@Test
-	public void assertGetCurrentTimestamp() {
-		Date date = timeRepository.getCurrentTimestamp();
-		DateTime now = new DateTime();
-		DateTime nowFromDb = new DateTime(date);
-		assertNotNull(date);
-		assertEquals(now.getYear(), nowFromDb.getYear());
-		assertEquals(now.getMonthOfYear(), nowFromDb.getMonthOfYear());
-		assertEquals(now.getDayOfMonth(), nowFromDb.getDayOfMonth());
-		assertEquals(now.getHourOfDay(), nowFromDb.getHourOfDay());
-		assertEquals(now.getMinuteOfHour(), nowFromDb.getMinuteOfHour());	
-	}
-	
-	@Test
 	public void assertMarkSessionsInactive() {
 		String userName = UserNameTestUtil.getTestUserName();
 		String email = String.format("%s@test.com", userName);
 		accountService.createAccount(email, "test", userName);
 		User user = accountService.getAccount(email);
 		Login login = accountService.login(email);
-		List<SessionModel> sessionModel = sessionRepository.getLatestActiveSessionByUserId(login.getSessionId());
+		List<SessionModel> sessionModel = sessionRepository.getLatestActiveSessionByUserId(login.getUserId());
 		assertEquals(sessionModel.size(), 1);
 		List<String> sessionIds = new ArrayList<>();
 		sessionIds.add(login.getSessionId());
 		sessionRepository.markSessionsInactive(sessionIds);
-		List<SessionModel> sessionModelAfterUpdate = sessionRepository.getLatestActiveSessionByUserId(login.getSessionId());
-		assertEquals(sessionModelAfterUpdate.size(), 1);
+		List<SessionModel> sessionModelAfterUpdate = sessionRepository.getLatestActiveSessionByUserId(login.getUserId());
+		assertEquals(sessionModelAfterUpdate.size(), 0);
 	}
 	
 	@Test

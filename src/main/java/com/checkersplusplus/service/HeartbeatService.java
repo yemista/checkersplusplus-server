@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.dao.SessionRepository;
-import com.checkersplusplus.dao.models.DateItem;
+import com.checkersplusplus.dao.TimeRepository;
 import com.checkersplusplus.dao.models.SessionModel;
 import com.checkersplusplus.service.models.Session;
 
@@ -26,6 +26,9 @@ public class HeartbeatService {
 
 	@Autowired
 	private SessionRepository sessionRepository;
+	
+	@Autowired
+	private TimeRepository timeRepository;
 	
 	public void updateHeartbeat(String sessionId) {
 		logger.debug("Updating heartbeat for sessionId: " + sessionId);
@@ -42,8 +45,7 @@ public class HeartbeatService {
 	}
 
 	private Date calculateExpirationDate() {
-		DateItem now = sessionRepository.getCurrentTimestamp();
-		Date nowDate = Date.from(now.getDate());
+		Date nowDate = timeRepository.getCurrentTimestamp();
 		DateTime currentDateTime = new DateTime(nowDate);
 		currentDateTime.plusSeconds(SECONDS_PER_HEARTBEAT * NUM_HEARTBEATS_FOR_EXPIRATION);
 		return currentDateTime.toDate();

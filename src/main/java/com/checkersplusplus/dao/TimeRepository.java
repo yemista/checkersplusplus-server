@@ -2,17 +2,23 @@ package com.checkersplusplus.dao;
 
 import java.util.Date;
 
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
 import org.springframework.stereotype.Repository;
+
+import com.checkersplusplus.dao.models.DateItem;
 
 @Repository
 public class TimeRepository {
-
-	@Autowired
-	private SessionFactory sessionFactory;
+	
+	@PersistenceContext
+	private EntityManager em;
 	
 	public Date getCurrentTimestamp() {
-		return (Date) sessionFactory.getCurrentSession().createQuery("SELECT current_timestamp()"); 
+	    Query query = em.createNativeQuery("SELECT CURRENT_TIMESTAMP AS DATE_VALUE", DateItem.class);
+	    DateItem dateItem = (DateItem) query.getSingleResult();
+	    return dateItem.getDate();
 	}
 }

@@ -1,22 +1,25 @@
 package com.checkersplusplus.dao.models;
 
-import java.time.Instant;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 @Entity
 public class DateItem {
-    private Instant date;
+    private Date date;
 
     @Id
     @Column(name = "DATE_VALUE")
-    public Instant getDate() {
+    @Temporal(TemporalType.TIMESTAMP)
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(Instant date) {
+    public void setDate(Date date) {
         this.date = date;
     }
 }
