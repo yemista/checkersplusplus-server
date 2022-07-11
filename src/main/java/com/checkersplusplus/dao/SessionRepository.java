@@ -22,7 +22,7 @@ public interface SessionRepository extends CrudRepository<SessionModel, Long> {
 	
 	@Modifying
 	@Query("UPDATE SessionModel s SET s.active = false WHERE s.userId = :userId AND s.active = true")
-	int invalidateExistingSessions(@Param("userId") String userId);
+	int invalidateExistingSessionsByUserId(@Param("userId") String userId);
 	
 	@Query("SELECT s FROM SessionModel s WHERE s.active = true AND s.heartbeat < :targetDate")
 	List<SessionModel> getAllSessionsWithHeartbeartOlderThan(@Param("targetDate") Date targetDate);
@@ -33,5 +33,9 @@ public interface SessionRepository extends CrudRepository<SessionModel, Long> {
 
 	@Modifying
 	@Query("UPDATE SessionModel s SET s.active = false WHERE s.token IN (:sessions)")
-	int markSessionsInactive(List<String> sessions);
+	int markSessionsInactive(@Param("sessions") List<String> sessions);
+
+	@Modifying
+	@Query("UPDATE SessionModel s SET s.active = false WHERE s.token = :sessionId")
+	void invalidateSession(@Param("sessionId") String sessionId);
 }

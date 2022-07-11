@@ -43,7 +43,8 @@ public class GameServiceTests {
 	
 	@Test
 	public void assertForfeitGame() {
-		
+		// TODO fill out test
+		fail();
 	}
 	
 	@Test

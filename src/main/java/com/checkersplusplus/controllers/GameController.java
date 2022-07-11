@@ -48,7 +48,7 @@ public class GameController extends HttpServlet {
 		
 		try {
 			logger.debug(String.format("Attempting to move piece in game %s for sessionId %s", gameId, token));
-			sessionService.validateSession(token);
+			Session session = sessionService.validateSession(token);
 			heartbeatService.updateHeartbeat(token);
 			Game game = gameService.getActiveGame(token);
 			
@@ -60,7 +60,7 @@ public class GameController extends HttpServlet {
 	                    .body(error.convertToJson());
 			}
 			
-			gameService.move(game, payload);
+			gameService.move(session, game, payload);
 			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (Exception e) {
 			logger.debug("Exception occurred during move: " + e.getMessage());

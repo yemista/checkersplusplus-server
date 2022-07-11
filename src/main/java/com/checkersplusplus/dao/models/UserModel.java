@@ -29,6 +29,9 @@ public class UserModel {
 	@Column(name = "created", updatable = false, nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
     private Date createDate;
+	
+	@Column(name = "verified", updatable = true, nullable = false)
+	private int verified;
 
 	public String getId() {
 		return id;
@@ -68,6 +71,14 @@ public class UserModel {
 
 	public void setCreateDate(Date createDate) {
 		this.createDate = createDate;
+	}
+
+	public int getVerified() {
+		return verified;
+	}
+	
+	public void setVerified(int verified) {
+		this.verified =  verified;
 	}
 }
 

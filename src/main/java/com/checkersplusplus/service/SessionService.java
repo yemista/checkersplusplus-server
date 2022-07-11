@@ -27,9 +27,13 @@ public class SessionService {
 	@Autowired
 	private SessionRepository sessionRepository;
 	
+	public void invalidateSession(String sessionId) {
+		sessionRepository.invalidateSession(sessionId);
+	}
+	
 	public String createUserSession(String userId) {
 		logger.debug(String.format("Creating session for user %s", userId));
-		int numSessions = sessionRepository.invalidateExistingSessions(userId);
+		int numSessions = sessionRepository.invalidateExistingSessionsByUserId(userId);
 		logger.debug(String.format("Invalidated %d sessions for user %s", numSessions, userId));
 		SessionModel session = new SessionModel();
 		session.setActive(Boolean.TRUE);
@@ -64,7 +68,7 @@ public class SessionService {
 		return new Session(sessionModel.getUserId(), sessionModel.getToken(), sessionModel.getHeartbeat());
 	}
 
-	public void validateSession(String token) throws Exception {
+	public Session validateSession(String token) throws Exception {
 		if (StringUtils.isBlank(token)) {
 			throw new CheckersPlusPlusException(new CheckersPlusPlusError(ErrorCodes.INVALID_TOKEN));
 		}
@@ -75,5 +79,7 @@ public class SessionService {
 			logger.debug("No active session for session id: " + token);
 			throw new CheckersPlusPlusException(new CheckersPlusPlusError(ErrorCodes.SESSION_EXPIRED));
 		}
+		
+		return session;
 	}
 }

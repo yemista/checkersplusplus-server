@@ -29,4 +29,8 @@ public interface GameRepository extends JpaRepository<GameModel, String> {
 	@Query(value = "SELECT g FROM GameModel g INNER JOIN ActiveGameModel a ON g.id = a.gameId WHERE g.blackId IS NULL",
 		   countQuery = "SELECT count(*) FROM GameModel g INNER JOIN ActiveGameModel a ON g.id = a.gameId WHERE g.blackId IS NULL")
 	public List<GameModel> getOpenGames(Pageable pageable);
+	
+	@Modifying
+	@Query("UPDATE GameModel g SET g.state = :state, g.version = :version WHERE g.id = :gameId")
+	public void updateGameState(@Param("gameId") String gameId, @Param("state") String state, @Param("version") int version);
 }

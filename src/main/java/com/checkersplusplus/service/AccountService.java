@@ -76,7 +76,7 @@ public class AccountService {
 			return null;
 		}
 		
-		return new User(userModel.getId(), userModel.getEmail(), userModel.getPassword(), userModel.getAlias());
+		return new User(userModel.getId(), userModel.getEmail(), userModel.getPassword(), userModel.getAlias(), userModel.getVerified());
 	}
 	
 	public boolean isEmailValid(String email) {
@@ -106,5 +106,10 @@ public class AccountService {
 		}
 		
 		return PasswordCryptoUtil.encryptPasswordForDatabase(password).equals(user.getPassword());
+	}
+
+	public boolean isAccountVerified(String email) {
+		User user = getAccount(email);
+		return user.getVerified() != 0;
 	}
 }

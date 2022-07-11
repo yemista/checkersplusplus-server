@@ -177,6 +177,7 @@ CREATE TABLE public.users (
     password character varying NOT NULL,
     alias character varying NOT NULL,
     created timestamp without time zone DEFAULT now() NOT NULL
+    verified integer DEFAULT 0 NOT NULL
 );
 
 

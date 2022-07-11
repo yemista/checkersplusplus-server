@@ -30,11 +30,6 @@ public class ExpiredSessionsJob {
 	 * Algorithm:
 	 * 	1. Get all active sessions where now - heartbeat > 3 * heartbeat.
 	 * 	2. Mark such sessions as inactive
-	 * 
-	 *  Part 2:
-	 *   1. Get all games where now - last_modified > 7 * heartbeat
-	 *   2. If both players do not have an active session, mark game as abandoned
-	 *      If one player does not have an active session, mark game as forfeit by inactive player
 	 */
 	public void execute() {
 		logger.debug("Expired session job running");

@@ -17,4 +17,6 @@ public class ErrorCodes {
 	public static final int INVALID_TOKEN = 14;
 	public static final int INVALID_GAME = 15;
 	public static final int INVALID_MOVE = 16;
+	public static final int UNKNOWN_STATE = 17;
+	public static final int UNVERIFIED_ACCOUNT = 18;
 }

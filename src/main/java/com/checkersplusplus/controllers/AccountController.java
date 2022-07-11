@@ -24,7 +24,9 @@ import com.checkersplusplus.service.GameService;
 import com.checkersplusplus.service.HeartbeatService;
 import com.checkersplusplus.service.SessionService;
 import com.checkersplusplus.service.models.CheckersPlusPlusError;
+import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.Login;
+import com.checkersplusplus.service.models.Session;
 import com.checkersplusplus.util.ResponseUtil;
 
 
@@ -62,6 +64,28 @@ public class AccountController {
 		}
 	}
 	
+	@PostMapping(value = "logout", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity logout(@RequestBody SecurityInput payload) {
+		try {
+			logger.debug("Attempting logout for session " + payload.getToken());
+			sessionService.validateSession(payload.getToken());
+			Game activeGame = gameService.getActiveGame(payload.getToken());
+			
+			if (activeGame != null) {
+				logger.debug("Session " + payload.getToken() + " is forfeiting game " + activeGame.getId());
+				Session userSession = sessionService.getSession(payload.getToken());
+				gameService.forfeitGame(activeGame.getId(), userSession.getUserId());
+			}
+			
+			sessionService.invalidateSession(payload.getToken());
+			return ResponseEntity.status(HttpStatus.OK).build();
+		} catch (Exception e) {
+			logger.debug("Exception occurred during heartbeat: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseUtil.unexpectedError(e);
+		}
+	}
+	
 	@PostMapping(value = "login", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity login(@RequestBody LoginInput payload) {
 		try {
@@ -76,6 +100,13 @@ public class AccountController {
 			
 			if (!accountService.isLoginValid(payload.getEmail(), payload.getPassword())) {
 				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.INVALID_LOGIN);
+				return ResponseEntity
+	                    .status(HttpStatus.BAD_REQUEST)
+	                    .body(error.convertToJson());
+			}
+			
+			if (!accountService.isAccountVerified(payload.getEmail())) {
+				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.UNVERIFIED_ACCOUNT);
 				return ResponseEntity
 	                    .status(HttpStatus.BAD_REQUEST)
 	                    .body(error.convertToJson());

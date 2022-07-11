@@ -82,7 +82,7 @@ public class SessionRepositoryTests {
 		createSessionForUser(user.getId());
 		List<SessionModel> sessionByUserId = sessionRepository.getLatestActiveSessionByUserId(user.getId());
 		assertEquals(sessionByUserId.size(), 3);
-		sessionRepository.invalidateExistingSessions(user.getId());
+		sessionRepository.invalidateExistingSessionsByUserId(user.getId());
 		List<SessionModel> sessionByUserIdAfterInvalidation = sessionRepository
 				.getLatestActiveSessionByUserId(user.getId());
 		assertEquals(sessionByUserIdAfterInvalidation.size(), 0);

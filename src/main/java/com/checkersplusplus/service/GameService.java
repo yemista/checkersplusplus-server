@@ -23,8 +23,13 @@ import com.checkersplusplus.dao.ActiveGameRepository;
 import com.checkersplusplus.dao.GameRepository;
 import com.checkersplusplus.dao.models.ActiveGameModel;
 import com.checkersplusplus.dao.models.GameModel;
+import com.checkersplusplus.engine.Move;
+import com.checkersplusplus.engine.enums.Color;
+import com.checkersplusplus.exceptions.CheckersPlusPlusException;
+import com.checkersplusplus.exceptions.ErrorCodes;
 import com.checkersplusplus.service.enums.GameStatus;
 import com.checkersplusplus.service.models.ActiveGame;
+import com.checkersplusplus.service.models.CheckersPlusPlusError;
 import com.checkersplusplus.service.models.Game;
 import com.checkersplusplus.service.models.OpenGames;
 import com.checkersplusplus.service.models.Session;
@@ -172,8 +177,35 @@ public class GameService {
 		gameRepository.save(gameModel);
 	}
 
-	public void move(Game game, GameMoveInput payload) {
-		// TODO Auto-generated method stub
+	public void move(Session session, Game game, GameMoveInput payload) throws Exception {
+		com.checkersplusplus.engine.Game gameEngine = new com.checkersplusplus.engine.Game(game.getState());
+		Move gameMove = convertGameMoveToMove(payload);
+		Color moverColor = determineMoverColor(session, game);
 		
+		if (!gameEngine.isMoveValid(gameMove, moverColor)) {
+			throw new CheckersPlusPlusException(new CheckersPlusPlusError(ErrorCodes.INVALID_MOVE));
+		}
+		
+		// move numver goes over 9? we currently only have one digit for it...
+		gameEngine.move(gameMove);
+		String gameState = gameEngine.getGameState();
+		gameRepository.updateGameState(game.getId(), gameState, game.getVersion() + 1);
+	}
+
+	private Color determineMoverColor(Session session, Game game) throws Exception {
+		if (session.getUserId().equals(game.getRedId())) {
+			return Color.RED;
+		}
+		
+		if (session.getUserId().equals(game.getBlackId())) {
+			return Color.BLACK;
+		}
+		
+		logger.debug("Session user " + session.getUserId() + " did not match game " + game.getId());
+		throw new CheckersPlusPlusException(new CheckersPlusPlusError(ErrorCodes.INVALID_MOVE)); 
+	}
+
+	private Move convertGameMoveToMove(GameMoveInput payload) {
+		return new Move(payload.getStartX(), payload.getStartY(), payload.getEndX(), payload.getEndY());
 	}
 }
