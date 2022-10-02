@@ -10,8 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.crypto.PasswordCryptoUtil;
+import com.checkersplusplus.dao.EmailVerificationRepository;
 import com.checkersplusplus.dao.UserRepository;
+import com.checkersplusplus.dao.models.EmailVerificationModel;
 import com.checkersplusplus.dao.models.UserModel;
+import com.checkersplusplus.service.models.EmailVerification;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
@@ -23,6 +26,9 @@ public class AccountService {
 	
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private EmailVerificationRepository emailVerificationRepository;
 	
 	@Autowired
 	private SessionService sessionService;
@@ -111,5 +117,23 @@ public class AccountService {
 	public boolean isAccountVerified(String email) {
 		User user = getAccount(email);
 		return user.getVerified() != 0;
+	}
+
+	public String getActiveVerificationCode(String email) {
+		return emailVerificationRepository.getActiveVerificationCode(email);
+	}
+
+	public void verifyAccount(String email) {
+		userRepository.verifyAccount(email);
+		emailVerificationRepository.inactivateVerificationCode(email);
+	}
+	
+	public EmailVerification createEmailVerificationCode(String email) {
+		EmailVerificationModel verificationModel = new EmailVerificationModel();
+		verificationModel.setActive(1);
+		verificationModel.setCode(UUID.randomUUID().toString());
+		verificationModel.setEmail(email);
+		emailVerificationRepository.save(verificationModel);
+		return new EmailVerification(email, verificationModel.getCode());
 	}
 }

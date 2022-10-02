@@ -28,7 +28,13 @@ public class SessionService {
 	private SessionRepository sessionRepository;
 	
 	public void invalidateSession(String sessionId) {
-		sessionRepository.invalidateSession(sessionId);
+		Session session = getSession(sessionId);
+		
+		if (session == null) {
+			return;
+		}
+		
+		sessionRepository.invalidateSession(session.getUserId());
 	}
 	
 	public String createUserSession(String userId) {

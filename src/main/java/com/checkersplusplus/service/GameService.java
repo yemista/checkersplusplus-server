@@ -51,6 +51,16 @@ public class GameService {
 	@Autowired
 	private GameRepository gameRepository;
 	
+	public Game getGameById(String gameId) {
+		GameModel gameModel = gameRepository.getById(gameId);
+		
+		if (gameModel == null) {
+			return null;
+		}
+		
+		return new Game(gameModel.getId(), gameModel.getState(), getGameStatus(gameModel), gameModel.getRedId(), gameModel.getBlackId(), gameModel.getWinnerId(), gameModel.getVersion());
+	}
+	
 	public Game getActiveGame(String token) {
 		GameModel gameModel = gameRepository.getActiveGameByToken(token);
 		
@@ -71,7 +81,7 @@ public class GameService {
 	
 	public void forfeitGame(String gameId, String userId) {
 		logger.debug("Forfeiting game " + gameId + " by userId " + userId);
-		gameRepository.forfeitGame(userId, gameId);
+		gameRepository.forfeitGame(gameId, userId);
 		logger.debug("Forfeited game " + gameId);
 	}
 	
@@ -130,23 +140,7 @@ public class GameService {
 	}
 	
 	private GameStatus getGameStatus(GameModel gameModel) {
-		if (gameModel.getBlackId() == null) {
-			return GameStatus.PENDING;
-		}
-		
-		if (gameModel.getWinnerId() != null) {
-			return GameStatus.COMPLETE;
-		}
-		
-		if (gameModel.getForfeitId() != null) {
-			return GameStatus.ABORTED;
-		}
-		
-		if (gameModel.getBlackId() != null && gameModel.getRedId() != null) {
-			return GameStatus.RUNNING;
-		}
-		
-		return GameStatus.CANCELED;
+		return GameStatus.getEnum(gameModel.getStatus());
 	}
 
 	public OpenGames getOpenGames(Integer page) {

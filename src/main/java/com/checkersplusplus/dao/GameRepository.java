@@ -23,7 +23,7 @@ public interface GameRepository extends JpaRepository<GameModel, String> {
 	public GameModel getById(String id);
 	
 	@Modifying
-	@Query("UPDATE GameModel g SET g.forfeitId = :userId WHERE g.id = :gameId")
+	@Query("UPDATE GameModel g SET g.forfeitId = :userId, g.status = 'FORFEIT' WHERE g.id = :gameId")
 	public void forfeitGame(@Param("gameId") String gameId, @Param("userId") String userId);
 
 	@Query(value = "SELECT g FROM GameModel g INNER JOIN ActiveGameModel a ON g.id = a.gameId WHERE g.blackId IS NULL",

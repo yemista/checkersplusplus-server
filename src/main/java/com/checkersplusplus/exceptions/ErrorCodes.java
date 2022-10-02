@@ -19,4 +19,5 @@ public class ErrorCodes {
 	public static final int INVALID_MOVE = 16;
 	public static final int UNKNOWN_STATE = 17;
 	public static final int UNVERIFIED_ACCOUNT = 18;
+	public static final int INVALID_VERIFICAITON_CODE = 19;
 }

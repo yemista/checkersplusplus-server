@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.checkersplusplus.controllers.inputs.CreateUserInput;
@@ -59,6 +61,28 @@ public class AccountController {
 			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (Exception e) {
 			logger.debug("Exception occurred during heartbeat: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseUtil.unexpectedError(e);
+		}
+	}
+	
+	@GetMapping(value = "verify", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity verify(@RequestParam String email, @RequestParam String code) throws Exception {
+		try {
+			logger.debug(String.format("Verify for email %s", email));
+			String assignedCode = accountService.getActiveVerificationCode(email);
+			
+			if (!code.equals(assignedCode)) {
+				CheckersPlusPlusError error = new CheckersPlusPlusError(ErrorCodes.INVALID_VERIFICAITON_CODE);
+				return ResponseEntity
+	                    .status(HttpStatus.BAD_REQUEST)
+	                    .body(error.convertToJson());
+			}
+			
+			accountService.verifyAccount(email);
+			return ResponseEntity.status(HttpStatus.OK).build();
+		} catch (Exception e) {
+			logger.debug("Exception occurred during verify: " + e.getMessage());
 			e.printStackTrace();
 			return ResponseUtil.unexpectedError(e);
 		}

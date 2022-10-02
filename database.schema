@@ -20,8 +20,12 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
+CREATE USER checkers WITH PASSWORD 'Ch3ckers123!';
+
+CREATE DATABASE checkersplusplus WITH OWNER = checkers;
+
 --
--- Name: active_games; Type: TABLE; Schema: public; Owner: elias
+-- Name: active_games; Type: TABLE; Schema: public; Owner: checkers
 --
 
 CREATE TABLE public.active_games (
@@ -31,10 +35,10 @@ CREATE TABLE public.active_games (
 );
 
 
-ALTER TABLE public.active_games OWNER TO elias;
+ALTER TABLE public.active_games OWNER TO checkers;
 
 --
--- Name: active_games_active_game_id_seq; Type: SEQUENCE; Schema: public; Owner: elias
+-- Name: active_games_active_game_id_seq; Type: SEQUENCE; Schema: public; Owner: checkers
 --
 
 CREATE SEQUENCE public.active_games_active_game_id_seq
@@ -46,17 +50,17 @@ CREATE SEQUENCE public.active_games_active_game_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.active_games_active_game_id_seq OWNER TO elias;
+ALTER TABLE public.active_games_active_game_id_seq OWNER TO checkers;
 
 --
--- Name: active_games_active_game_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: elias
+-- Name: active_games_active_game_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: checkers
 --
 
 ALTER SEQUENCE public.active_games_active_game_id_seq OWNED BY public.active_games.active_game_id;
 
 
 --
--- Name: game; Type: TABLE; Schema: public; Owner: elias
+-- Name: game; Type: TABLE; Schema: public; Owner: checkers
 --
 
 CREATE TABLE public.game (
@@ -72,10 +76,10 @@ CREATE TABLE public.game (
 );
 
 
-ALTER TABLE public.game OWNER TO elias;
+ALTER TABLE public.game OWNER TO checkers;
 
 --
--- Name: game_moves; Type: TABLE; Schema: public; Owner: elias
+-- Name: game_moves; Type: TABLE; Schema: public; Owner: checkers
 --
 
 CREATE TABLE public.game_moves (
@@ -90,10 +94,10 @@ CREATE TABLE public.game_moves (
 );
 
 
-ALTER TABLE public.game_moves OWNER TO elias;
+ALTER TABLE public.game_moves OWNER TO checkers;
 
 --
--- Name: game_moves_game_move_id_seq; Type: SEQUENCE; Schema: public; Owner: elias
+-- Name: game_moves_game_move_id_seq; Type: SEQUENCE; Schema: public; Owner: checkers
 --
 
 CREATE SEQUENCE public.game_moves_game_move_id_seq
@@ -105,17 +109,17 @@ CREATE SEQUENCE public.game_moves_game_move_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.game_moves_game_move_id_seq OWNER TO elias;
+ALTER TABLE public.game_moves_game_move_id_seq OWNER TO checkers;
 
 --
--- Name: game_moves_game_move_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: elias
+-- Name: game_moves_game_move_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: checkers
 --
 
 ALTER SEQUENCE public.game_moves_game_move_id_seq OWNED BY public.game_moves.game_move_id;
 
 
 --
--- Name: record; Type: TABLE; Schema: public; Owner: elias
+-- Name: record; Type: TABLE; Schema: public; Owner: checkers
 --
 
 CREATE TABLE public.record (
@@ -127,10 +131,10 @@ CREATE TABLE public.record (
 );
 
 
-ALTER TABLE public.record OWNER TO elias;
+ALTER TABLE public.record OWNER TO checkers;
 
 --
--- Name: sessions; Type: TABLE; Schema: public; Owner: elias
+-- Name: sessions; Type: TABLE; Schema: public; Owner: checkers
 --
 
 CREATE TABLE public.sessions (
@@ -143,10 +147,10 @@ CREATE TABLE public.sessions (
 );
 
 
-ALTER TABLE public.sessions OWNER TO elias;
+ALTER TABLE public.sessions OWNER TO checkers;
 
 --
--- Name: sessions_session_id_seq; Type: SEQUENCE; Schema: public; Owner: elias
+-- Name: sessions_session_id_seq; Type: SEQUENCE; Schema: public; Owner: checkers
 --
 
 CREATE SEQUENCE public.sessions_session_id_seq
@@ -158,17 +162,17 @@ CREATE SEQUENCE public.sessions_session_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.sessions_session_id_seq OWNER TO elias;
+ALTER TABLE public.sessions_session_id_seq OWNER TO checkers;
 
 --
--- Name: sessions_session_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: elias
+-- Name: sessions_session_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: checkers
 --
 
 ALTER SEQUENCE public.sessions_session_id_seq OWNED BY public.sessions.session_id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: elias
+-- Name: users; Type: TABLE; Schema: public; Owner: checkers
 --
 
 CREATE TABLE public.users (
@@ -176,105 +180,57 @@ CREATE TABLE public.users (
     email character varying NOT NULL,
     password character varying NOT NULL,
     alias character varying NOT NULL,
-    created timestamp without time zone DEFAULT now() NOT NULL
+    created timestamp without time zone DEFAULT now() NOT NULL,
     verified integer DEFAULT 0 NOT NULL
 );
 
 
-ALTER TABLE public.users OWNER TO elias;
+ALTER TABLE public.users OWNER TO checkers;
 
 --
--- Name: active_games active_game_id; Type: DEFAULT; Schema: public; Owner: elias
+-- Name: active_games active_game_id; Type: DEFAULT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.active_games ALTER COLUMN active_game_id SET DEFAULT nextval('public.active_games_active_game_id_seq'::regclass);
 
 
 --
--- Name: game_moves game_move_id; Type: DEFAULT; Schema: public; Owner: elias
+-- Name: game_moves game_move_id; Type: DEFAULT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game_moves ALTER COLUMN game_move_id SET DEFAULT nextval('public.game_moves_game_move_id_seq'::regclass);
 
 
 --
--- Name: sessions session_id; Type: DEFAULT; Schema: public; Owner: elias
+-- Name: sessions session_id; Type: DEFAULT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.sessions ALTER COLUMN session_id SET DEFAULT nextval('public.sessions_session_id_seq'::regclass);
 
 
 --
--- Data for Name: active_games; Type: TABLE DATA; Schema: public; Owner: elias
---
-
-COPY public.active_games (active_game_id, user_id, game_id) FROM stdin;
-\.
-
-
---
--- Data for Name: game; Type: TABLE DATA; Schema: public; Owner: elias
---
-
-COPY public.game (game_id, red_id, black_id, created, state, winner_id, forfeit) FROM stdin;
-\.
-
-
---
--- Data for Name: game_moves; Type: TABLE DATA; Schema: public; Owner: elias
---
-
-COPY public.game_moves (game_move_id, game_id, user_id, from_row, from_col, to_row, to_col, created) FROM stdin;
-\.
-
-
---
--- Data for Name: record; Type: TABLE DATA; Schema: public; Owner: elias
---
-
-COPY public.record (record_id, user_id, win, loss, draw) FROM stdin;
-\.
-
-
---
--- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: elias
---
-
-COPY public.sessions (session_id, user_id, token, heartbeat, active, create_date) FROM stdin;
-\.
-
-
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: elias
---
-
-COPY public.users (user_id, email, password, alias, created) FROM stdin;
-\.
-
-
---
--- Name: active_games_active_game_id_seq; Type: SEQUENCE SET; Schema: public; Owner: elias
+-- Name: active_games_active_game_id_seq; Type: SEQUENCE SET; Schema: public; Owner: checkers
 --
 
 SELECT pg_catalog.setval('public.active_games_active_game_id_seq', 1, false);
 
 
 --
--- Name: game_moves_game_move_id_seq; Type: SEQUENCE SET; Schema: public; Owner: elias
+-- Name: game_moves_game_move_id_seq; Type: SEQUENCE SET; Schema: public; Owner: checkers
 --
 
 SELECT pg_catalog.setval('public.game_moves_game_move_id_seq', 1, false);
 
 
 --
--- Name: sessions_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: elias
+-- Name: sessions_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: checkers
 --
 
 SELECT pg_catalog.setval('public.sessions_session_id_seq', 1, false);
 
 
 --
--- Name: active_games active_games_pkey; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: active_games active_games_pkey; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.active_games
@@ -282,7 +238,7 @@ ALTER TABLE ONLY public.active_games
 
 
 --
--- Name: active_games active_games_user_id_key; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: active_games active_games_user_id_key; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.active_games
@@ -290,7 +246,7 @@ ALTER TABLE ONLY public.active_games
 
 
 --
--- Name: game_moves game_moves_pkey; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: game_moves game_moves_pkey; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game_moves
@@ -298,7 +254,7 @@ ALTER TABLE ONLY public.game_moves
 
 
 --
--- Name: game game_pkey; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: game game_pkey; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game
@@ -306,7 +262,7 @@ ALTER TABLE ONLY public.game
 
 
 --
--- Name: record record_pkey; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: record record_pkey; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.record
@@ -314,7 +270,7 @@ ALTER TABLE ONLY public.record
 
 
 --
--- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.sessions
@@ -322,7 +278,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- Name: users users_alias_key; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: users users_alias_key; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.users
@@ -330,7 +286,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.users
@@ -338,7 +294,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: elias
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.users
@@ -346,7 +302,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: active_games fk_active_games_to_users; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: active_games fk_active_games_to_users; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.active_games
@@ -354,7 +310,7 @@ ALTER TABLE ONLY public.active_games
 
 
 --
--- Name: game fk_black_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: game fk_black_id; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game
@@ -362,7 +318,7 @@ ALTER TABLE ONLY public.game
 
 
 --
--- Name: game fk_forfeit_to_users; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: game fk_forfeit_to_users; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game
@@ -370,7 +326,7 @@ ALTER TABLE ONLY public.game
 
 
 --
--- Name: game_moves fk_move_user_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: game_moves fk_move_user_id; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game_moves
@@ -378,7 +334,7 @@ ALTER TABLE ONLY public.game_moves
 
 
 --
--- Name: record fk_record_user_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: record fk_record_user_id; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.record
@@ -386,7 +342,7 @@ ALTER TABLE ONLY public.record
 
 
 --
--- Name: game fk_red_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: game fk_red_id; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game
@@ -394,7 +350,7 @@ ALTER TABLE ONLY public.game
 
 
 --
--- Name: sessions fk_session_user_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: sessions fk_session_user_id; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.sessions
@@ -402,7 +358,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- Name: game fk_winner_id; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: game fk_winner_id; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game
@@ -410,7 +366,7 @@ ALTER TABLE ONLY public.game
 
 
 --
--- Name: game_moves game_moves_game_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: elias
+-- Name: game_moves game_moves_game_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: checkers
 --
 
 ALTER TABLE ONLY public.game_moves
@@ -418,28 +374,28 @@ ALTER TABLE ONLY public.game_moves
 
 
 --
--- Name: TABLE game; Type: ACL; Schema: public; Owner: elias
+-- Name: TABLE game; Type: ACL; Schema: public; Owner: checkers
 --
 
 GRANT ALL ON TABLE public.game TO checkers;
 
 
 --
--- Name: TABLE game_moves; Type: ACL; Schema: public; Owner: elias
+-- Name: TABLE game_moves; Type: ACL; Schema: public; Owner: checkers
 --
 
 GRANT ALL ON TABLE public.game_moves TO checkers;
 
 
 --
--- Name: TABLE record; Type: ACL; Schema: public; Owner: elias
+-- Name: TABLE record; Type: ACL; Schema: public; Owner: checkers
 --
 
 GRANT ALL ON TABLE public.record TO checkers;
 
 
 --
--- Name: TABLE users; Type: ACL; Schema: public; Owner: elias
+-- Name: TABLE users; Type: ACL; Schema: public; Owner: checkers
 --
 
 GRANT ALL ON TABLE public.users TO checkers;

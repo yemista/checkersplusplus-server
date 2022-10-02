@@ -36,6 +36,6 @@ public interface SessionRepository extends CrudRepository<SessionModel, Long> {
 	int markSessionsInactive(@Param("sessions") List<String> sessions);
 
 	@Modifying
-	@Query("UPDATE SessionModel s SET s.active = false WHERE s.token = :sessionId")
-	void invalidateSession(@Param("sessionId") String sessionId);
+	@Query("UPDATE SessionModel s SET s.active = false WHERE s.userId = :userId")
+	void invalidateSession(@Param("userId") String userId);
 }

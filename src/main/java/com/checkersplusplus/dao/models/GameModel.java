@@ -11,7 +11,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 @Entity
-@Table(name = "game")
+@Table(name = "games")
 public class GameModel implements Serializable {
 
 	@Id
@@ -27,10 +27,10 @@ public class GameModel implements Serializable {
 	@Column(name = "winner_id", updatable = true, nullable = true)
 	private String winnerId;
 	
-	@Column(name = "forfeit", updatable = true, nullable = true)
+	@Column(name = "forfeit_id", updatable = true, nullable = true)
 	private String forfeitId;
 	
-	@Column(name = "state", updatable = true, nullable = false)
+	@Column(name = "game_state", updatable = true, nullable = false)
 	private String state;
 	
 	@Column(name = "status", updatable = true, nullable = false)

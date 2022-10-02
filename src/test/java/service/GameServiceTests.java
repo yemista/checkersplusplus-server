@@ -43,8 +43,11 @@ public class GameServiceTests {
 	
 	@Test
 	public void assertForfeitGame() {
-		// TODO fill out test
-		fail();
+		Login login = createUserForTest();
+		Game game = gameService.createGame(login.getSessionId());
+		gameService.forfeitGame(game.getId(), login.getUserId());
+		Game forfeitedGame = gameService.getGameById(game.getId());
+		assertEquals(forfeitedGame.getStatus(), GameStatus.FORFEIT);
 	}
 	
 	@Test

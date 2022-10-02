@@ -14,6 +14,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import com.checkersplusplus.service.AccountService;
+import com.checkersplusplus.service.models.EmailVerification;
 import com.checkersplusplus.service.models.Login;
 import com.checkersplusplus.service.models.User;
 
@@ -75,5 +76,32 @@ public class AccountServiceTests {
 		Login login = accountService.login(email);
 		assertNotNull(accountService.login(email));
 		assertNull(accountService.login(email + "1"));
+	}
+	
+	@Test
+	public void assertGetVerificationCode() {
+		String userName = UserNameTestUtil.getTestUserName();
+		String email = String.format("%s@test.com", userName);
+		accountService.createAccount(email, "test", userName);
+		EmailVerification verification = accountService.createEmailVerificationCode(email);
+		String code = accountService.getActiveVerificationCode(email);
+		assertEquals(code, verification.getCode());
+	}
+	
+	@Test
+	public void assertVerifyEmail() {
+		String userName = UserNameTestUtil.getTestUserName();
+		String email = String.format("%s@test.com", userName);
+		accountService.createAccount(email, "test", userName);
+		EmailVerification verification = accountService.createEmailVerificationCode(email);
+		String code = accountService.getActiveVerificationCode(email);
+		assertEquals(code, verification.getCode());
+		User account = accountService.getAccount(email);
+		assertEquals(account.getVerified(), 0);
+		accountService.verifyAccount(email);
+		String codeAfterVerification = accountService.getActiveVerificationCode(email);
+		assertNull(codeAfterVerification);
+		User verifiedAccount = accountService.getAccount(email);
+		assertEquals(verifiedAccount.getVerified(), 1);
 	}
 }

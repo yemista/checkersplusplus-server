@@ -42,6 +42,6 @@ public class SessionServiceTests {
 		assertNotNull(activeSession);
 		sessionService.invalidateSession(login.getSessionId());
 		Session inactiveSession = sessionService.getLatestActiveSessionByUserId(login.getUserId());
-		assertNull(activeSession);
+		assertNull(inactiveSession);
 	}
 }

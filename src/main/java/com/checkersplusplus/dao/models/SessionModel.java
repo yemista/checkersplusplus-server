@@ -23,7 +23,7 @@ public class SessionModel {
 	@Column(name = "user_id", updatable = false, nullable = false)
 	private String userId;
 	
-	@Column(name = "token", updatable = false, nullable = false)
+	@Column(name = "session_token", updatable = false, nullable = false)
 	private String token;
 	
 	@Column(name = "active", updatable = true, nullable = false)

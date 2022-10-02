@@ -95,15 +95,17 @@ public class SessionRepositoryTests {
 		accountService.createAccount(email, "test", userName);
 		User user = accountService.getAccount(email);
 		createSessionForUser(user.getId());
-		DateTime dateTimePlusThreeSeconds = new DateTime(new Date());
-		dateTimePlusThreeSeconds.minusSeconds(3);
-		List<SessionModel> youngSessions = sessionRepository.getAllSessionsWithHeartbeartOlderThan(dateTimePlusThreeSeconds.toDate());
-		List<SessionModel> youngSessionsForUser = youngSessions.stream().filter(session -> user.getId().equals(session.getUserId())).collect(Collectors.toList());
-		assertEquals(youngSessionsForUser.size(), 0);
-		Thread.sleep(3000);
-		List<SessionModel> oldSessions = sessionRepository.getAllSessionsWithHeartbeartOlderThan(dateTimePlusThreeSeconds.toDate());
-		List<SessionModel> oldSessionsForUser = oldSessions.stream().filter(session -> user.getId().equals(session.getUserId())).collect(Collectors.toList());
-		assertEquals(oldSessionsForUser.size(), 1);
+		Date currDbTime = timeRepository.getCurrentTimestamp();
+		DateTime dateTime1 = new DateTime(currDbTime);
+		DateTime dateTimePlusThreeSeconds = dateTime1.plusSeconds(3);
+		List<SessionModel> pastSessions = sessionRepository.getAllSessionsWithHeartbeartOlderThan(dateTimePlusThreeSeconds.toDate());
+		List<SessionModel> pastSessionsForUser = pastSessions.stream().filter(session -> user.getId().equals(session.getUserId())).collect(Collectors.toList());
+		assertEquals(pastSessionsForUser.size(), 1);
+		DateTime dateTime2 = new DateTime(currDbTime);
+		DateTime dateTimeMinusThreeSeconds = dateTime2.minusSeconds(3);
+		List<SessionModel> futureSessions = sessionRepository.getAllSessionsWithHeartbeartOlderThan(dateTimeMinusThreeSeconds.toDate());
+		List<SessionModel> futureSessionsForUser = futureSessions.stream().filter(session -> user.getId().equals(session.getUserId())).collect(Collectors.toList());
+		assertEquals(futureSessionsForUser.size(), 0);
 	}
 	
 	@Test

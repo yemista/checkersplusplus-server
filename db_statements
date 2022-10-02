@@ -1,0 +1,26 @@
+CREATE TABLE public.active_games
+(active_game_id int NOT NULL,
+user_id varchar(36),
+game_id varchar(36),
+PRIMARY KEY (active_game_id),
+UNIQUE (user_id))
+
+CREATE TABLE public.email_verification
+(email_verification_id int NOT NULL,
+email varchar(128),
+code varchar(36),
+active bool DEFAULT false,
+PRIMARY KEY (email_verification_id))
+
+CREATE TABLE public.games
+(game_id varchar(36) NOT NULL,
+red_id varchar(36),
+black_id varchar(36),
+winner_id varchar(36),
+forfeit_id varchar(36),
+"state" varchar(70),
+status varchar(25),
+created timestamp,
+move_num int,
+PRIMARY KEY (game_id))
+
