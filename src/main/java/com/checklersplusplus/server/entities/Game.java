@@ -8,10 +8,14 @@ import com.checklersplusplus.server.model.GameModel;
 public class Game implements Serializable {
 	private UUID gameId;
 	private String gameState;
+	private boolean redSeated;
+	private boolean blackSeated;
 	
-	public Game(UUID gameId, String gameState) {
+	private Game(UUID gameId, String gameState, boolean blackSeated, boolean redSeated) {
 		this.gameId = gameId;
 		this.gameState = gameState;
+		this.blackSeated = blackSeated;
+		this.redSeated = redSeated;
 	}
 	
 	public UUID getGameId() {
@@ -23,10 +27,18 @@ public class Game implements Serializable {
 	}
 
 	public static Game fromModel(GameModel gameModel) {
-		return new Game(gameModel.getGameId(), gameModel.getGameState());
+		return new Game(gameModel.getGameId(), gameModel.getGameState(), gameModel.getBlackId() != null, gameModel.getRedId() != null);
 	}
 
 	public void setGameState(String boardState) {
 		this.gameState = boardState;
+	}
+
+	public boolean isRedSeated() {
+		return redSeated;
+	}
+
+	public boolean isBlackSeated() {
+		return blackSeated;
 	}
 }

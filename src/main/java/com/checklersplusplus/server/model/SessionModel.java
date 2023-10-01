@@ -24,18 +24,17 @@ public class SessionModel {
 	@Column(name = "active")
 	private boolean active;
 	
-	@Column(name = "create_time")
-	private Timestamp createTime;
+	@Column(name = "last_modified")
+	private Timestamp lastModified;
 
 	public SessionModel() {
-		
 	}
 	
-	public SessionModel(UUID sessionId, UUID accountId, boolean active, Timestamp createTime) {
+	public SessionModel(UUID sessionId, UUID accountId, boolean active, Timestamp lastModified) {
 		this.sessionId = sessionId;
 		this.accountId = accountId;
 		this.active = active;
-		this.createTime = createTime;
+		this.lastModified = lastModified;
 	}
 
 	public UUID getSessionId() {
@@ -62,11 +61,11 @@ public class SessionModel {
 		this.active = active;
 	}
 
-	public Timestamp getCreateTime() {
-		return createTime;
+	public Timestamp getLastModified() {
+		return lastModified;
 	}
 
-	public void setCreateTime(Timestamp createTime) {
-		this.createTime = createTime;
+	public void setLastModified(Timestamp lastModified) {
+		this.lastModified = lastModified;
 	}
 }

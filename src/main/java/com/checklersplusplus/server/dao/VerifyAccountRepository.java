@@ -14,6 +14,10 @@ public interface VerifyAccountRepository extends JpaRepository<VerifyAccountMode
 	public Optional<VerifyAccountModel> findByAccountIdAndVerificationCode(UUID accountId, String verificationCode);
 	
 	@Modifying
-	@Query("update VerifyAccount set active = false where accountId = ?1")
-	public void inactiveForAccountId(UUID accountId);
+	@Query("UPDATE VerifyAccountModel SET active=false WHERE accountId = ?1")
+	public void inactivateForAccountId(UUID accountId);
+	
+	@Query("SELECT v FROM VerifyAccountModel v WHERE v.accountId = ?1 AND active=true")
+	public Optional<VerifyAccountModel> getByAccountId(UUID accountId);
+	
 }

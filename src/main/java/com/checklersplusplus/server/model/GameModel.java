@@ -35,9 +35,12 @@ public class GameModel {
 	
 	@Column(name = "game_state")
 	private String gameState;
+	
+	@Column(name = "active")
+	private boolean active;
 
 	public GameModel(UUID gameId, UUID redId, UUID blackId, UUID winnerId, Timestamp created,
-			Timestamp lastModified, String gameState) {
+			Timestamp lastModified, String gameState, boolean active) {
 		super();
 		this.gameId = gameId;
 		this.redId = redId;
@@ -46,6 +49,10 @@ public class GameModel {
 		this.created = created;
 		this.lastModified = lastModified;
 		this.gameState = gameState;
+		this.active = active;
+	}
+
+	public GameModel() {
 	}
 
 	public UUID getGameId() {
@@ -103,4 +110,13 @@ public class GameModel {
 	public void setGameState(String gameState) {
 		this.gameState = gameState;
 	}
+
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
 }

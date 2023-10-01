@@ -44,7 +44,7 @@ public class AccountController {
 	@PostMapping("/resendVerification")
 	public ResponseEntity<String> resendVerificationCode() {
 		// TODO - implement
-		return null;
+		return new ResponseEntity<>("Please check your email for the verification code. If you do not see it check your spam folder.", HttpStatus.OK);
 	}
 	
 	@PostMapping("/verify")
@@ -77,7 +77,7 @@ public class AccountController {
 			return new ResponseEntity<>("Failed to create account. Please try again.", HttpStatus.BAD_REQUEST);
 		}
 		
-		return new ResponseEntity<>("Account created successfully. Please check your email for the verification code.", HttpStatus.OK);
+		return new ResponseEntity<>("Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder.", HttpStatus.OK);
 	}
 
 	private boolean isPasswordsMatch(String password, String confirmPassword) {

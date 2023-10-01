@@ -43,7 +43,7 @@ public class AccountControllerTest {
 	@Test
 	public void canVerifyAccount() throws Exception {
 		VerifyAccount verifyAccount = new VerifyAccount();
-		verifyAccount.setEmail(TEST_EMAIL);
+		verifyAccount.setUsername(TEST_USERNAME);
 		verifyAccount.setVerificationCode(TEST_VERIFICATION_CODE);
 		mockMvc.perform(post("/checkersplusplus/api/account/verify").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(verifyAccount)))
@@ -55,7 +55,7 @@ public class AccountControllerTest {
 	@Test
 	public void cannotVerifyAccount() throws Exception {
 		VerifyAccount verifyAccount = new VerifyAccount();
-		verifyAccount.setEmail(TEST_EMAIL);
+		verifyAccount.setUsername(TEST_EMAIL);
 		verifyAccount.setVerificationCode(TEST_VERIFICATION_CODE);
 		Mockito.doThrow(new Exception()).when(accountService).verifyAccount(any());
 		mockMvc.perform(post("/checkersplusplus/api/account/verify").contentType(MediaType.APPLICATION_JSON)

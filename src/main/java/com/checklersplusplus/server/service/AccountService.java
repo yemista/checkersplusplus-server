@@ -71,16 +71,17 @@ public class AccountService {
 		accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword()));
 		accountModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
 		accountRepository.save(accountModel);
-		verifyAccountRepository.inactiveForAccountId(accountModel.getAccountId());
+		verifyAccountRepository.inactivateForAccountId(accountModel.getAccountId());
 		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
 		verifyAccountModel.setAccountId(accountModel.getAccountId());
 		verifyAccountModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
 		verifyAccountModel.setVerificationCode(VerificationCodeUtil.generateVerificationCode());
+		verifyAccountModel.setActive(true);
 		verifyAccountRepository.save(verifyAccountModel);
 	}
 	
 	public void verifyAccount(@Valid VerifyAccount verifyAccount) throws Exception {
-		Optional<AccountModel> accountModelOptional = accountRepository.getByEmail(verifyAccount.getEmail());
+		Optional<AccountModel> accountModelOptional = accountRepository.getByUsername(verifyAccount.getUsername());
 		
 		if (accountModelOptional.isEmpty()) {
 			throw new Exception();
@@ -113,7 +114,7 @@ public class AccountService {
 		
 		sessionRepository.inactiveExistingSessions(account.get().getAccountId());
 		SessionModel sessionModel = new SessionModel();
-		sessionModel.setCreateTime(Timestamp.valueOf(LocalDateTime.now()));
+		sessionModel.setLastModified(Timestamp.valueOf(LocalDateTime.now()));
 		sessionModel.setAccountId(account.get().getAccountId());
 		sessionModel.setActive(true);
 		sessionRepository.save(sessionModel);
