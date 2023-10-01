@@ -27,9 +27,6 @@ public class GameModel {
 	@Column(name = "winner_id")
 	private UUID winnerId;
 	
-	@Column(name = "forfeit_id")
-	private UUID forfeitId;
-	
 	@Column(name = "created")
 	private Timestamp created;
 	
@@ -39,14 +36,13 @@ public class GameModel {
 	@Column(name = "game_state")
 	private String gameState;
 
-	public GameModel(UUID gameId, UUID redId, UUID blackId, UUID winnerId, UUID forfeitId, Timestamp created,
+	public GameModel(UUID gameId, UUID redId, UUID blackId, UUID winnerId, Timestamp created,
 			Timestamp lastModified, String gameState) {
 		super();
 		this.gameId = gameId;
 		this.redId = redId;
 		this.blackId = blackId;
 		this.winnerId = winnerId;
-		this.forfeitId = forfeitId;
 		this.created = created;
 		this.lastModified = lastModified;
 		this.gameState = gameState;
@@ -82,14 +78,6 @@ public class GameModel {
 
 	public void setWinnerId(UUID winnerId) {
 		this.winnerId = winnerId;
-	}
-
-	public UUID getForfeitId() {
-		return forfeitId;
-	}
-
-	public void setForfeitId(UUID forfeitId) {
-		this.forfeitId = forfeitId;
 	}
 
 	public Timestamp getCreated() {

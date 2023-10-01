@@ -18,24 +18,23 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkersplusplus.engine.Board;
 import com.checkersplusplus.engine.Coordinate;
 import com.checkersplusplus.engine.CoordinatePair;
-import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.entities.Game;
-import com.checklersplusplus.server.model.GameModel;
-import com.checklersplusplus.server.net.Move;
+import com.checklersplusplus.server.entities.Move;
+import com.checklersplusplus.server.service.GameService;
 
 @RestController
 @RequestMapping("/checkersplusplus/api/game")
 public class GameController {
 
 	@Autowired
-	private GameRepository gameRepository;
+	private GameService gameService;
 	
 	@GetMapping("/{gameId}")
 	public ResponseEntity<Game> getGameById(@PathVariable("gameId") UUID gameId) {
-	    Optional<GameModel> gameData = gameRepository.findById(gameId);
+	    Optional<Game> gameData = gameService.findByGameId(gameId);
 
 	    if (gameData.isPresent()) {
-	      return new ResponseEntity<>(Game.fromModel(gameData.get()), HttpStatus.OK);
+	      return new ResponseEntity<>(gameData.get(), HttpStatus.OK);
 	    } else {
 	      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	    }
@@ -43,17 +42,17 @@ public class GameController {
 	
 	@PostMapping("/{gameId}/move")
 	public ResponseEntity<Game> move(@PathVariable("gameId") UUID gameId, @RequestBody List<Move> moves) {
-		Optional<GameModel> gameData = gameRepository.findById(gameId);
+		Optional<Game> gameData = gameService.findByGameId(gameId);
 
 	    if (gameData.isPresent()) {
 	    	List<CoordinatePair> coordinates = moves.stream()
 	    			.map(move -> new CoordinatePair(new Coordinate(move.getStartCol(), move.getStartRow()), new Coordinate(move.getEndCol(), move.getEndRow())))
 	    			.collect(Collectors.toList());
-	    	Board board = new Board(gameData.get().getGameState());
+	    	com.checkersplusplus.engine.Game logicalGame = new com.checkersplusplus.engine.Game(gameData.get().getGameState());
 	    	
-	    	if (Board.isMoveLegal(board, coordinates)) {
-	    		//board.commitMoves(moves);
-	    		gameData.get().setGameState(board.getBoardState());
+	    	if (Board.isMoveLegal(logicalGame.getBoard(), coordinates)) {
+	    		logicalGame.doMove(coordinates);
+	    		gameData.get().setGameState(logicalGame.getGameState());
 	    		
 	    	} else {
 	    		return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
