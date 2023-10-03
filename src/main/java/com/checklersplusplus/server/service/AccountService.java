@@ -12,19 +12,18 @@ import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
-import com.checklersplusplus.server.entities.Account;
-import com.checklersplusplus.server.entities.CreateAccount;
-import com.checklersplusplus.server.entities.Login;
-import com.checklersplusplus.server.entities.Session;
-import com.checklersplusplus.server.entities.VerifyAccount;
+import com.checklersplusplus.server.entities.request.CreateAccount;
+import com.checklersplusplus.server.entities.response.Account;
+import com.checklersplusplus.server.entities.response.Session;
 import com.checklersplusplus.server.exception.AccountNotVerifiedException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
+import com.checklersplusplus.server.exception.InvalidVerificationCodeException;
+import com.checklersplusplus.server.exception.UsernameNotFoundException;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 import com.checklersplusplus.server.util.CryptoUtil;
-import com.checklersplusplus.server.util.VerificationCodeUtil;
 
 import jakarta.validation.Valid;
 
@@ -39,10 +38,10 @@ public class AccountService {
 	private VerifyAccountRepository verifyAccountRepository;
 	
 	@Autowired
-	public SessionRepository sessionRepository;
+	private SessionRepository sessionRepository;
 	
 	@Autowired
-	public GameRepository gameRepository;
+	private GameRepository gameRepository;
 	
 	public Account findByUsername(String username) {
 		Optional<AccountModel> accountModel = accountRepository.getByUsername(username);
@@ -71,38 +70,10 @@ public class AccountService {
 		accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword()));
 		accountModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
 		accountRepository.save(accountModel);
-		verifyAccountRepository.inactivateForAccountId(accountModel.getAccountId());
-		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
-		verifyAccountModel.setAccountId(accountModel.getAccountId());
-		verifyAccountModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
-		verifyAccountModel.setVerificationCode(VerificationCodeUtil.generateVerificationCode());
-		verifyAccountModel.setActive(true);
-		verifyAccountRepository.save(verifyAccountModel);
-	}
-	
-	public void verifyAccount(@Valid VerifyAccount verifyAccount) throws Exception {
-		Optional<AccountModel> accountModelOptional = accountRepository.getByUsername(verifyAccount.getUsername());
-		
-		if (accountModelOptional.isEmpty()) {
-			throw new Exception();
-		}
-		
-		AccountModel accountModel = accountModelOptional.get();		
-		Optional<VerifyAccountModel> verifyAccountModelOptional = verifyAccountRepository.findByAccountIdAndVerificationCode(accountModel.getAccountId(), verifyAccount.getVerificationCode());
-		
-		if (verifyAccountModelOptional.isEmpty() || verifyAccountModelOptional.get().getActive() == false) {
-			throw new Exception();
-		}
-		
-		VerifyAccountModel verifyAccountModel = verifyAccountModelOptional.get();
-		verifyAccountModel.setActive(false);
-		verifyAccountRepository.save(verifyAccountModel);
-		accountModel.setVerified(Timestamp.valueOf(LocalDateTime.now()));
-		accountRepository.save(accountModel);
 	}
 
-	public Session login(@Valid Login login) throws CheckersPlusPlusServerException, AccountNotVerifiedException {
-		Optional<AccountModel> account = accountRepository.findByUsernameAndPassword(login.getUsername(), CryptoUtil.encryptPassword(login.getPassword()));
+	public Session login(String username, String password) throws CheckersPlusPlusServerException, AccountNotVerifiedException {
+		Optional<AccountModel> account = accountRepository.findByUsernameAndPassword(username, CryptoUtil.encryptPassword(password));
 		
 		if (account.isEmpty()) {
 			throw new CheckersPlusPlusServerException("Failed to login. Account not found.");
@@ -129,5 +100,21 @@ public class AccountService {
 		session.setMessage("Login Successful");
 		return session;
 	}
-
+	
+	public void resetPassword(String username, String verificationCode, String password) throws CheckersPlusPlusServerException {
+		Optional<AccountModel> account = accountRepository.getByUsername(username);
+		
+		if (account.isEmpty()) {
+			throw new UsernameNotFoundException();
+		}
+		
+		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getLatestByAccountId(account.get().getAccountId());
+		
+		if (verifyAccount.isEmpty() || !verificationCode.equals(verifyAccount.get().getVerificationCode())) {
+			throw new InvalidVerificationCodeException();
+		}
+		
+		account.get().setPassword(CryptoUtil.encryptPassword(password));
+		accountRepository.save(account.get());
+	}
 }

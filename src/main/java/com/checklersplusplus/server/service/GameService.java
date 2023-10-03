@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
-import com.checklersplusplus.server.entities.Game;
+import com.checklersplusplus.server.entities.response.Game;
 import com.checklersplusplus.server.exception.CannotCreateGameException;
 import com.checklersplusplus.server.exception.CannotJoinGameException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;

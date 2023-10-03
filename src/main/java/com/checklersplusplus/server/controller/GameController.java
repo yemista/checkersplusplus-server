@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkersplusplus.engine.Board;
 import com.checkersplusplus.engine.Coordinate;
 import com.checkersplusplus.engine.CoordinatePair;
-import com.checklersplusplus.server.entities.Game;
-import com.checklersplusplus.server.entities.Move;
+import com.checklersplusplus.server.entities.request.Move;
+import com.checklersplusplus.server.entities.response.Game;
 import com.checklersplusplus.server.service.GameService;
 
 @RestController

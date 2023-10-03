@@ -1,9 +1,9 @@
-package com.checklersplusplus.server.entities;
+package com.checklersplusplus.server.entities.response;
 
 import java.io.Serializable;
 import java.util.UUID;
 
-public class Account implements Serializable {
+public class Account extends CheckersPlusPlusResponse implements Serializable {
 	private UUID accountId;
 	private String username;
 	

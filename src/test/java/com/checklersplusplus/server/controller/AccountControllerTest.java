@@ -16,9 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.checklersplusplus.server.entities.Account;
-import com.checklersplusplus.server.entities.CreateAccount;
-import com.checklersplusplus.server.entities.VerifyAccount;
+import com.checklersplusplus.server.entities.request.CreateAccount;
+import com.checklersplusplus.server.entities.request.VerifyAccount;
+import com.checklersplusplus.server.entities.response.Account;
 import com.checklersplusplus.server.service.AccountService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

@@ -1,4 +1,4 @@
-package com.checklersplusplus.server.entities;
+package com.checklersplusplus.server.entities.request;
 
 import java.io.Serializable;
 

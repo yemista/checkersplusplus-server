@@ -1,11 +1,10 @@
-package com.checklersplusplus.server.entities;
+package com.checklersplusplus.server.entities.response;
 
 import java.util.UUID;
 
-public class Session {
+public class Session extends CheckersPlusPlusResponse {
 	private UUID sessionId;
 	private UUID gameId;
-	private String message;
 	
 	public Session() {
 	}
@@ -17,17 +16,9 @@ public class Session {
 	public UUID getGameId() {
 		return gameId;
 	}
-	
-	public String getMessage() {
-		return message;
-	}
 
 	public void setGameId(UUID gameId) {
 		this.gameId = gameId;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
 	}
 	
 	public void setSessionId(UUID sessionId) {

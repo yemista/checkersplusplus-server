@@ -1,11 +1,31 @@
-package com.checklersplusplus.server.entities;
+package com.checklersplusplus.server.entities.request;
 
 import java.io.Serializable;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+
 public class Move implements Serializable {
+	
+	@Positive(message = "Invalid coordinate for start column.")
+	@Max(value = 7, message = "Invalid coordinate for start column.")
+	@Min(value = 0, message = "Invalid coordinate for start column.")
 	private int startCol;
+	
+	@Positive
+	@Max(value = 7, message = "Invalid coordinate for start row.")
+	@Min(value = 0, message = "Invalid coordinate for start row.")
 	private int startRow;
+	
+	@Positive
+	@Max(value = 7, message = "Invalid coordinate for end column.")
+	@Min(value = 0, message = "Invalid coordinate for end column.")
 	private int endCol;
+	
+	@Positive
+	@Max(value = 7, message = "Invalid coordinate for end row.")
+	@Min(value = 0, message = "Invalid coordinate for end row.")
 	private int endRow;
 	
 	public Move(int startCol, int startRow, int endCol, int endRow) {

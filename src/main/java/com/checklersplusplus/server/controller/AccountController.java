@@ -8,13 +8,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.checklersplusplus.server.entities.CreateAccount;
-import com.checklersplusplus.server.entities.Login;
-import com.checklersplusplus.server.entities.Session;
-import com.checklersplusplus.server.entities.VerifyAccount;
+import com.checklersplusplus.server.entities.request.CreateAccount;
+import com.checklersplusplus.server.entities.request.Login;
+import com.checklersplusplus.server.entities.request.ResetPassword;
+import com.checklersplusplus.server.entities.request.Username;
+import com.checklersplusplus.server.entities.request.VerifyAccount;
+import com.checklersplusplus.server.entities.response.Account;
+import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
+import com.checklersplusplus.server.entities.response.Session;
 import com.checklersplusplus.server.exception.AccountNotVerifiedException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
+import com.checklersplusplus.server.exception.UsernameNotFoundException;
 import com.checklersplusplus.server.service.AccountService;
+import com.checklersplusplus.server.service.EmailService;
+import com.checklersplusplus.server.service.VerificationService;
 
 import jakarta.validation.Valid;
 
@@ -25,10 +32,16 @@ public class AccountController {
 	@Autowired
 	private AccountService accountService;
 	
+	@Autowired
+	private EmailService emailService;
+	
+	@Autowired
+	private VerificationService verificationService;
+	
 	@PostMapping("/login")
 	public ResponseEntity<Session> login(@Valid @RequestBody Login login) {
 		try {
-			Session session = accountService.login(login);
+			Session session = accountService.login(login.getUsername(), login.getPassword());
 			return new ResponseEntity<>(session, HttpStatus.OK);
 		} catch (AccountNotVerifiedException a) {
 			Session session = new Session();
@@ -41,16 +54,43 @@ public class AccountController {
 		}
 	}
 	
-	@PostMapping("/resendVerification")
-	public ResponseEntity<String> resendVerificationCode() {
-		// TODO - implement
-		return new ResponseEntity<>("Please check your email for the verification code. If you do not see it check your spam folder.", HttpStatus.OK);
+	@PostMapping("/sendVerification")
+	public ResponseEntity<CheckersPlusPlusResponse> sendVerificationCode(@Valid @RequestBody Username username) {
+		try {
+			Account account = accountService.findByUsername(username.getUsername());
+			
+			if (account == null) {
+				throw new UsernameNotFoundException();
+			}
+			
+			String verificationCode = verificationService.createVerificationCode(account.getAccountId());
+			emailService.emailVerificationCode(account.getAccountId(), verificationCode);
+		} catch(CheckersPlusPlusServerException e) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+		return new ResponseEntity<>(new CheckersPlusPlusResponse("Please check your email for the verification code. If you do not see it check your spam folder."), HttpStatus.OK);
+	}
+	
+	@PostMapping("/resetPassword")
+	public ResponseEntity<CheckersPlusPlusResponse> resetPassword(@Valid @RequestBody ResetPassword resetPassword) {
+		if (!isPasswordsMatch(resetPassword.getPassword(), resetPassword.getConfirmPassword())) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Password and confirmation password do not match."), HttpStatus.BAD_REQUEST);
+		}
+		
+		try {
+			accountService.resetPassword(resetPassword.getUsername(), resetPassword.getVerificationCode(), resetPassword.getPassword());
+			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse();
+			response.setMessage("Password reset successful.");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (CheckersPlusPlusServerException e) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
 	}
 	
 	@PostMapping("/verify")
 	public ResponseEntity<String> verifyAccount(@Valid @RequestBody VerifyAccount verifyAccount) {
 		try {
-			accountService.verifyAccount(verifyAccount);
+			verificationService.verifyAccount(verifyAccount.getUsername(), verifyAccount.getVerificationCode());
 			return new ResponseEntity<>("Account verified.", HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>("Failed to verify account. Please enter the most recent verification code.", HttpStatus.BAD_REQUEST);

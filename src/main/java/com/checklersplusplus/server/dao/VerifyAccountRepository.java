@@ -18,6 +18,6 @@ public interface VerifyAccountRepository extends JpaRepository<VerifyAccountMode
 	public void inactivateForAccountId(UUID accountId);
 	
 	@Query("SELECT v FROM VerifyAccountModel v WHERE v.accountId = ?1 AND active=true")
-	public Optional<VerifyAccountModel> getByAccountId(UUID accountId);
+	public Optional<VerifyAccountModel> getLatestByAccountId(UUID accountId);
 	
 }

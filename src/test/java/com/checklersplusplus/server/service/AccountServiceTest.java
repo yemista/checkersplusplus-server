@@ -20,8 +20,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
-import com.checklersplusplus.server.entities.Account;
-import com.checklersplusplus.server.entities.CreateAccount;
+import com.checklersplusplus.server.entities.request.CreateAccount;
+import com.checklersplusplus.server.entities.response.Account;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 import com.checklersplusplus.server.util.CryptoUtil;
@@ -113,7 +113,7 @@ public class AccountServiceTest {
 		Optional<AccountModel> accountModel = accountRepository.getByEmail(TEST_EMAIL);
 		assertTrue(accountModel.isPresent());
 		accountsToDelete.add(accountModel.get());
-		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getByAccountId(accountModel.get().getAccountId());
+		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getLatestByAccountId(accountModel.get().getAccountId());
 		assertTrue(verifyAccount.isPresent());
 		verifyAccountsToDelete.add(verifyAccount.get());
 		return accountModel.get();

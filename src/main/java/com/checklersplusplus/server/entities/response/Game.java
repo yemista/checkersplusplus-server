@@ -1,11 +1,11 @@
-package com.checklersplusplus.server.entities;
+package com.checklersplusplus.server.entities.response;
 
 import java.io.Serializable;
 import java.util.UUID;
 
 import com.checklersplusplus.server.model.GameModel;
 
-public class Game implements Serializable {
+public class Game extends CheckersPlusPlusResponse implements Serializable {
 	private UUID gameId;
 	private String gameState;
 	private boolean redSeated;
