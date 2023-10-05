@@ -24,6 +24,7 @@ import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 import com.checklersplusplus.server.util.CryptoUtil;
+import com.checklersplusplus.server.util.VerificationCodeUtil;
 
 import jakarta.validation.Valid;
 
@@ -68,8 +69,15 @@ public class AccountService {
 		accountModel.setUsername(createAccount.getUsername());
 		accountModel.setEmail(createAccount.getEmail());
 		accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword()));
-		accountModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
+		accountModel.setCreated(LocalDateTime.now());
 		accountRepository.save(accountModel);
+		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
+		verifyAccountModel.setAccountId(accountModel.getAccountId());
+		verifyAccountModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
+		String verificationCode = VerificationCodeUtil.generateVerificationCode();
+		verifyAccountModel.setVerificationCode(verificationCode);
+		verifyAccountModel.setActive(true);
+		verifyAccountRepository.save(verifyAccountModel);
 	}
 
 	public Session login(String username, String password) throws CheckersPlusPlusServerException, AccountNotVerifiedException {

@@ -1,6 +1,6 @@
 package com.checklersplusplus.server.model;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 public class AccountModel {
 
 	@Id
+	@Column(name = "account_id")
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID accountId;
 	
@@ -28,17 +29,17 @@ public class AccountModel {
 	private String password;
 	
 	@Column(name = "created")
-	private Timestamp created;
+	private LocalDateTime created;
 	
 	@Column(name = "verified")
-	private Timestamp verified;
+	private LocalDateTime verified;
 
 	public AccountModel() {
 		
 	}
 	
-	public AccountModel(UUID accountId, String email, String username, String password, Timestamp created,
-			Timestamp verified) {
+	public AccountModel(UUID accountId, String email, String username, String password, LocalDateTime created,
+			LocalDateTime verified) {
 		super();
 		this.accountId = accountId;
 		this.email = email;
@@ -80,19 +81,19 @@ public class AccountModel {
 		this.password = password;
 	}
 
-	public Timestamp getCreated() {
+	public LocalDateTime getCreated() {
 		return created;
 	}
 
-	public void setCreated(Timestamp created) {
+	public void setCreated(LocalDateTime created) {
 		this.created = created;
 	}
 
-	public Timestamp getVerified() {
+	public LocalDateTime getVerified() {
 		return verified;
 	}
 
-	public void setVerified(Timestamp verified) {
+	public void setVerified(LocalDateTime verified) {
 		this.verified = verified;
 	}
 }

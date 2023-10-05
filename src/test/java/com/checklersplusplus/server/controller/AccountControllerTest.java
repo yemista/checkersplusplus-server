@@ -20,6 +20,8 @@ import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.request.VerifyAccount;
 import com.checklersplusplus.server.entities.response.Account;
 import com.checklersplusplus.server.service.AccountService;
+import com.checklersplusplus.server.service.EmailService;
+import com.checklersplusplus.server.service.VerificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringRunner.class)
@@ -33,6 +35,12 @@ public class AccountControllerTest {
 
 	@MockBean
 	private AccountService accountService;
+	
+	@MockBean
+	private EmailService emailService;
+	
+	@MockBean
+	private VerificationService verificationService;
 	
 	@Autowired
 	private MockMvc mockMvc;
@@ -57,7 +65,7 @@ public class AccountControllerTest {
 		VerifyAccount verifyAccount = new VerifyAccount();
 		verifyAccount.setUsername(TEST_EMAIL);
 		verifyAccount.setVerificationCode(TEST_VERIFICATION_CODE);
-		Mockito.doThrow(new Exception()).when(accountService).verifyAccount(any());
+		Mockito.doThrow(new Exception()).when(verificationService).verifyAccount(any(), any());
 		mockMvc.perform(post("/checkersplusplus/api/account/verify").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(verifyAccount)))
 							.andExpect(status().isBadRequest())
@@ -71,7 +79,7 @@ public class AccountControllerTest {
 		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isOk())
-							.andExpect(content().string("Account created successfully. Please check your email for the verification code."))
+							.andExpect(content().string("Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder."))
 							.andDo(print());
 	}
 	
@@ -87,7 +95,7 @@ public class AccountControllerTest {
 	
 	@Test
 	public void cannotCreateAccountWithDuplicateUsername() throws Exception {
-		Mockito.when(accountService.findByUsername(TEST_USERNAME)).thenReturn(new Account());
+		Mockito.when(accountService.findByUsername(any())).thenReturn(new Account());
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
 		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))

@@ -56,7 +56,7 @@ public class VerificationService {
 		VerifyAccountModel verifyAccountModel = verifyAccountModelOptional.get();
 		verifyAccountModel.setActive(false);
 		verifyAccountRepository.save(verifyAccountModel);
-		accountModel.setVerified(Timestamp.valueOf(LocalDateTime.now()));
+		accountModel.setVerified(LocalDateTime.now());
 		accountRepository.save(accountModel);
 	}
 

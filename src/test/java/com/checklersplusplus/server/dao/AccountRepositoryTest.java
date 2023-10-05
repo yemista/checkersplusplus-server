@@ -7,12 +7,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.checklersplusplus.server.model.AccountModel;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
+@TestPropertySource(locations="classpath:h2.properties")
 public class AccountRepositoryTest {
 
 	@Autowired
@@ -30,7 +32,7 @@ public class AccountRepositoryTest {
 		accountRepository.saveAndFlush(account);
 		assertThat(account.getAccountId()).isNotNull();
 		AccountModel account2 = new AccountModel();
-		account2.setUsername("test");
+		account2.setUsername("test2");
 		account2.setEmail("test2@test.com");
 		account2.setPassword("1234567890");
 		accountRepository.saveAndFlush(account2);
