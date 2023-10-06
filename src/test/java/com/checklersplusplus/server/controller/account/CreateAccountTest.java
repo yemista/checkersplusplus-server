@@ -1,4 +1,4 @@
-package com.checklersplusplus.server.controller;
+package com.checklersplusplus.server.controller.account;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -16,62 +16,32 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.checklersplusplus.server.controller.AccountController;
 import com.checklersplusplus.server.entities.request.CreateAccount;
-import com.checklersplusplus.server.entities.request.VerifyAccount;
 import com.checklersplusplus.server.entities.response.Account;
 import com.checklersplusplus.server.service.AccountService;
 import com.checklersplusplus.server.service.EmailService;
-import com.checklersplusplus.server.service.VerificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = AccountController.class)
-public class AccountControllerTest {
+public class CreateAccountTest {
 
 	private static final String TEST_EMAIL = "test@test.com";
 	private static final String TEST_PASSWORD = "Password123";
 	private static final String TEST_USERNAME = "test";
-	private static final String TEST_VERIFICATION_CODE = "ABCDEF";
-
+	
 	@MockBean
 	private AccountService accountService;
 	
 	@MockBean
 	private EmailService emailService;
 	
-	@MockBean
-	private VerificationService verificationService;
-	
 	@Autowired
 	private MockMvc mockMvc;
 	
 	@Autowired
 	private ObjectMapper objectMapper;
-	
-	@Test
-	public void canVerifyAccount() throws Exception {
-		VerifyAccount verifyAccount = new VerifyAccount();
-		verifyAccount.setUsername(TEST_USERNAME);
-		verifyAccount.setVerificationCode(TEST_VERIFICATION_CODE);
-		mockMvc.perform(post("/checkersplusplus/api/account/verify").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(verifyAccount)))
-							.andExpect(status().isOk())
-							.andExpect(content().string("Account verified."))
-							.andDo(print());
-	}
-
-	@Test
-	public void cannotVerifyAccount() throws Exception {
-		VerifyAccount verifyAccount = new VerifyAccount();
-		verifyAccount.setUsername(TEST_EMAIL);
-		verifyAccount.setVerificationCode(TEST_VERIFICATION_CODE);
-		Mockito.doThrow(new Exception()).when(verificationService).verifyAccount(any(), any());
-		mockMvc.perform(post("/checkersplusplus/api/account/verify").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(verifyAccount)))
-							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Failed to verify account. Please enter the most recent verification code."))
-							.andDo(print());
-	}
 	
 	@Test
 	public void canCreateAccount() throws Exception {
@@ -112,6 +82,76 @@ public class AccountControllerTest {
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
 							.andExpect(content().string("Email address is already in use."))
+							.andDo(print());
+	}
+	
+	@Test
+	public void cannotCreateAccountWithMissingEmail() throws Exception {
+		CreateAccount createAccount = new CreateAccount(null, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
+		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(createAccount)))
+							.andExpect(status().isBadRequest())
+							.andExpect(content().string("Email is required."))
+							.andDo(print());
+	}
+	
+	@Test
+	public void cannotCreateAccountWithMissingPassword() throws Exception {
+		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, null, TEST_PASSWORD, TEST_USERNAME);
+		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(createAccount)))
+							.andExpect(status().isBadRequest())
+							.andExpect(content().string("Password is required."))
+							.andDo(print());
+	}
+	
+	@Test
+	public void cannotCreateAccountWithMissingConfirmationPassword() throws Exception {
+		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, null, TEST_USERNAME);
+		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(createAccount)))
+							.andExpect(status().isBadRequest())
+							.andExpect(content().string("Confirmation password is required."))
+							.andDo(print());
+	}
+	
+	@Test
+	public void cannotCreateAccountWithMissingUsername() throws Exception {
+		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, null);
+		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(createAccount)))
+							.andExpect(status().isBadRequest())
+							.andExpect(content().string("Username is required."))
+							.andDo(print());
+	}
+	
+	@Test
+	public void cannotCreateAccountWithInvalidEmail() throws Exception {
+		CreateAccount createAccount = new CreateAccount(TEST_PASSWORD, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
+		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(createAccount)))
+							.andExpect(status().isBadRequest())
+							.andExpect(content().string("The provided email is not a valid email."))
+							.andDo(print());
+	}
+	
+	@Test
+	public void cannotCreateAccountWithInvalidUsername() throws Exception {
+		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, "a");
+		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(createAccount)))
+							.andExpect(status().isBadRequest())
+							.andExpect(content().string("Username must be from 3 to 20 characters."))
+							.andDo(print());
+	}
+	
+	@Test
+	public void cannotCreateAccountWithInvalidPassword() throws Exception {
+		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, "abc", "abc", TEST_USERNAME);
+		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(createAccount)))
+							.andExpect(status().isBadRequest())
+							.andExpect(content().string("Password must be 10 characters long and combination of uppercase letters, lowercase letters, numbers."))
 							.andDo(print());
 	}
 }

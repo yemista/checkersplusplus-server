@@ -20,4 +20,7 @@ public interface VerifyAccountRepository extends JpaRepository<VerifyAccountMode
 	@Query("SELECT v FROM VerifyAccountModel v WHERE v.accountId = ?1 AND active=true")
 	public Optional<VerifyAccountModel> getLatestByAccountId(UUID accountId);
 	
+	@Query("SELECT v FROM VerifyAccountModel v INNER JOIN AccountModel a ON v.accountId = a.accountId WHERE a.username = ?1 AND v.active=true")
+	public Optional<VerifyAccountModel> getLatestByUsername(String username);
+	
 }

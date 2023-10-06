@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class Username {
 	
-	@NotBlank(message = "The username is required.")
+	@NotBlank(message = "Username is required.")
 	private String username;
 
 	public Username(String username) {

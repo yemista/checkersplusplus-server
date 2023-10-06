@@ -112,7 +112,9 @@ public class AccountController {
 		}
 		
 		try {
-			accountService.createAccount(createAccount);
+			String verificationCode = accountService.createAccount(createAccount);
+			Account account = accountService.findByUsername(createAccount.getUsername());
+			emailService.emailVerificationCode(account.getAccountId(), verificationCode);
 		} catch (Exception e) {
 			return new ResponseEntity<>("Failed to create account. Please try again.", HttpStatus.BAD_REQUEST);
 		}

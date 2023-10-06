@@ -1,7 +1,13 @@
 package com.checklersplusplus.server.entities.request;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class VerifyAccount {
+	
+	@NotBlank(message = "Username is required.")
 	private String username;
+	
+	@NotBlank(message = "Verification code is required.")
 	private String verificationCode;
 	
 	public VerifyAccount(String username, String verificationCode) {

@@ -64,7 +64,7 @@ public class AccountService {
 		return new Account(accountModel.get().getAccountId(), accountModel.get().getUsername());
 	}
 
-	public void createAccount(@Valid CreateAccount createAccount) throws Exception {
+	public String createAccount(@Valid CreateAccount createAccount) throws Exception {
 		AccountModel accountModel = new AccountModel();
 		accountModel.setUsername(createAccount.getUsername());
 		accountModel.setEmail(createAccount.getEmail());
@@ -78,6 +78,7 @@ public class AccountService {
 		verifyAccountModel.setVerificationCode(verificationCode);
 		verifyAccountModel.setActive(true);
 		verifyAccountRepository.save(verifyAccountModel);
+		return verificationCode;
 	}
 
 	public Session login(String username, String password) throws CheckersPlusPlusServerException, AccountNotVerifiedException {
@@ -105,7 +106,7 @@ public class AccountService {
 			session.setGameId(currentGame.get().getGameId());
 		}
 		
-		session.setMessage("Login Successful");
+		session.setMessage("Login successful.");
 		return session;
 	}
 	

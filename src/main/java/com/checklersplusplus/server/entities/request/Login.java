@@ -1,20 +1,21 @@
 package com.checklersplusplus.server.entities.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public class Login {
 	
-	@Size(min = 3, max = 20, message = "The username must be from 3 to 20 characters.")
-	@NotBlank(message = "The username is required.")
+	@NotBlank(message = "Username is required.")
 	private String username;
 	
-	@NotBlank(message = "The password is required.")
+	@NotBlank(message = "Password is required.")
 	private String password;
 	
 	public Login(String username, String password) {
 		this.username = username;
 		this.password = password;
+	}
+
+	public Login() {
 	}
 
 	public String getUsername() {
@@ -24,4 +25,14 @@ public class Login {
 	public String getPassword() {
 		return password;
 	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
+	
 }

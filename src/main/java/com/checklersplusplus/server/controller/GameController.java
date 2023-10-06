@@ -53,7 +53,6 @@ public class GameController {
 	    	if (Board.isMoveLegal(logicalGame.getBoard(), coordinates)) {
 	    		logicalGame.doMove(coordinates);
 	    		gameData.get().setGameState(logicalGame.getGameState());
-	    		
 	    	} else {
 	    		return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 	    	}
