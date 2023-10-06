@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -17,10 +19,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.checklersplusplus.server.controller.AccountController;
+import com.checklersplusplus.server.entities.internal.NewAccount;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.response.Account;
 import com.checklersplusplus.server.service.AccountService;
 import com.checklersplusplus.server.service.EmailService;
+import com.checklersplusplus.server.service.VerificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringRunner.class)
@@ -37,6 +41,9 @@ public class CreateAccountTest {
 	@MockBean
 	private EmailService emailService;
 	
+	@MockBean
+	private VerificationService verificationService;
+	
 	@Autowired
 	private MockMvc mockMvc;
 	
@@ -46,6 +53,7 @@ public class CreateAccountTest {
 	@Test
 	public void canCreateAccount() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
+		Mockito.when(accountService.createAccount(any())).thenReturn(new NewAccount(UUID.randomUUID(), "123456"));
 		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isOk())
@@ -151,7 +159,7 @@ public class CreateAccountTest {
 		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Password must be 10 characters long and combination of uppercase letters, lowercase letters, numbers."))
+							.andExpect(content().string("Password must be 8 characters long and combination of uppercase letters, lowercase letters, numbers."))
 							.andDo(print());
 	}
 }

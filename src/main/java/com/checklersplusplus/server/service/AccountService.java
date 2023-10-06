@@ -12,6 +12,7 @@ import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
+import com.checklersplusplus.server.entities.internal.NewAccount;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.response.Account;
 import com.checklersplusplus.server.entities.response.Session;
@@ -64,7 +65,7 @@ public class AccountService {
 		return new Account(accountModel.get().getAccountId(), accountModel.get().getUsername());
 	}
 
-	public String createAccount(@Valid CreateAccount createAccount) throws Exception {
+	public NewAccount createAccount(@Valid CreateAccount createAccount) throws Exception {
 		AccountModel accountModel = new AccountModel();
 		accountModel.setUsername(createAccount.getUsername());
 		accountModel.setEmail(createAccount.getEmail());
@@ -78,7 +79,8 @@ public class AccountService {
 		verifyAccountModel.setVerificationCode(verificationCode);
 		verifyAccountModel.setActive(true);
 		verifyAccountRepository.save(verifyAccountModel);
-		return verificationCode;
+		NewAccount newAccount = new NewAccount(accountModel.getAccountId(), verificationCode);
+		return newAccount;
 	}
 
 	public Session login(String username, String password) throws CheckersPlusPlusServerException, AccountNotVerifiedException {

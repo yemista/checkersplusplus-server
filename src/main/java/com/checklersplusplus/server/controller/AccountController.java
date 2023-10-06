@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.checklersplusplus.server.entities.internal.NewAccount;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.request.Login;
 import com.checklersplusplus.server.entities.request.ResetPassword;
@@ -112,9 +113,8 @@ public class AccountController {
 		}
 		
 		try {
-			String verificationCode = accountService.createAccount(createAccount);
-			Account account = accountService.findByUsername(createAccount.getUsername());
-			emailService.emailVerificationCode(account.getAccountId(), verificationCode);
+			NewAccount newAccount = accountService.createAccount(createAccount);
+			emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
 		} catch (Exception e) {
 			return new ResponseEntity<>("Failed to create account. Please try again.", HttpStatus.BAD_REQUEST);
 		}

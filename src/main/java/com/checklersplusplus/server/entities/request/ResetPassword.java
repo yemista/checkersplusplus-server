@@ -6,12 +6,11 @@ import jakarta.validation.constraints.Size;
 
 public class ResetPassword {
 	
-	@Size(min = 3, max = 20, message = "Username is between 3 to 20 characters.")
 	@NotBlank(message = "Username is required.")
 	private String username;
 	
 	@NotBlank(message = "Password is required.")
-	@Pattern(regexp = "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$", message = "Password must be 8 characters or more long and a combination of uppercase letters, lowercase letters, numbers.")  
+	@Pattern(regexp = "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$", message = "Password must be 8 characters long and combination of uppercase letters, lowercase letters, numbers.")  
 	private String password;
 	
 	@NotBlank(message = "Confirmation password is required.")
