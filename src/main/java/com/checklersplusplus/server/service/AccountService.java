@@ -65,7 +65,7 @@ public class AccountService {
 		return new Account(accountModel.get().getAccountId(), accountModel.get().getUsername());
 	}
 
-	public NewAccount createAccount(@Valid CreateAccount createAccount) throws Exception {
+	public NewAccount createAccount(@Valid CreateAccount createAccount) throws CheckersPlusPlusServerException, Exception {
 		AccountModel accountModel = new AccountModel();
 		accountModel.setUsername(createAccount.getUsername());
 		accountModel.setEmail(createAccount.getEmail());
@@ -91,7 +91,7 @@ public class AccountService {
 		}
 		
 		if (account.get().getVerified() == null) {
-			throw new AccountNotVerifiedException("Account not verified.");
+			throw new AccountNotVerifiedException();
 		}
 		
 		sessionRepository.inactiveExistingSessions(account.get().getAccountId());

@@ -52,6 +52,10 @@ public class AccountController {
 			Session session = new Session();
 			session.setMessage(e.getMessage());
 			return new ResponseEntity<>(session, HttpStatus.BAD_REQUEST);
+		} catch(Exception ex) {
+			Session session = new Session();
+			session.setMessage("Server error.");
+			return new ResponseEntity<>(session, HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
 	
@@ -68,6 +72,8 @@ public class AccountController {
 			emailService.emailVerificationCode(account.getAccountId(), verificationCode);
 		} catch(CheckersPlusPlusServerException e) {
 			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		} catch(Exception ex) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 		return new ResponseEntity<>(new CheckersPlusPlusResponse("Please check your email for the verification code. If you do not see it check your spam folder."), HttpStatus.OK);
 	}
@@ -85,41 +91,47 @@ public class AccountController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (CheckersPlusPlusServerException e) {
 			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		} catch(Exception ex) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
 	
 	@PostMapping("/verify")
-	public ResponseEntity<String> verifyAccount(@Valid @RequestBody VerifyAccount verifyAccount) {
+	public ResponseEntity<CheckersPlusPlusResponse> verifyAccount(@Valid @RequestBody VerifyAccount verifyAccount) {
 		try {
 			verificationService.verifyAccount(verifyAccount.getUsername(), verifyAccount.getVerificationCode());
-			return new ResponseEntity<>("Account verified.", HttpStatus.OK);
-		} catch (Exception e) {
-			return new ResponseEntity<>("Failed to verify account. Please enter the most recent verification code.", HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Account verified."), HttpStatus.OK);
+		} catch (CheckersPlusPlusServerException e) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to verify account. Please enter the most recent verification code."), HttpStatus.BAD_REQUEST);
+		} catch(Exception ex) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
 	
 	@PostMapping("/create")
-	public ResponseEntity<String> createAccount(@Valid @RequestBody CreateAccount createAccount) {
+	public ResponseEntity<CheckersPlusPlusResponse> createAccount(@Valid @RequestBody CreateAccount createAccount) {
 		if (isEmailInUse(createAccount.getEmail())) {
-			return new ResponseEntity<>("Email address is already in use.", HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Email address is already in use."), HttpStatus.BAD_REQUEST);
 		}
 		
 		if (isUsernameInUse(createAccount.getUsername())) {
-			return new ResponseEntity<>("Username is already in use.", HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Username is already in use."), HttpStatus.BAD_REQUEST);
 		}
 		
 		if (!isPasswordsMatch(createAccount.getPassword(), createAccount.getConfirmPassword())) {
-			return new ResponseEntity<>("Password and confirmation password do not match.", HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Password and confirmation password do not match."), HttpStatus.BAD_REQUEST);
 		}
 		
 		try {
 			NewAccount newAccount = accountService.createAccount(createAccount);
 			emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
-		} catch (Exception e) {
-			return new ResponseEntity<>("Failed to create account. Please try again.", HttpStatus.BAD_REQUEST);
+		} catch (CheckersPlusPlusServerException e) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to create account. Please try again."), HttpStatus.BAD_REQUEST);
+		} catch(Exception ex) {
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 		
-		return new ResponseEntity<>("Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder.", HttpStatus.OK);
+		return new ResponseEntity<>(new CheckersPlusPlusResponse("Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder."), HttpStatus.OK);
 	}
 
 	private boolean isPasswordsMatch(String password, String confirmPassword) {

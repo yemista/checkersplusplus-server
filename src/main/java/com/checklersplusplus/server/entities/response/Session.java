@@ -8,6 +8,11 @@ public class Session extends CheckersPlusPlusResponse {
 	
 	public Session() {
 	}
+	
+	public Session(UUID sessionId, UUID gameId) {
+		this.gameId = gameId;
+		this.sessionId = sessionId;
+	}
 
 	public UUID getSessionId() {
 		return sessionId;

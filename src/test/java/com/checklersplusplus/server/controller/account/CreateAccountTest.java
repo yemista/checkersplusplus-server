@@ -1,9 +1,9 @@
 package com.checklersplusplus.server.controller.account;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.UUID;
@@ -17,11 +17,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import com.checklersplusplus.server.controller.AccountController;
 import com.checklersplusplus.server.entities.internal.NewAccount;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.response.Account;
+import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
 import com.checklersplusplus.server.service.AccountService;
 import com.checklersplusplus.server.service.EmailService;
 import com.checklersplusplus.server.service.VerificationService;
@@ -54,112 +57,145 @@ public class CreateAccountTest {
 	public void canCreateAccount() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
 		Mockito.when(accountService.createAccount(any())).thenReturn(new NewAccount(UUID.randomUUID(), "123456"));
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isOk())
-							.andExpect(content().string("Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithoutMatchingPasswords() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_USERNAME, TEST_USERNAME);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Password and confirmation password do not match."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Password and confirmation password do not match.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithDuplicateUsername() throws Exception {
 		Mockito.when(accountService.findByUsername(any())).thenReturn(new Account());
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Username is already in use."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Username is already in use.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithDuplicateEmail() throws Exception {
 		Mockito.when(accountService.findByEmail(TEST_EMAIL)).thenReturn(new Account());
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Email address is already in use."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Email address is already in use.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithMissingEmail() throws Exception {
 		CreateAccount createAccount = new CreateAccount(null, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Email is required."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Email is required.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithMissingPassword() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, null, TEST_PASSWORD, TEST_USERNAME);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Password is required."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Password is required.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithMissingConfirmationPassword() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, null, TEST_USERNAME);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Confirmation password is required."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Confirmation password is required.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithMissingUsername() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, null);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Username is required."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Username is required.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithInvalidEmail() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_PASSWORD, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("The provided email is not a valid email."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "The provided email is not a valid email.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithInvalidUsername() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, "a");
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Username must be from 3 to 20 characters."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Username must be from 3 to 20 characters.");
 	}
 	
 	@Test
 	public void cannotCreateAccountWithInvalidPassword() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, "abc", "abc", TEST_USERNAME);
-		mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Password must be 8 characters long and combination of uppercase letters, lowercase letters, numbers."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Password must be 8 characters long and combination of uppercase letters, lowercase letters, numbers.");
 	}
 }

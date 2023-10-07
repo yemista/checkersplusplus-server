@@ -1,13 +1,7 @@
 package com.checklersplusplus.server.entities.request;
 
-import jakarta.validation.constraints.NotBlank;
-
 public class Login {
-	
-	@NotBlank(message = "Username is required.")
 	private String username;
-	
-	@NotBlank(message = "Password is required.")
 	private String password;
 	
 	public Login(String username, String password) {

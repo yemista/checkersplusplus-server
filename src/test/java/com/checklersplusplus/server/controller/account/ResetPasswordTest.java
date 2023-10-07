@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.Test;
@@ -108,60 +107,78 @@ public class ResetPasswordTest {
 	@Test
 	public void cannotResetPasswordWithMissingPassword() throws Exception {
 		ResetPassword ResetPassword = new ResetPassword(TEST_USERNAME, null, TEST_PASSWORD, TEST_VERIFICATION_CODE);
-		mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(ResetPassword)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Password is required."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Password is required.");
 	}
 	
 	@Test
 	public void cannotResetPasswordWithMissingConfirmationPassword() throws Exception {
 		ResetPassword ResetPassword = new ResetPassword(TEST_USERNAME, TEST_PASSWORD, null, TEST_VERIFICATION_CODE);
-		mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(ResetPassword)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Confirmation password is required."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(),"Confirmation password is required.");
 	}
 	
 	@Test
 	public void cannotResetPasswordWithMissingUsername() throws Exception {
 		ResetPassword ResetPassword = new ResetPassword(null, TEST_PASSWORD, TEST_PASSWORD, TEST_VERIFICATION_CODE);
-		mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(ResetPassword)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Username is required."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Username is required.");
 	}
 	
 	@Test
 	public void cannotResetPasswordWithMissingVerificationCode() throws Exception {
 		ResetPassword ResetPassword = new ResetPassword(TEST_USERNAME, TEST_PASSWORD, TEST_PASSWORD, null);
-		mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(ResetPassword)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Verification code is required."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(),"Verification code is required.");
 	}
 	
 	@Test
 	public void cannotResetPasswordWithInvalidVerificationCodeParam() throws Exception {
 		ResetPassword ResetPassword = new ResetPassword(TEST_USERNAME, TEST_PASSWORD, TEST_PASSWORD, "abc");
-		mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(ResetPassword)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Invalid verification code."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Invalid verification code.");
 	}
 	
 	@Test
 	public void cannotResetPasswordWithInvalidPassword() throws Exception {
 		ResetPassword ResetPassword = new ResetPassword(TEST_USERNAME, "abc", "abc", TEST_VERIFICATION_CODE);
-		mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
+		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/resetPassword").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(ResetPassword)))
 							.andExpect(status().isBadRequest())
-							.andExpect(content().string("Password must be 8 characters long and combination of uppercase letters, lowercase letters, numbers."))
 							.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
+		assertEquals(response.getMessage(), "Password must be 8 characters long and combination of uppercase letters, lowercase letters, numbers.");
 	}
 }

@@ -1,10 +1,7 @@
 package com.checklersplusplus.server.entities.request;
 
-import jakarta.validation.constraints.NotBlank;
-
 public class Username {
 	
-	@NotBlank(message = "Username is required.")
 	private String username;
 
 	public Username(String username) {
