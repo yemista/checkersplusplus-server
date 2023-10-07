@@ -103,7 +103,8 @@ public class AccountService {
 		Session session = new Session();
 		session.setSessionId(sessionModel.getSessionId());
 		
-		Optional<GameModel> currentGame = gameRepository.getByAccountId(account.get().getAccountId());
+		Optional<GameModel> currentGame = gameRepository.getActiveGameByAccountId(account.get().getAccountId());
+		
 		if (currentGame.isPresent()) {
 			session.setGameId(currentGame.get().getGameId());
 		}

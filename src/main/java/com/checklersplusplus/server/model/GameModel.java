@@ -38,9 +38,12 @@ public class GameModel {
 	
 	@Column(name = "active")
 	private boolean active;
+	
+	@Column(name = "in_progress")
+	private boolean inProgress;
 
 	public GameModel(UUID gameId, UUID redId, UUID blackId, UUID winnerId, Timestamp created,
-			Timestamp lastModified, String gameState, boolean active) {
+			Timestamp lastModified, String gameState, boolean active, boolean inProgress) {
 		super();
 		this.gameId = gameId;
 		this.redId = redId;
@@ -50,6 +53,7 @@ public class GameModel {
 		this.lastModified = lastModified;
 		this.gameState = gameState;
 		this.active = active;
+		this.inProgress = inProgress;
 	}
 
 	public GameModel() {
@@ -119,4 +123,11 @@ public class GameModel {
 		this.active = active;
 	}
 
+	public boolean isInProgress() {
+		return inProgress;
+	}
+
+	public void setInProgress(boolean inProgress) {
+		this.inProgress = inProgress;
+	}
 }

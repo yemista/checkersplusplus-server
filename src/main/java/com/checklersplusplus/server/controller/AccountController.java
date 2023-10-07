@@ -54,7 +54,7 @@ public class AccountController {
 			return new ResponseEntity<>(session, HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
 			Session session = new Session();
-			session.setMessage("Server error.");
+			session.setMessage("Server error. Try again soon.");
 			return new ResponseEntity<>(session, HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
@@ -73,7 +73,7 @@ public class AccountController {
 		} catch(CheckersPlusPlusServerException e) {
 			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
-			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error."), HttpStatus.SERVICE_UNAVAILABLE);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 		return new ResponseEntity<>(new CheckersPlusPlusResponse("Please check your email for the verification code. If you do not see it check your spam folder."), HttpStatus.OK);
 	}
@@ -92,7 +92,7 @@ public class AccountController {
 		} catch (CheckersPlusPlusServerException e) {
 			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
-			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error."), HttpStatus.SERVICE_UNAVAILABLE);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
 	
@@ -104,7 +104,7 @@ public class AccountController {
 		} catch (CheckersPlusPlusServerException e) {
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to verify account. Please enter the most recent verification code."), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
-			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error."), HttpStatus.SERVICE_UNAVAILABLE);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
 	
@@ -128,7 +128,7 @@ public class AccountController {
 		} catch (CheckersPlusPlusServerException e) {
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to create account. Please try again."), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
-			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error."), HttpStatus.SERVICE_UNAVAILABLE);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 		
 		return new ResponseEntity<>(new CheckersPlusPlusResponse("Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder."), HttpStatus.OK);

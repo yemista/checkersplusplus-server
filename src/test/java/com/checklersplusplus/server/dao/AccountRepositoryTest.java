@@ -2,6 +2,8 @@ package com.checklersplusplus.server.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,19 +26,42 @@ public class AccountRepositoryTest {
 	private AccountRepository accountRepository;
 	
 	@Test
-	public void cannotFindFromEmptyRepository() {
+	public void canGetByUsername() {
 		AccountModel account = new AccountModel();
 		account.setUsername("test");
 		account.setEmail("test@test.com");
 		account.setPassword("1234567890");
 		accountRepository.saveAndFlush(account);
 		assertThat(account.getAccountId()).isNotNull();
-		AccountModel account2 = new AccountModel();
-		account2.setUsername("test2");
-		account2.setEmail("test2@test.com");
-		account2.setPassword("1234567890");
-		accountRepository.saveAndFlush(account2);
-		assertThat(account.getAccountId()).isNotEqualTo(account2.getAccountId());
+		Optional<AccountModel> fetchedAccount = accountRepository.getByUsername("test");
+		assertThat(fetchedAccount).isPresent();
+		assertThat(fetchedAccount.get().getAccountId()).isEqualTo(fetchedAccount.get().getAccountId());
+	}
+	
+	@Test
+	public void canGetByEmail() {
+		AccountModel account = new AccountModel();
+		account.setUsername("test");
+		account.setEmail("test@test.com");
+		account.setPassword("1234567890");
+		accountRepository.saveAndFlush(account);
+		assertThat(account.getAccountId()).isNotNull();
+		Optional<AccountModel> fetchedAccount = accountRepository.getByEmail("test@test.com");
+		assertThat(fetchedAccount).isPresent();
+		assertThat(fetchedAccount.get().getAccountId()).isEqualTo(fetchedAccount.get().getAccountId());
+	}
+	
+	@Test
+	public void canFindByUsernameAndPassword() {
+		AccountModel account = new AccountModel();
+		account.setUsername("test");
+		account.setEmail("test@test.com");
+		account.setPassword("1234567890");
+		accountRepository.saveAndFlush(account);
+		assertThat(account.getAccountId()).isNotNull();
+		Optional<AccountModel> fetchedAccount = accountRepository.findByUsernameAndPassword("test", "1234567890");
+		assertThat(fetchedAccount).isPresent();
+		assertThat(fetchedAccount.get().getAccountId()).isEqualTo(fetchedAccount.get().getAccountId());
 	}
 }
 

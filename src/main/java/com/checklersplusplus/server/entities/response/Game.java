@@ -18,6 +18,9 @@ public class Game extends CheckersPlusPlusResponse implements Serializable {
 		this.redSeated = redSeated;
 	}
 	
+	public Game() {
+	}
+
 	public UUID getGameId() {
 		return gameId;
 	}
