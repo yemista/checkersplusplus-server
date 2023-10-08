@@ -16,9 +16,9 @@ public interface SessionRepository extends JpaRepository<SessionModel, UUID> {
 	@Query("UPDATE SessionModel SET active = false WHERE accountId = ?1")
 	public void inactiveExistingSessions(UUID accountID);
 	
-	@Query("SELECT s FROM SessionModel s WHERE  s.sessionId = ?1 AND active=true")
+	@Query("SELECT s FROM SessionModel s WHERE s.sessionId = ?1 AND active=true")
 	public Optional<SessionModel> getBySessionId(UUID sessionId);
 	
-	@Query("SELECT s FROM SessionModel s WHERE  s.accountId = ?1 AND active=true")
+	@Query("SELECT s FROM SessionModel s WHERE s.accountId = ?1 AND active=true")
 	public List<SessionModel> getActiveByAccountId(UUID accountId);
 }

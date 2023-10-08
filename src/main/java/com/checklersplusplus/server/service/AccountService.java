@@ -120,7 +120,7 @@ public class AccountService {
 			throw new UsernameNotFoundException();
 		}
 		
-		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getLatestByAccountId(account.get().getAccountId());
+		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getActiveByAccountId(account.get().getAccountId());
 		
 		if (verifyAccount.isEmpty() || !verificationCode.equals(verifyAccount.get().getVerificationCode())) {
 			throw new InvalidVerificationCodeException();

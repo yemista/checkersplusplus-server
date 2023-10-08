@@ -56,7 +56,7 @@ public class CreateVerifyLoginIntegrationTests {
 		ResponseEntity<String> createAccountResponse = restTemplate.postForEntity("http://localhost:" + String.valueOf(port) + "/checkersplusplus/api/account/create", createAccountParams, String.class);
 		assertEquals(createAccountResponse.getStatusCode(), HttpStatusCode.valueOf(200));
 		assertEquals(createAccountResponse.getBody(), "Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder.");
-		Optional<VerifyAccountModel> verifyAccountModel = verifyAccountRepository.getLatestByUsername(TEST_USERNAME);
+		Optional<VerifyAccountModel> verifyAccountModel = verifyAccountRepository.getActiveByUsername(TEST_USERNAME);
 		assertTrue(verifyAccountModel.isPresent());
 		VerifyAccount verifyAccountParams = new VerifyAccount();
 		verifyAccountParams.setUsername(TEST_USERNAME);

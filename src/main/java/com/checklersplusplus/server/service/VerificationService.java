@@ -47,7 +47,7 @@ public class VerificationService {
 		}
 		
 		AccountModel accountModel = accountModelOptional.get();		
-		Optional<VerifyAccountModel> verifyAccountModelOptional = verifyAccountRepository.getLatestByAccountId(accountModel.getAccountId());
+		Optional<VerifyAccountModel> verifyAccountModelOptional = verifyAccountRepository.getActiveByAccountId(accountModel.getAccountId());
 		
 		if (verifyAccountModelOptional.isEmpty() || !verificationCode.equals(verifyAccountModelOptional.get().getVerificationCode())) {
 			throw new InvalidVerificationCodeException();

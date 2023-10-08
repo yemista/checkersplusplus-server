@@ -113,7 +113,7 @@ public class AccountServiceTest {
 		Optional<AccountModel> accountModel = accountRepository.getByEmail(TEST_EMAIL);
 		assertTrue(accountModel.isPresent());
 		accountsToDelete.add(accountModel.get());
-		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getLatestByAccountId(accountModel.get().getAccountId());
+		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getActiveByAccountId(accountModel.get().getAccountId());
 		assertTrue(verifyAccount.isPresent());
 		verifyAccountsToDelete.add(verifyAccount.get());
 		return accountModel.get();
