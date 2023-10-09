@@ -57,6 +57,7 @@ public class GameController {
 	public ResponseEntity<Game> move(@PathVariable("sessionId") UUID sessionId, @PathVariable("gameId") UUID gameId, @RequestBody List<Move> moves) {
 		try {
 			Game updatedGame = gameService.move(sessionId, gameId, moves);
+			updatedGame.setMessage("Move successful.");
 			return new ResponseEntity<>(updatedGame, HttpStatus.OK);
 		} catch(CheckersPlusPlusServerException ex) {
 			Game game = new Game();
@@ -73,6 +74,7 @@ public class GameController {
 	public ResponseEntity<Game> join(@PathVariable("sessionId") UUID sessionId, @PathVariable("gameId") UUID gameId) {
 		try {
 			Game updatedGame = gameService.joinGame(sessionId, gameId);
+			updatedGame.setMessage("Game joined.");
 			return new ResponseEntity<>(updatedGame, HttpStatus.OK);
 		} catch(CheckersPlusPlusServerException ex) {
 			Game game = new Game();
@@ -89,6 +91,7 @@ public class GameController {
 	public ResponseEntity<Game> create(@PathVariable("sessionId") UUID sessionId, @Valid @RequestBody CreateGame createGame) {
 		try {
 			Game createdGame = gameService.createGame(sessionId, createGame.isMoveFirst());
+			createdGame.setMessage("Game created.");
 			return new ResponseEntity<>(createdGame, HttpStatus.OK);
 		} catch(CheckersPlusPlusServerException ex) {
 			Game game = new Game();

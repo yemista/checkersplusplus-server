@@ -7,6 +7,9 @@ public class CreateGame {
 		this.moveFirst = moveFirst;
 	}
 
+	public CreateGame() {
+	}
+
 	public boolean isMoveFirst() {
 		return moveFirst;
 	}
