@@ -1,6 +1,5 @@
 package com.checklersplusplus.server.service;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +18,6 @@ import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.Game;
 import com.checklersplusplus.server.exception.CannotCancelGameException;
 import com.checklersplusplus.server.exception.CannotCreateGameException;
-import com.checklersplusplus.server.exception.CannotJoinGameException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.exception.InvalidMoveException;
@@ -42,7 +40,7 @@ public class GameService {
 	}
 	
 	public Game move(UUID sessionId, UUID gameId, List<Move> moves) throws CheckersPlusPlusServerException {
-		Optional<SessionModel> sessionModel = sessionRepository.getBySessionId(sessionId);
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
 		if (sessionModel.isEmpty()) {
 			throw new SessionNotFoundException();
@@ -74,8 +72,8 @@ public class GameService {
     	return Game.fromModel(gameModel.get());
 	}
 	
-	public void cancelGame(UUID gameId, UUID sessionId) throws CheckersPlusPlusServerException {
-		Optional<SessionModel> sessionModel = sessionRepository.getBySessionId(sessionId);
+	public void cancelGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
 		if (sessionModel.isEmpty()) {
 			throw new SessionNotFoundException();
@@ -83,7 +81,7 @@ public class GameService {
 		
 		Optional<GameModel> gameModel = gameRepository.getByGameId(gameId);
 		
-		if (gameModel.isEmpty() || !gameModel.get().isActive() || !gameModel.get().isInProgress()) {
+		if (gameModel.isEmpty() || !gameModel.get().isActive()) {
 			throw new GameNotFoundException();
 		}
 		
@@ -96,20 +94,11 @@ public class GameService {
 		}
 		
 		gameModel.get().setActive(false);
-		gameModel.get().setInProgress(false);
 		gameRepository.save(gameModel.get());
 	}
-	
-	private boolean gameStarted(GameModel gameModel) {
-		return gameModel.getBlackId() != null && gameModel.getRedId() != null;
-	}
 
-	private boolean userNotPlayingGame(UUID accountId, GameModel gameModel) {
-		return !(gameModel.getBlackId().equals(accountId) || gameModel.getRedId().equals(accountId));
-	}
-
-	public Game joinGame(UUID gameId, UUID sessionId) throws CheckersPlusPlusServerException {
-		Optional<SessionModel> sessionModel = sessionRepository.getBySessionId(sessionId);
+	public Game joinGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
 		if (sessionModel.isEmpty()) {
 			throw new SessionNotFoundException();
@@ -121,9 +110,7 @@ public class GameService {
 			throw new GameNotFoundException();
 		}
 		
-		if (gameModel.get().getBlackId() != null && gameModel.get().getRedId() != null) {
-			throw new CannotJoinGameException();
-		} else if (gameModel.get().getBlackId() == null) {
+		if (gameModel.get().getBlackId() == null) {
 			gameModel.get().setBlackId(sessionModel.get().getAccountId());
 		} else {
 			gameModel.get().setRedId(sessionModel.get().getAccountId());
@@ -135,7 +122,7 @@ public class GameService {
 	}
 	
 	public Game createGame(UUID sessionId, boolean isBlack) throws CheckersPlusPlusServerException {
-		Optional<SessionModel> sessionModel = sessionRepository.getBySessionId(sessionId);
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
 		if (sessionModel.isEmpty()) {
 			throw new SessionNotFoundException();
@@ -150,8 +137,8 @@ public class GameService {
 		GameModel gameModel = new GameModel();
 		gameModel.setActive(true);
 		gameModel.setInProgress(false);
-		gameModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
-		gameModel.setLastModified(Timestamp.valueOf(LocalDateTime.now()));
+		gameModel.setCreated(LocalDateTime.now());
+		gameModel.setLastModified(LocalDateTime.now());
 		
 		if (isBlack) {
 			gameModel.setBlackId(sessionModel.get().getAccountId());
@@ -165,14 +152,8 @@ public class GameService {
 		return Game.fromModel(gameModel);
 	}
 	
-	public void forefeitGame(UUID gameId, UUID sessionId) throws CheckersPlusPlusServerException {
-		Optional<GameModel> gameModel = gameRepository.findById(gameId);
-		
-		if (gameModel.isEmpty() || !gameModel.get().isActive() || !gameModel.get().isInProgress()) {
-			throw new GameNotFoundException();
-		}
-		
-		Optional<SessionModel> sessionModel = sessionRepository.getBySessionId(sessionId);
+	public void forefeitGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
 		if (sessionModel.isEmpty()) {
 			throw new SessionNotFoundException();
@@ -180,14 +161,22 @@ public class GameService {
 		
 		UUID accountId = sessionModel.get().getAccountId();
 		
-		if (gameModel.get().getBlackId().equals(accountId)) {
+		Optional<GameModel> gameModel = gameRepository.findById(gameId);
+		
+		if (gameModel.isEmpty() || !gameModel.get().isActive() || !gameModel.get().isInProgress()) {
+			throw new GameNotFoundException();
+		}
+		
+		if (accountId.equals(gameModel.get().getBlackId())) {
 			gameModel.get().setWinnerId(gameModel.get().getRedId());
-		} else if (gameModel.get().getRedId().equals(accountId)) {
+		} else if (accountId.equals(gameModel.get().getRedId())) {
 			gameModel.get().setWinnerId(gameModel.get().getBlackId());
 		} else {
 			throw new CheckersPlusPlusServerException("User not found for game.");
 		}
 		
+		gameModel.get().setActive(false);
+		gameModel.get().setInProgress(false);
 		gameRepository.save(gameModel.get());
 	}
 
@@ -199,5 +188,13 @@ public class GameService {
 		}
 		
 		return Optional.of(Game.fromModel(gameModel.get()));
+	}
+	
+	private boolean gameStarted(GameModel gameModel) {
+		return gameModel.isInProgress() && gameModel.isActive();
+	}
+
+	private boolean userNotPlayingGame(UUID accountId, GameModel gameModel) {
+		return !(accountId.equals(gameModel.getBlackId()) || accountId.equals(gameModel.getRedId()));
 	}
 }

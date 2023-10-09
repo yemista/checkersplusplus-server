@@ -27,8 +27,6 @@ import com.checklersplusplus.server.model.VerifyAccountModel;
 import com.checklersplusplus.server.util.CryptoUtil;
 import com.checklersplusplus.server.util.VerificationCodeUtil;
 
-import jakarta.validation.Valid;
-
 @Service
 @Transactional
 public class AccountService {
@@ -65,7 +63,7 @@ public class AccountService {
 		return new Account(accountModel.get().getAccountId(), accountModel.get().getUsername());
 	}
 
-	public NewAccount createAccount(@Valid CreateAccount createAccount) throws CheckersPlusPlusServerException, Exception {
+	public NewAccount createAccount(CreateAccount createAccount) throws CheckersPlusPlusServerException, Exception {
 		AccountModel accountModel = new AccountModel();
 		accountModel.setUsername(createAccount.getUsername());
 		accountModel.setEmail(createAccount.getEmail());
@@ -83,7 +81,7 @@ public class AccountService {
 		return newAccount;
 	}
 
-	public Session login(String username, String password) throws CheckersPlusPlusServerException, AccountNotVerifiedException {
+	public Session login(String username, String password) throws CheckersPlusPlusServerException {
 		Optional<AccountModel> account = accountRepository.findByUsernameAndPassword(username, CryptoUtil.encryptPassword(password));
 		
 		if (account.isEmpty()) {
@@ -128,5 +126,7 @@ public class AccountService {
 		
 		account.get().setPassword(CryptoUtil.encryptPassword(password));
 		accountRepository.save(account.get());
+		verifyAccount.get().setActive(false);
+		verifyAccountRepository.save(verifyAccount.get());
 	}
 }

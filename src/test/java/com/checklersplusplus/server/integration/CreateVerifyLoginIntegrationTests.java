@@ -22,6 +22,7 @@ import com.checklersplusplus.server.dao.VerifyAccountRepository;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.request.Login;
 import com.checklersplusplus.server.entities.request.VerifyAccount;
+import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
 import com.checklersplusplus.server.entities.response.Session;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
@@ -53,17 +54,17 @@ public class CreateVerifyLoginIntegrationTests {
 		createAccountParams.setPassword(TEST_PASSWORD);
 		createAccountParams.setConfirmPassword(TEST_PASSWORD);
 		createAccountParams.setUsername(TEST_USERNAME);
-		ResponseEntity<String> createAccountResponse = restTemplate.postForEntity("http://localhost:" + String.valueOf(port) + "/checkersplusplus/api/account/create", createAccountParams, String.class);
+		ResponseEntity<CheckersPlusPlusResponse> createAccountResponse = restTemplate.postForEntity("http://localhost:" + String.valueOf(port) + "/checkersplusplus/api/account/create", createAccountParams, CheckersPlusPlusResponse.class);
 		assertEquals(createAccountResponse.getStatusCode(), HttpStatusCode.valueOf(200));
-		assertEquals(createAccountResponse.getBody(), "Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder.");
+		assertEquals(createAccountResponse.getBody().getMessage(), "Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder.");
 		Optional<VerifyAccountModel> verifyAccountModel = verifyAccountRepository.getActiveByUsername(TEST_USERNAME);
 		assertTrue(verifyAccountModel.isPresent());
 		VerifyAccount verifyAccountParams = new VerifyAccount();
 		verifyAccountParams.setUsername(TEST_USERNAME);
 		verifyAccountParams.setVerificationCode(verifyAccountModel.get().getVerificationCode());
-		ResponseEntity<String> verifyAccountResponse = restTemplate.postForEntity("http://localhost:" + String.valueOf(port) + "/checkersplusplus/api/account/verify", verifyAccountParams, String.class);
+		ResponseEntity<CheckersPlusPlusResponse> verifyAccountResponse = restTemplate.postForEntity("http://localhost:" + String.valueOf(port) + "/checkersplusplus/api/account/verify", verifyAccountParams, CheckersPlusPlusResponse.class);
 		assertEquals(verifyAccountResponse.getStatusCode(), HttpStatusCode.valueOf(200));
-		assertEquals(verifyAccountResponse.getBody(), "Account verified.");
+		assertEquals(verifyAccountResponse.getBody().getMessage(), "Account verified.");
 		Login loginParams = new Login();
 		loginParams.setUsername(TEST_USERNAME);
 		loginParams.setPassword(TEST_PASSWORD);
@@ -71,7 +72,7 @@ public class CreateVerifyLoginIntegrationTests {
 		assertEquals(loginResponse.getStatusCode(), HttpStatusCode.valueOf(200));
 		assertEquals(loginResponse.getBody().getMessage(), "Login successful.");
 		assertNotNull(loginResponse.getBody().getSessionId());
-		Optional<SessionModel> sessionModel = sessionRepository.getBySessionId(loginResponse.getBody().getSessionId());
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(loginResponse.getBody().getSessionId());
 		assertTrue(sessionModel.isPresent());
 	}
 }

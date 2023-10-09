@@ -1,11 +1,13 @@
 package com.checklersplusplus.server.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -19,10 +21,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.checklersplusplus.server.dao.AccountRepository;
+import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.response.Account;
+import com.checklersplusplus.server.entities.response.Session;
+import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.model.AccountModel;
+import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 import com.checklersplusplus.server.util.CryptoUtil;
 
@@ -40,6 +46,9 @@ public class AccountServiceTest {
 	
 	@Autowired
 	private AccountRepository accountRepository;
+	
+	@Autowired
+	private SessionRepository sessionRepository;
 	
 	@Autowired
 	private VerifyAccountRepository verifyAccountRepository;
@@ -108,9 +117,91 @@ public class AccountServiceTest {
 		assertNull(accountModel.getVerified());
 	}
 	
+	@Test
+	public void testCannotLoginInvalidAccount() throws Exception {
+		try {
+			accountService.login(TEST_USERNAME, TEST_PASSWORD);
+			fail();
+		} catch(CheckersPlusPlusServerException e) {
+			assertThat(e.getMessage()).isEqualTo("Failed to login. Account not found.");
+		}
+	}
+	
+	@Test
+	public void testCannotLoginUnverifiedAccount() throws Exception {
+		CreateAccount createAccountInput = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
+		AccountModel accountModel = createAccount(createAccountInput);
+		
+		try {
+			accountService.login(TEST_USERNAME, TEST_PASSWORD);
+			fail();
+		} catch(CheckersPlusPlusServerException e) {
+			assertThat(e.getMessage()).isEqualTo("Account not verified.");
+		}
+	}
+	
+	@Test
+	public void testCanLogin() throws Exception {
+		CreateAccount createAccountInput = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
+		AccountModel accountModel = createAccount(createAccountInput);
+		accountModel.setVerified(LocalDateTime.now());
+		accountRepository.save(accountModel);
+		Session session = accountService.login(TEST_USERNAME, TEST_PASSWORD);
+		assertThat(session.getSessionId()).isNotNull();
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(session.getSessionId());
+		assertThat(sessionModel.isPresent()).isTrue();
+		assertThat(sessionModel.get().getSessionId()).isEqualTo(session.getSessionId());
+		assertThat(session.getMessage()).isEqualTo("Login successful.");
+	}
+	
+	@Test
+	public void testCannotResetPasswordInvalidAccount() throws Exception {
+		CreateAccount createAccountInput = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
+		AccountModel accountModel = createAccount(createAccountInput);
+		
+		try {
+			accountService.resetPassword("abc", "abc", TEST_PASSWORD);
+			fail();
+		} catch(CheckersPlusPlusServerException e) {
+			assertThat(e.getMessage()).isEqualTo("Username not found.");
+		}
+	}
+	
+	@Test
+	public void testCannotResetPasswordInvalidVerificationCodeAccount() throws Exception {
+		CreateAccount createAccountInput = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
+		AccountModel accountModel = createAccount(createAccountInput);
+		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getActiveByAccountId(accountModel.getAccountId());
+		assertTrue(verifyAccount.isPresent());
+		verifyAccount.get().setVerificationCode("123456");
+		verifyAccountRepository.save(verifyAccount.get());
+		
+		try {
+			accountService.resetPassword(TEST_USERNAME, TEST_VERIFICATION_CODE, TEST_PASSWORD);
+			fail();
+		} catch(CheckersPlusPlusServerException e) {
+			assertThat(e.getMessage()).isEqualTo("Invalid verification code. Check your email for the most recent code.");
+		}
+	}
+	
+	@Test
+	public void testCanResetPassword() throws Exception {
+		CreateAccount createAccountInput = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
+		AccountModel accountModel = createAccount(createAccountInput);
+		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getActiveByAccountId(accountModel.getAccountId());
+		assertTrue(verifyAccount.isPresent());
+		verifyAccount.get().setVerificationCode(TEST_VERIFICATION_CODE);
+		verifyAccountRepository.save(verifyAccount.get());
+		String newPassword = "NewPassword1";
+		accountService.resetPassword(TEST_USERNAME, TEST_VERIFICATION_CODE, newPassword);
+		Optional<AccountModel> updatedAccount = accountRepository.getByUsername(TEST_USERNAME);
+		assertThat(updatedAccount.isPresent()).isTrue();
+		assertThat(updatedAccount.get().getPassword()).isEqualTo(CryptoUtil.encryptPassword(newPassword));
+	}
+	
 	private AccountModel createAccount(CreateAccount createAccount) throws Exception {
 		accountService.createAccount(createAccount);
-		Optional<AccountModel> accountModel = accountRepository.getByEmail(TEST_EMAIL);
+		Optional<AccountModel> accountModel = accountRepository.getByEmail(createAccount.getEmail());
 		assertTrue(accountModel.isPresent());
 		accountsToDelete.add(accountModel.get());
 		Optional<VerifyAccountModel> verifyAccount = verifyAccountRepository.getActiveByAccountId(accountModel.get().getAccountId());

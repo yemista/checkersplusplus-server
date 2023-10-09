@@ -1,6 +1,6 @@
 package com.checklersplusplus.server.model;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -28,10 +28,10 @@ public class GameModel {
 	private UUID winnerId;
 	
 	@Column(name = "created")
-	private Timestamp created;
+	private LocalDateTime created;
 	
 	@Column(name = "last_modified")
-	private Timestamp lastModified;
+	private LocalDateTime lastModified;
 	
 	@Column(name = "game_state")
 	private String gameState;
@@ -42,8 +42,8 @@ public class GameModel {
 	@Column(name = "in_progress")
 	private boolean inProgress;
 
-	public GameModel(UUID gameId, UUID redId, UUID blackId, UUID winnerId, Timestamp created,
-			Timestamp lastModified, String gameState, boolean active, boolean inProgress) {
+	public GameModel(UUID gameId, UUID redId, UUID blackId, UUID winnerId, LocalDateTime created,
+			LocalDateTime lastModified, String gameState, boolean active, boolean inProgress) {
 		super();
 		this.gameId = gameId;
 		this.redId = redId;
@@ -91,19 +91,19 @@ public class GameModel {
 		this.winnerId = winnerId;
 	}
 
-	public Timestamp getCreated() {
+	public LocalDateTime getCreated() {
 		return created;
 	}
 
-	public void setCreated(Timestamp created) {
+	public void setCreated(LocalDateTime created) {
 		this.created = created;
 	}
 
-	public Timestamp getLastModified() {
+	public LocalDateTime getLastModified() {
 		return lastModified;
 	}
 
-	public void setLastModified(Timestamp lastModified) {
+	public void setLastModified(LocalDateTime lastModified) {
 		this.lastModified = lastModified;
 	}
 

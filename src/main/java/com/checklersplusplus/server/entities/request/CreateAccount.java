@@ -25,12 +25,12 @@ public class CreateAccount implements Serializable {
 	@NotBlank(message = "Username is required.")
 	private String username;
 	
-	public CreateAccount(String email, String password, String confirmPassword, String alias) {
+	public CreateAccount(String email, String password, String confirmPassword, String username) {
 		super();
 		this.email = email;
 		this.password = password;
 		this.confirmPassword = confirmPassword;
-		this.username = alias;
+		this.username = username;
 	}
 	
 	public CreateAccount() {

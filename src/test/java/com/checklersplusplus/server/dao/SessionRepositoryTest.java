@@ -60,7 +60,7 @@ public class SessionRepositoryTest {
 		sessionRepository.save(session);
 		assertThat(session.getSessionId()).isNotNull();
 		
-		Optional<SessionModel> fetchedSession = sessionRepository.getBySessionId(session.getSessionId());
+		Optional<SessionModel> fetchedSession = sessionRepository.getActiveBySessionId(session.getSessionId());
 		assertThat(fetchedSession).isPresent();
 		assertThat(fetchedSession.get().getAccountId()).isEqualTo(accountId);
 	}

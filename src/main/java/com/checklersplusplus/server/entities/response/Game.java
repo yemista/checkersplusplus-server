@@ -8,14 +8,14 @@ import com.checklersplusplus.server.model.GameModel;
 public class Game extends CheckersPlusPlusResponse implements Serializable {
 	private UUID gameId;
 	private String gameState;
-	private boolean redSeated;
-	private boolean blackSeated;
+	private UUID redAccountId;
+	private UUID blackAccountId;
 	
-	private Game(UUID gameId, String gameState, boolean blackSeated, boolean redSeated) {
+	private Game(UUID gameId, String gameState, UUID blackAccountId, UUID redAccountId) {
 		this.gameId = gameId;
 		this.gameState = gameState;
-		this.blackSeated = blackSeated;
-		this.redSeated = redSeated;
+		this.blackAccountId = blackAccountId;
+		this.redAccountId = redAccountId;
 	}
 	
 	public Game() {
@@ -30,18 +30,18 @@ public class Game extends CheckersPlusPlusResponse implements Serializable {
 	}
 
 	public static Game fromModel(GameModel gameModel) {
-		return new Game(gameModel.getGameId(), gameModel.getGameState(), gameModel.getBlackId() != null, gameModel.getRedId() != null);
+		return new Game(gameModel.getGameId(), gameModel.getGameState(), gameModel.getBlackId(), gameModel.getRedId());
 	}
 
 	public void setGameState(String boardState) {
 		this.gameState = boardState;
 	}
 
-	public boolean isRedSeated() {
-		return redSeated;
+	public UUID getRedId() {
+		return redAccountId;
 	}
 
-	public boolean isBlackSeated() {
-		return blackSeated;
+	public UUID getBlackId() {
+		return blackAccountId;
 	}
 }

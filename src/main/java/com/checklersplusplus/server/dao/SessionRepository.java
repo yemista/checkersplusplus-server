@@ -17,7 +17,7 @@ public interface SessionRepository extends JpaRepository<SessionModel, UUID> {
 	public void inactiveExistingSessions(UUID accountID);
 	
 	@Query("SELECT s FROM SessionModel s WHERE s.sessionId = ?1 AND active=true")
-	public Optional<SessionModel> getBySessionId(UUID sessionId);
+	public Optional<SessionModel> getActiveBySessionId(UUID sessionId);
 	
 	@Query("SELECT s FROM SessionModel s WHERE s.accountId = ?1 AND active=true")
 	public List<SessionModel> getActiveByAccountId(UUID accountId);
