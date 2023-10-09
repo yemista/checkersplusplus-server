@@ -152,7 +152,7 @@ public class GameService {
 		return Game.fromModel(gameModel);
 	}
 	
-	public void forefeitGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
+	public void forfeitGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
 		if (sessionModel.isEmpty()) {

@@ -335,7 +335,7 @@ public class GameServiceTest {
 	@Test
 	public void cannotForfeitGameInvalidGame() {
 		try {
-			gameService.forefeitGame(sessionId, UUID.randomUUID());
+			gameService.forfeitGame(sessionId, UUID.randomUUID());
 			fail();
 		} catch(CheckersPlusPlusServerException e) {
 			assertThat(e.getMessage()).isEqualTo("Game not found.");
@@ -351,7 +351,7 @@ public class GameServiceTest {
 		gameRepository.save(gameModel.get());
 		
 		try {
-			gameService.forefeitGame(sessionId, gameModel.get().getGameId());
+			gameService.forfeitGame(sessionId, gameModel.get().getGameId());
 			fail();
 		} catch(CheckersPlusPlusServerException e) {
 			assertThat(e.getMessage()).isEqualTo("Game not found.");
@@ -365,7 +365,7 @@ public class GameServiceTest {
 		gamesToDelete.add(gameModel.get());
 		
 		try {
-			gameService.forefeitGame(sessionId, gameModel.get().getGameId());
+			gameService.forfeitGame(sessionId, gameModel.get().getGameId());
 			fail();
 		} catch(CheckersPlusPlusServerException e) {
 			assertThat(e.getMessage()).isEqualTo("Game not found.");
@@ -383,7 +383,7 @@ public class GameServiceTest {
 		gameRepository.save(gameModel.get());
 		
 		try {
-			gameService.forefeitGame(sessionId, gameModel.get().getGameId());
+			gameService.forfeitGame(sessionId, gameModel.get().getGameId());
 			fail();
 		} catch(CheckersPlusPlusServerException e) {
 			assertThat(e.getMessage()).isEqualTo("User not found for game.");
@@ -393,7 +393,7 @@ public class GameServiceTest {
 	@Test
 	public void cannotForfeitGameSessionNotFound() throws CheckersPlusPlusServerException {
 		try {
-			gameService.forefeitGame(UUID.randomUUID(), UUID.randomUUID());
+			gameService.forfeitGame(UUID.randomUUID(), UUID.randomUUID());
 			fail();
 		} catch(CheckersPlusPlusServerException e) {
 			assertThat(e.getMessage()).isEqualTo("Session not found. Please login.");
@@ -410,7 +410,7 @@ public class GameServiceTest {
 		UUID opponentId = UUID.randomUUID();
 		gameModel.get().setRedId(opponentId);;
 		gameRepository.save(gameModel.get());
-		gameService.forefeitGame(sessionId, gameModel.get().getGameId());
+		gameService.forfeitGame(sessionId, gameModel.get().getGameId());
 		Optional<GameModel> forfeitedGameModel = gameRepository.getByGameId(game.getGameId());
 		assertThat(forfeitedGameModel.isPresent()).isTrue();
 		assertThat(forfeitedGameModel.get().isActive()).isFalse();
