@@ -24,18 +24,22 @@ public class OpenWebSocketModel {
 	@Column(name = "session_id")
 	private UUID sessionId;
 	
+	@Column(name = "server_id")
+	private UUID serverId;
+	
 	@Column(name = "web_socket_id")
 	private String webSocketId;
 	
 	@Column(name = "active")
 	private boolean active;
 
-	public OpenWebSocketModel(UUID openWebSocketId, String webSocketId, LocalDateTime created, UUID sessionId, boolean active) {
+	public OpenWebSocketModel(UUID openWebSocketId, String webSocketId, LocalDateTime created, UUID sessionId,  UUID serverId, boolean active) {
 		this.openWebSocketId = openWebSocketId;
 		this.created = created;
 		this.sessionId = sessionId;
 		this.active = active;
 		this.webSocketId = webSocketId;
+		this.serverId = serverId;
 	}
 
 	public OpenWebSocketModel() {
@@ -79,5 +83,13 @@ public class OpenWebSocketModel {
 
 	public void setWebSocketId(String webSocketId) {
 		this.webSocketId = webSocketId;
+	}
+
+	public UUID getServerId() {
+		return serverId;
+	}
+
+	public void setServerId(UUID serverId) {
+		this.serverId = serverId;
 	}
 }

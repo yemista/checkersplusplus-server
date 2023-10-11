@@ -186,9 +186,11 @@ public class GameServiceTest {
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
 		gameService.joinGame(sessionId, game.getGameId());
+		assertThat(gameModel.get().getCurrentMoveNumber()).isEqualTo(1);
 		List<Move> moves = Arrays.asList(new Move(0, 2, 1, 3));
 		gameService.move(sessionId, gameModel.get().getGameId(), moves);
 		Optional<GameModel> gameAfterMove = gameRepository.getByGameId(game.getGameId());
+		assertThat(gameAfterMove.get().getCurrentMoveNumber()).isEqualTo(2);
 		assertThat(gameAfterMove.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEXEEEEEEEEXEXEXEEXEXEXEXXEXEXEXE|2");
 	}
 	

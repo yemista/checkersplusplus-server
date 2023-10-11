@@ -11,11 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.checklersplusplus.server.dao.OpenWebSocketRepository;
 import com.checklersplusplus.server.model.OpenWebSocketModel;
+import com.checklersplusplus.server.websocket.WebSocketServerId;
 
 @Service
 @Transactional
 public class OpenWebSocketService {
-	
 	private static final Logger logger = LoggerFactory.getLogger(OpenWebSocketService.class);
 
 	@Autowired
@@ -27,13 +27,11 @@ public class OpenWebSocketService {
 		openWebSocket.setCreated(LocalDateTime.now());
 		openWebSocket.setWebSocketId(webSocketSessionId);
 		openWebSocket.setSessionId(serverSessionId);
+		openWebSocket.setServerId(WebSocketServerId.getInstance().getId());
 		openWebSocketRepository.save(openWebSocket);
 	}
-
 
 	public void inactivateWebSocketSession(String webSocketSessionId) {
 		openWebSocketRepository.inactivateBySessionId(webSocketSessionId);
 	}
-
-	
 }

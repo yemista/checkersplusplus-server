@@ -68,6 +68,7 @@ public class GameService {
     	if (logicalGame.isMoveLegal(coordinates)) {
     		logicalGame.doMove(coordinates);
     		gameModel.get().setGameState(logicalGame.getGameState());
+    		gameModel.get().setCurrentMoveNumber(logicalGame.getCurrentMove());
     		gameRepository.save(gameModel.get());
     	} else {
     		throw new InvalidMoveException();
@@ -155,6 +156,7 @@ public class GameService {
 		
 		com.checkersplusplus.engine.Game game = new com.checkersplusplus.engine.Game();
 		gameModel.setGameState(game.getGameState());
+		gameModel.setCurrentMoveNumber(game.getCurrentMove());
 		gameRepository.save(gameModel);
 		logger.info(String.format("SessionId: %s   Created game: %s", sessionId.toString(), gameModel.getGameId().toString()));
 		return Game.fromModel(gameModel);
