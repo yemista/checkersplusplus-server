@@ -4,6 +4,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,8 @@ import com.checklersplusplus.server.util.VerificationCodeUtil;
 @Service
 @Transactional
 public class AccountService {
+	
+	private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
 
 	@Autowired
 	private AccountRepository accountRepository;
@@ -78,6 +82,7 @@ public class AccountService {
 		verifyAccountModel.setActive(true);
 		verifyAccountRepository.save(verifyAccountModel);
 		NewAccount newAccount = new NewAccount(accountModel.getAccountId(), verificationCode);
+		logger.debug(String.format("New account created: %s", accountModel.getAccountId().toString()));
 		return newAccount;
 	}
 

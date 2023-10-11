@@ -1,5 +1,7 @@
 package com.checklersplusplus.server.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,8 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/checkersplusplus/api/account")
 public class AccountController {
+	
+	private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
 
 	@Autowired
 	private AccountService accountService;
@@ -43,16 +47,20 @@ public class AccountController {
 	public ResponseEntity<Session> login(@Valid @RequestBody Login login) {
 		try {
 			Session session = accountService.login(login.getUsername(), login.getPassword());
+			logger.info(String.format("Successful login by %s", login.getUsername()));
 			return new ResponseEntity<>(session, HttpStatus.OK);
 		} catch (AccountNotVerifiedException a) {
+			logger.info(a.getMessage());
 			Session session = new Session();
 			session.setMessage(a.getMessage());
 			return new ResponseEntity<>(session, HttpStatus.FORBIDDEN);
 		} catch (CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
 			Session session = new Session();
 			session.setMessage(e.getMessage());
 			return new ResponseEntity<>(session, HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			Session session = new Session();
 			session.setMessage("Server error. Try again soon.");
 			return new ResponseEntity<>(session, HttpStatus.SERVICE_UNAVAILABLE);
