@@ -113,6 +113,7 @@ public class AccountService {
 		}
 		
 		session.setMessage("Login successful.");
+		logger.info(String.format("Login successful for %s", account.get().getUsername()));
 		return session;
 	}
 	
@@ -133,5 +134,6 @@ public class AccountService {
 		accountRepository.save(account.get());
 		verifyAccount.get().setActive(false);
 		verifyAccountRepository.save(verifyAccount.get());
+		logger.info(String.format("Password reset for %s", account.get().getUsername()));
 	}
 }

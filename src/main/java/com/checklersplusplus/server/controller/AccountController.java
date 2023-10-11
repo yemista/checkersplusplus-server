@@ -79,8 +79,10 @@ public class AccountController {
 			String verificationCode = verificationService.createVerificationCode(account.getAccountId());
 			emailService.emailVerificationCode(account.getAccountId(), verificationCode);
 		} catch(CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 		return new ResponseEntity<>(new CheckersPlusPlusResponse("Please check your email for the verification code. If you do not see it check your spam folder."), HttpStatus.OK);
@@ -98,8 +100,10 @@ public class AccountController {
 			response.setMessage("Password reset successful.");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
@@ -110,8 +114,10 @@ public class AccountController {
 			verificationService.verifyAccount(verifyAccount.getUsername(), verifyAccount.getVerificationCode());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Account verified."), HttpStatus.OK);
 		} catch (CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to verify account. Please enter the most recent verification code."), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
@@ -134,8 +140,10 @@ public class AccountController {
 			NewAccount newAccount = accountService.createAccount(createAccount);
 			emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
 		} catch (CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to create account. Please try again."), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 		
