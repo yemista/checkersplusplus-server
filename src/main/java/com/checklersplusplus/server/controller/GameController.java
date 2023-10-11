@@ -53,6 +53,7 @@ public class GameController {
 		   List<Game> games = gameService.getOpenGames();
 		   return new ResponseEntity<>(games, HttpStatus.OK);
 	    } catch(Exception ex) {
+	    	logger.error(ex.getMessage());
 			return new ResponseEntity<>(Collections.emptyList(), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
@@ -63,11 +64,13 @@ public class GameController {
 			Game updatedGame = gameService.move(sessionId, gameId, moves);
 			updatedGame.setMessage("Move successful.");
 			return new ResponseEntity<>(updatedGame, HttpStatus.OK);
-		} catch(CheckersPlusPlusServerException ex) {
+		} catch(CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
 			Game game = new Game();
-			game.setMessage(ex.getMessage());
+			game.setMessage(e.getMessage());
 			return new ResponseEntity<>(game, HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			Game game = new Game();
 			game.setMessage("Server error. Try again soon.");
 			return new ResponseEntity<>(game, HttpStatus.SERVICE_UNAVAILABLE);
@@ -80,11 +83,13 @@ public class GameController {
 			Game updatedGame = gameService.joinGame(sessionId, gameId);
 			updatedGame.setMessage("Game joined.");
 			return new ResponseEntity<>(updatedGame, HttpStatus.OK);
-		} catch(CheckersPlusPlusServerException ex) {
+		} catch(CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
 			Game game = new Game();
-			game.setMessage(ex.getMessage());
+			game.setMessage(e.getMessage());
 			return new ResponseEntity<>(game, HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			Game game = new Game();
 			game.setMessage("Server error. Try again soon.");
 			return new ResponseEntity<>(game, HttpStatus.SERVICE_UNAVAILABLE);
@@ -97,11 +102,13 @@ public class GameController {
 			Game createdGame = gameService.createGame(sessionId, createGame.isMoveFirst());
 			createdGame.setMessage("Game created.");
 			return new ResponseEntity<>(createdGame, HttpStatus.OK);
-		} catch(CheckersPlusPlusServerException ex) {
+		} catch(CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
 			Game game = new Game();
-			game.setMessage(ex.getMessage());
+			game.setMessage(e.getMessage());
 			return new ResponseEntity<>(game, HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			Game game = new Game();
 			game.setMessage("Server error. Try again soon.");
 			return new ResponseEntity<>(game, HttpStatus.SERVICE_UNAVAILABLE);
@@ -114,10 +121,12 @@ public class GameController {
 			gameService.cancelGame(sessionId, gameId);
 			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse("Canceled game.");
 			return new ResponseEntity<>(response, HttpStatus.OK);
-		} catch(CheckersPlusPlusServerException ex) {
-			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse(ex.getMessage());
+		} catch(CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
+			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse(e.getMessage());
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse("Server error. Try again soon.");
 			return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
 		}
@@ -129,10 +138,12 @@ public class GameController {
 			gameService.forfeitGame(sessionId, gameId);
 			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse("Forfeited game.");
 			return new ResponseEntity<>(response, HttpStatus.OK);
-		} catch(CheckersPlusPlusServerException ex) {
-			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse(ex.getMessage());
+		} catch(CheckersPlusPlusServerException e) {
+			logger.info(e.getMessage());
+			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse(e.getMessage());
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
+			logger.error(ex.getMessage());
 			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse("Server error. Try again soon.");
 			return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
 		}

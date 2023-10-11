@@ -73,9 +73,10 @@ public class GameService {
     		throw new InvalidMoveException();
     	}
     	
+    	logger.info(String.format("GameId: %s   SessionId: %s    Committed Move: %s", gameId.toString(), sessionId.toString(), convertMovesToString(moves)));
     	return Game.fromModel(gameModel.get());
 	}
-	
+
 	public void cancelGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -99,6 +100,7 @@ public class GameService {
 		
 		gameModel.get().setActive(false);
 		gameRepository.save(gameModel.get());
+		logger.info(String.format("SessionId: %s   Cancelled game: %s", sessionId.toString(), gameId.toString()));
 	}
 
 	public Game joinGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
@@ -122,6 +124,7 @@ public class GameService {
 		
 		gameModel.get().setInProgress(true);
 		gameRepository.save(gameModel.get());
+		logger.info(String.format("SessionId: %s   Joined game: %s", sessionId.toString(), sessionId.toString()));
 		return Game.fromModel(gameModel.get());
 	}
 	
@@ -153,6 +156,7 @@ public class GameService {
 		com.checkersplusplus.engine.Game game = new com.checkersplusplus.engine.Game();
 		gameModel.setGameState(game.getGameState());
 		gameRepository.save(gameModel);
+		logger.info(String.format("SessionId: %s   Created game: %s", sessionId.toString(), gameModel.getGameId().toString()));
 		return Game.fromModel(gameModel);
 	}
 	
@@ -182,6 +186,7 @@ public class GameService {
 		gameModel.get().setActive(false);
 		gameModel.get().setInProgress(false);
 		gameRepository.save(gameModel.get());
+		logger.info(String.format("SessionId: %s   Forfeited game: %s", sessionId.toString(), gameModel.get().getGameId().toString()));
 	}
 
 	public Optional<Game> findByGameId(UUID gameId) {
@@ -200,5 +205,15 @@ public class GameService {
 
 	private boolean userNotPlayingGame(UUID accountId, GameModel gameModel) {
 		return !(accountId.equals(gameModel.getBlackId()) || accountId.equals(gameModel.getRedId()));
+	}
+	
+	private String convertMovesToString(List<Move> moves) {
+		StringBuilder sb = new StringBuilder();
+		
+		for (Move move : moves) {
+			sb.append(String.format("c:%d,r:%d-c:%d,r:%d+", move.getStartCol(), move.getStartRow(), move.getEndCol(), move.getEndRow()));
+		}
+		
+		return sb.toString();
 	}
 }
