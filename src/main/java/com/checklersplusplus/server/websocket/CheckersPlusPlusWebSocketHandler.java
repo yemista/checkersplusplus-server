@@ -14,6 +14,12 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.checklersplusplus.server.service.OpenWebSocketService;
 
+/**
+ * The overall web socket strategy is as follows:
+ * 
+ * 1. Upon connection established, store the web socket session id in our web socket map.
+ * 2. 
+ */
 @Component
 public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 	
@@ -38,27 +44,13 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 			UUID serverSessionId = UUID.fromString(serverSession);
 			Pair<WebSocketSession, UUID> pair = WebSocketMap.getInstance().getMap().get(session.getId());
 			
-			if (pair == null) {
-				throw new Exception("Connection not established");
-			}
-			
-			if (pair.getSecond().equals(SYSTEM_ID)) {
-				WebSocketMap.getInstance().getMap().put(session.getId(), Pair.of(session, serverSessionId));
-				openWebSocketService.createWebSocketSession(serverSessionId, session.getId());
-				return;
-			}
-			
-			UUID cachedServerSessionId = pair.getSecond();
-			
-			if (!cachedServerSessionId.equals(serverSessionId)) {
+			if (pair == null || pair.getSecond().equals(SYSTEM_ID) || !pair.getSecond().equals(serverSessionId)) {
 				openWebSocketService.inactivateWebSocketSession(session.getId());
 				WebSocketMap.getInstance().getMap().put(session.getId(), Pair.of(session, serverSessionId));
 				openWebSocketService.createWebSocketSession(serverSessionId, session.getId());
 			}
-			
 		} catch (Exception e) {
-			openWebSocketService.inactivateWebSocketSession(session.getId());
-			WebSocketMap.getInstance().getMap().remove(session.getId());
+			logger.error(e.getMessage());
 		}
 	}
 
