@@ -51,14 +51,14 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 			UUID cachedServerSessionId = pair.getSecond();
 			
 			if (!cachedServerSessionId.equals(serverSessionId)) {
-				throw new Exception(String.format("Mismatched server sessionId from client. Expected: %s Actual: %s", cachedServerSessionId.toString(), serverSessionId.toString()));
+				openWebSocketService.inactivateWebSocketSession(session.getId());
+				WebSocketMap.getInstance().getMap().put(session.getId(), Pair.of(session, serverSessionId));
+				openWebSocketService.createWebSocketSession(serverSessionId, session.getId());
 			}
+			
 		} catch (Exception e) {
-			System.out.print(e);
 			openWebSocketService.inactivateWebSocketSession(session.getId());
 			WebSocketMap.getInstance().getMap().remove(session.getId());
-			session.close();
-			throw e;
 		}
 	}
 

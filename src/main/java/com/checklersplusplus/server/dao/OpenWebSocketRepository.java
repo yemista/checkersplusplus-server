@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.dao;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,7 @@ public interface OpenWebSocketRepository extends JpaRepository<OpenWebSocketMode
 	@Modifying
 	@Query("UPDATE OpenWebSocketModel SET active = false WHERE webSocketId = ?1 AND active = true")
 	public void inactivateBySessionId(String sessionId);
+
+	@Query("SELECT o FROM OpenWebSocketModel o WHERE active = true AND sessionId = ?1")
+	public Optional<OpenWebSocketModel> getActiveByServerSessionId(UUID serverSessionId);
 }
