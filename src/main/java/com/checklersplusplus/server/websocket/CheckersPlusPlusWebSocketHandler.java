@@ -18,7 +18,14 @@ import com.checklersplusplus.server.service.OpenWebSocketService;
  * The overall web socket strategy is as follows:
  * 
  * 1. Upon connection established, store the web socket session id in our web socket map.
- * 2. 
+ * 2. Upon message received, if we have not stored the server session id from the message
+ * 	a. Deactivate any existing records.
+ * 	b. Store the web socket session id with the latest server session id in the WebSocketMap.
+ * 	c. Save the updated information in the database.
+ * 
+ * What this means is the client can reconnect and open a web socket and send its latest server session id
+ * indefinitely. If the client logs in again and gets a new session id, it can simply send it and the 
+ * handler will update it.
  */
 @Component
 public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
@@ -58,7 +65,6 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
 		openWebSocketService.inactivateWebSocketSession(session.getId());
 		WebSocketMap.getInstance().getMap().remove(session.getId());
-		session.close();
         super.handleTransportError(session, exception);
 	}
 
@@ -66,7 +72,6 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
 		openWebSocketService.inactivateWebSocketSession(session.getId());
 		WebSocketMap.getInstance().getMap().remove(session.getId());
-		session.close();
         super.afterConnectionClosed(session, closeStatus);
 	}
 
