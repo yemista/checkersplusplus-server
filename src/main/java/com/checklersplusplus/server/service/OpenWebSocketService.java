@@ -1,7 +1,9 @@
 package com.checklersplusplus.server.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checklersplusplus.server.dao.OpenWebSocketRepository;
+import com.checklersplusplus.server.entities.internal.OpenWebSocket;
 import com.checklersplusplus.server.model.OpenWebSocketModel;
 import com.checklersplusplus.server.websocket.WebSocketServerId;
 
@@ -33,5 +36,12 @@ public class OpenWebSocketService {
 
 	public void inactivateWebSocketSession(String webSocketSessionId) {
 		openWebSocketRepository.inactivateBySessionId(webSocketSessionId);
+	}
+	
+	public List<OpenWebSocket> getOpenWebSocketsForServer() {
+		return openWebSocketRepository.getActiveByServerId(WebSocketServerId.getInstance().getId())
+				.stream()
+				.map(openWebSocketModel -> new OpenWebSocket(openWebSocketModel.getSessionId(), openWebSocketModel.getWebSocketId()))
+				.collect(Collectors.toList());
 	}
 }

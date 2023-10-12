@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.dao;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,4 +18,7 @@ public interface OpenWebSocketRepository extends JpaRepository<OpenWebSocketMode
 
 	@Query("SELECT o FROM OpenWebSocketModel o WHERE active = true AND sessionId = ?1")
 	public Optional<OpenWebSocketModel> getActiveByServerSessionId(UUID serverSessionId);
+	
+	@Query("SELECT o FROM OpenWebSocketModel o WHERE active = true AND serverId = ?1")
+	public List<OpenWebSocketModel> getActiveByServerId(UUID serverId);
 }
