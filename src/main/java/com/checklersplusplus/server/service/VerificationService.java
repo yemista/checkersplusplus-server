@@ -1,6 +1,5 @@
 package com.checklersplusplus.server.service;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,7 +34,7 @@ public class VerificationService {
 		verifyAccountRepository.inactivateForAccountId(accountId);
 		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
 		verifyAccountModel.setAccountId(accountId);
-		verifyAccountModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
+		verifyAccountModel.setCreated(LocalDateTime.now());
 		String verificationCode = VerificationCodeUtil.generateVerificationCode();
 		verifyAccountModel.setVerificationCode(verificationCode);
 		verifyAccountModel.setActive(true);

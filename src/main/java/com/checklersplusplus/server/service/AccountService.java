@@ -1,6 +1,5 @@
 package com.checklersplusplus.server.service;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -76,7 +75,7 @@ public class AccountService {
 		accountRepository.save(accountModel);
 		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
 		verifyAccountModel.setAccountId(accountModel.getAccountId());
-		verifyAccountModel.setCreated(Timestamp.valueOf(LocalDateTime.now()));
+		verifyAccountModel.setCreated(LocalDateTime.now());
 		String verificationCode = VerificationCodeUtil.generateVerificationCode();
 		verifyAccountModel.setVerificationCode(verificationCode);
 		verifyAccountModel.setActive(true);
@@ -99,7 +98,7 @@ public class AccountService {
 		
 		sessionRepository.inactiveExistingSessions(account.get().getAccountId());
 		SessionModel sessionModel = new SessionModel();
-		sessionModel.setLastModified(Timestamp.valueOf(LocalDateTime.now()));
+		sessionModel.setLastModified(LocalDateTime.now());
 		sessionModel.setAccountId(account.get().getAccountId());
 		sessionModel.setActive(true);
 		sessionRepository.save(sessionModel);

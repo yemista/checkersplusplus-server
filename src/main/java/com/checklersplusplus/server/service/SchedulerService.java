@@ -15,11 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.LastMoveSentRepository;
 import com.checklersplusplus.server.dao.OpenWebSocketRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.model.GameModel;
+import com.checklersplusplus.server.model.GameMoveModel;
 import com.checklersplusplus.server.model.LastMoveSentModel;
 import com.checklersplusplus.server.model.OpenWebSocketModel;
 import com.checklersplusplus.server.model.SessionModel;
@@ -40,6 +42,9 @@ public class SchedulerService {
 	
 	@Autowired
 	private GameRepository gameRepository;
+	
+	@Autowired
+	private GameMoveRepository gameMoveRepository;
 	
 	@Autowired
 	private LastMoveSentRepository lastMoveSentRepository;
@@ -64,13 +69,14 @@ public class SchedulerService {
 			
 			Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, game.get().getGameId());
 			
-			if (lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
+			if (lastMoveSent.isEmpty() || lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
 				continue;
 			}
 			
 			if (game.get().getCurrentMoveNumber() - lastMoveSent.get().getLastMoveSent() == 1) {
 				Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketId());
-				String move = "";
+				Optional<GameMoveModel> latestMove = gameMoveRepository.findFirstByGameIdOrderByMoveNumberDesc(game.get().getGameId());
+				String move = latestMove.get().getMoveList();
 				
 				try {
 					webSocket.getFirst().sendMessage(new TextMessage(move));

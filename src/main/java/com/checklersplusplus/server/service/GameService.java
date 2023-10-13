@@ -14,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.engine.Coordinate;
 import com.checkersplusplus.engine.CoordinatePair;
+import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
+import com.checklersplusplus.server.dao.LastMoveSentRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.Game;
@@ -38,6 +40,12 @@ public class GameService {
 	
 	@Autowired
 	private SessionRepository sessionRepository;
+	
+	@Autowired
+	private LastMoveSentRepository lastMoveSentRepository;
+	
+	@Autowired
+	private GameMoveRepository gameMoveRepository;
 		
 	public List<Game> getOpenGames() {
 		return gameRepository.getOpenGames().stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());

@@ -1,6 +1,6 @@
 package com.checklersplusplus.server.model;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -25,7 +25,7 @@ public class VerifyAccountModel {
 	private String verificationCode;
 	
 	@Column(name = "created")
-	private Timestamp created;
+	private LocalDateTime created;
 	
 	@Column(name = "active")
 	private boolean active;
@@ -34,7 +34,7 @@ public class VerifyAccountModel {
 		
 	}
 
-	public VerifyAccountModel(UUID verifyAccountId, UUID accountId, String verificationCode, Timestamp created, boolean active) {
+	public VerifyAccountModel(UUID verifyAccountId, UUID accountId, String verificationCode, LocalDateTime created, boolean active) {
 		super();
 		this.verifyAccountId = verifyAccountId;
 		this.accountId = accountId;
@@ -67,11 +67,11 @@ public class VerifyAccountModel {
 		this.verificationCode = verificationCode;
 	}
 
-	public Timestamp getCreated() {
+	public LocalDateTime getCreated() {
 		return created;
 	}
 
-	public void setCreated(Timestamp created) {
+	public void setCreated(LocalDateTime created) {
 		this.created = created;
 	}
 	

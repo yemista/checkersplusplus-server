@@ -1,6 +1,6 @@
 package com.checklersplusplus.server.model;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -25,12 +25,12 @@ public class SessionModel {
 	private boolean active;
 	
 	@Column(name = "last_modified")
-	private Timestamp lastModified;
+	private LocalDateTime lastModified;
 
 	public SessionModel() {
 	}
 	
-	public SessionModel(UUID sessionId, UUID accountId, boolean active, Timestamp lastModified) {
+	public SessionModel(UUID sessionId, UUID accountId, boolean active, LocalDateTime lastModified) {
 		this.sessionId = sessionId;
 		this.accountId = accountId;
 		this.active = active;
@@ -61,11 +61,11 @@ public class SessionModel {
 		this.active = active;
 	}
 
-	public Timestamp getLastModified() {
+	public LocalDateTime getLastModified() {
 		return lastModified;
 	}
 
-	public void setLastModified(Timestamp lastModified) {
+	public void setLastModified(LocalDateTime lastModified) {
 		this.lastModified = lastModified;
 	}
 }
