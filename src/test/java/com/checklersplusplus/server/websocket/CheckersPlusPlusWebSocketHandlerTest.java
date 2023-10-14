@@ -67,12 +67,13 @@ public class CheckersPlusPlusWebSocketHandlerTest {
 		webSocketSession.sendMessage(new TextMessage(serverSessionId.toString()));
 		assertThat(webSocketSession.isOpen()).isTrue();
 		
+		Thread.sleep(100);
 		Optional<OpenWebSocketModel> openWebSocketModel = openWebSocketRepository.getActiveByServerSessionId(serverSessionId);
 		assertThat(openWebSocketModel.isPresent()).isTrue();
-		
+
 		UUID secondServerSessionId = UUID.randomUUID();
 		webSocketSession.sendMessage(new TextMessage(secondServerSessionId.toString()));
-		Thread.sleep(1000);  // Sleep here to make sure secondServerSessionId makes it to database before querying it.
+		Thread.sleep(100);  // Sleep here to make sure secondServerSessionId makes it to database before querying it.
 		Optional<OpenWebSocketModel> secondOpenWebSocketModel = openWebSocketRepository.getActiveByServerSessionId(secondServerSessionId);
 		assertThat(secondOpenWebSocketModel.isPresent()).isTrue();
 		assertThat(secondOpenWebSocketModel.get().getOpenWebSocketId()).isNotEqualTo(openWebSocketModel.get().getOpenWebSocketId());

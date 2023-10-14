@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Test;
@@ -21,6 +22,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.checklersplusplus.server.dao.AccountRepository;
+import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
 import com.checklersplusplus.server.entities.request.CreateAccount;
@@ -28,6 +30,7 @@ import com.checklersplusplus.server.entities.response.Account;
 import com.checklersplusplus.server.entities.response.Session;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.model.AccountModel;
+import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 import com.checklersplusplus.server.util.CryptoUtil;
@@ -52,6 +55,9 @@ public class AccountServiceTest {
 	
 	@Autowired
 	private VerifyAccountRepository verifyAccountRepository;
+	
+	@Autowired
+	private GameEventRepository gameEventRepository;
 	
 	private List<AccountModel> accountsToDelete = new ArrayList<>();
 	private List<VerifyAccountModel> verifyAccountsToDelete = new ArrayList<>();
@@ -146,7 +152,18 @@ public class AccountServiceTest {
 		AccountModel accountModel = createAccount(createAccountInput);
 		accountModel.setVerified(LocalDateTime.now());
 		accountRepository.save(accountModel);
+		GameEventModel gameEvent = new GameEventModel();
+		gameEvent.setActive(true);
+		gameEvent.setEvent("");
+		gameEvent.setEventRecipientAccountId(accountModel.getAccountId());
+		UUID gameId = UUID.randomUUID();
+		gameEvent.setGameId(gameId);
+		gameEventRepository.save(gameEvent);
+		Optional<GameEventModel> fetchedGameEvent = gameEventRepository.findActiveEventForAccountIdAndGameId(accountModel.getAccountId(), gameId);
+		assertThat(fetchedGameEvent.isPresent()).isTrue();
 		Session session = accountService.login(TEST_USERNAME, TEST_PASSWORD);
+		Optional<GameEventModel> reFetchedGameEvent = gameEventRepository.findActiveEventForAccountIdAndGameId(accountModel.getAccountId(), gameId);
+		assertThat(reFetchedGameEvent.isPresent()).isFalse();
 		assertThat(session.getSessionId()).isNotNull();
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(session.getSessionId());
 		assertThat(sessionModel.isPresent()).isTrue();

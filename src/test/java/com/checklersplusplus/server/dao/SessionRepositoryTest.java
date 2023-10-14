@@ -2,7 +2,6 @@ package com.checklersplusplus.server.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,19 +35,13 @@ public class SessionRepositoryTest {
 		sessionRepository.save(session1);
 		assertThat(session1.getSessionId()).isNotNull();
 		
-		SessionModel session2 = new SessionModel();
-		session2.setAccountId(accountId);
-		session2.setActive(true);
-		sessionRepository.save(session2);
-		assertThat(session2.getSessionId()).isNotNull();
-		
-		List<SessionModel> sessions = sessionRepository.getActiveByAccountId(accountId);
-		assertThat(sessions.size()).isEqualTo(2);
+		Optional<SessionModel> session = sessionRepository.getActiveByAccountId(accountId);
+		assertThat(session.isPresent()).isTrue();
 		
 		sessionRepository.inactiveExistingSessions(accountId);
 		
-		List<SessionModel> activeSessions = sessionRepository.getActiveByAccountId(accountId);
-		assertThat(activeSessions.size()).isEqualTo(0);
+		Optional<SessionModel> activeSession = sessionRepository.getActiveByAccountId(accountId);
+		assertThat(activeSession.isPresent()).isFalse();
 	}
 	
 	@Test

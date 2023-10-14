@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
 import com.checklersplusplus.server.entities.request.CreateAccount;
@@ -24,6 +26,7 @@ import com.checklersplusplus.server.entities.request.Login;
 import com.checklersplusplus.server.entities.request.VerifyAccount;
 import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
 import com.checklersplusplus.server.entities.response.Session;
+import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 
@@ -42,10 +45,21 @@ public class CreateVerifyLoginIntegrationTests {
 	private int port;
 	
 	@Autowired
+	private AccountRepository accountRepository;
+	
+	@Autowired
 	private VerifyAccountRepository verifyAccountRepository;
 	
 	@Autowired
 	private SessionRepository sessionRepository;
+	
+	@After
+	public void cleanupDatabaseObjects() {
+		Optional<AccountModel> account = accountRepository.getByEmail(TEST_EMAIL);
+		Optional<SessionModel> session = sessionRepository.getActiveByAccountId(account.get().getAccountId());
+		sessionRepository.delete(session.get());
+		accountRepository.delete(account.get());
+	}
 
 	@Test
 	public void createVerifyLogin() {

@@ -1,6 +1,5 @@
 package com.checklersplusplus.server.dao;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,5 +19,5 @@ public interface SessionRepository extends JpaRepository<SessionModel, UUID> {
 	public Optional<SessionModel> getActiveBySessionId(UUID sessionId);
 	
 	@Query("SELECT s FROM SessionModel s WHERE s.accountId = ?1 AND active=true")
-	public List<SessionModel> getActiveByAccountId(UUID accountId);
+	public Optional<SessionModel> getActiveByAccountId(UUID accountId);
 }

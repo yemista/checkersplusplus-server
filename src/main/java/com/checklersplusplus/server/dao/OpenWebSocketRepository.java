@@ -12,13 +12,19 @@ import com.checklersplusplus.server.model.OpenWebSocketModel;
 
 public interface OpenWebSocketRepository extends JpaRepository<OpenWebSocketModel, UUID> {
 
+	// TODO test
 	@Modifying
 	@Query("UPDATE OpenWebSocketModel SET active = false WHERE webSocketId = ?1 AND active = true")
 	public void inactivateBySessionId(String sessionId);
 
+	// TODO test
 	@Query("SELECT o FROM OpenWebSocketModel o WHERE active = true AND sessionId = ?1")
 	public Optional<OpenWebSocketModel> getActiveByServerSessionId(UUID serverSessionId);
 	
+	// TODO test
 	@Query("SELECT o FROM OpenWebSocketModel o WHERE active = true AND serverId = ?1")
 	public List<OpenWebSocketModel> getActiveByServerId(UUID serverId);
+	
+	@Query("SELECT o FROM OpenWebSocketModel o WHERE serverId = ?1")
+	public List<OpenWebSocketModel> getAllByServerId(UUID serverId);
 }

@@ -27,6 +27,8 @@ import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.exception.InvalidMoveException;
 import com.checklersplusplus.server.exception.SessionNotFoundException;
 import com.checklersplusplus.server.model.GameModel;
+import com.checklersplusplus.server.model.GameMoveModel;
+import com.checklersplusplus.server.model.LastMoveSentModel;
 import com.checklersplusplus.server.model.SessionModel;
 
 @Service
@@ -74,15 +76,31 @@ public class GameService {
     	com.checkersplusplus.engine.Game logicalGame = new com.checkersplusplus.engine.Game(gameModel.get().getGameState());
     	
     	if (logicalGame.isMoveLegal(coordinates)) {
+    		int previousMove = logicalGame.getCurrentMove();
     		logicalGame.doMove(coordinates);
     		gameModel.get().setGameState(logicalGame.getGameState());
+    		gameModel.get().setLastModified(LocalDateTime.now());
     		gameModel.get().setCurrentMoveNumber(logicalGame.getCurrentMove());
     		gameRepository.save(gameModel.get());
+    		
+    		GameMoveModel gameMoveModel = new GameMoveModel();
+    		gameMoveModel.setAccountId(sessionModel.get().getAccountId());
+    		gameMoveModel.setGameId(gameId);
+    		gameMoveModel.setCreated(LocalDateTime.now());
+    		gameMoveModel.setMoveNumber(previousMove);
+    		gameMoveModel.setMoveList(convertMoveListToString(moves));
+    		gameMoveRepository.save(gameMoveModel);
+    		
+    		LastMoveSentModel lastMoveSentModel = new LastMoveSentModel();
+    		lastMoveSentModel.setGameId(gameId);
+    		lastMoveSentModel.setAccountId(sessionModel.get().getAccountId());
+    		lastMoveSentModel.setLastMoveSent(previousMove);
+    		lastMoveSentRepository.save(lastMoveSentModel);
     	} else {
     		throw new InvalidMoveException();
     	}
     	
-    	logger.info(String.format("GameId: %s   SessionId: %s    Committed Move: %s", gameId.toString(), sessionId.toString(), convertMovesToString(moves)));
+    	logger.info(String.format("GameId: %s   SessionId: %s    Committed Move: %s", gameId.toString(), sessionId.toString(), convertMoveListToString(moves)));
     	return Game.fromModel(gameModel.get());
 	}
 
@@ -133,7 +151,7 @@ public class GameService {
 		
 		gameModel.get().setInProgress(true);
 		gameRepository.save(gameModel.get());
-		logger.info(String.format("SessionId: %s   Joined game: %s", sessionId.toString(), sessionId.toString()));
+		logger.info(String.format("SessionId: %s   Joined game: %s", sessionId.toString(), gameId.toString()));
 		return Game.fromModel(gameModel.get());
 	}
 	
@@ -217,7 +235,7 @@ public class GameService {
 		return !(accountId.equals(gameModel.getBlackId()) || accountId.equals(gameModel.getRedId()));
 	}
 	
-	private String convertMovesToString(List<Move> moves) {
+	private String convertMoveListToString(List<Move> moves) {
 		StringBuilder sb = new StringBuilder();
 		
 		for (Move move : moves) {

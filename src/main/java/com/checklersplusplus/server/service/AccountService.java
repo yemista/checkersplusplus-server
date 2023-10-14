@@ -2,6 +2,7 @@ package com.checklersplusplus.server.service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checklersplusplus.server.dao.AccountRepository;
+import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
@@ -45,6 +47,9 @@ public class AccountService {
 	
 	@Autowired
 	private GameRepository gameRepository;
+	
+	@Autowired
+	private GameEventRepository gameEventRepository;
 	
 	public Account findByUsername(String username) {
 		Optional<AccountModel> accountModel = accountRepository.getByUsername(username);
@@ -111,6 +116,19 @@ public class AccountService {
 			session.setGameId(currentGame.get().getGameId());
 		}
 		
+		UUID opponentId = null;
+		
+		if (account.get().getAccountId().equals(currentGame.get().getBlackId())) {
+			opponentId = currentGame.get().getRedId();
+		} else if(account.get().getAccountId().equals(currentGame.get().getRedId())) {
+			opponentId = currentGame.get().getBlackId();
+		}
+		 
+		if (opponentId != null) {
+			gameEventRepository.inactivateTimeoutEventForOpponent(opponentId);
+		}
+
+		gameEventRepository.inactivateEventsForRecipient(account.get().getAccountId());
 		session.setMessage("Login successful.");
 		logger.info(String.format("Login successful for %s", account.get().getUsername()));
 		return session;

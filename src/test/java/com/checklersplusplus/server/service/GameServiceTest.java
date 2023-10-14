@@ -19,7 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.checklersplusplus.server.dao.AccountRepository;
+import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
+import com.checklersplusplus.server.dao.LastMoveSentRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
 import com.checklersplusplus.server.entities.request.CreateAccount;
@@ -29,6 +31,8 @@ import com.checklersplusplus.server.entities.response.Session;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameModel;
+import com.checklersplusplus.server.model.GameMoveModel;
+import com.checklersplusplus.server.model.LastMoveSentModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 
@@ -58,6 +62,12 @@ public class GameServiceTest {
 	
 	@Autowired
 	private GameRepository gameRepository;
+	
+	@Autowired
+	private GameMoveRepository gameMoveRepository;
+	
+	@Autowired
+	private LastMoveSentRepository lastMoveSentRepository;
 	
 	private List<AccountModel> accountsToDelete = new ArrayList<>();
 	private List<VerifyAccountModel> verifyAccountsToDelete = new ArrayList<>();
@@ -163,8 +173,8 @@ public class GameServiceTest {
 	@Test
 	public void cannotMoveInvalidMove() throws Exception {
 		UUID secondAccountId = setupSecondUserAndSession();
-		List<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
-		Game game = gameService.createGame(secondSession.get(0).getSessionId(), false);
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
 		gameService.joinGame(sessionId, game.getGameId());
@@ -181,8 +191,8 @@ public class GameServiceTest {
 	@Test
 	public void canMove() throws Exception {
 		UUID secondAccountId = setupSecondUserAndSession();
-		List<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
-		Game game = gameService.createGame(secondSession.get(0).getSessionId(), false);
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
 		gameService.joinGame(sessionId, game.getGameId());
@@ -192,6 +202,13 @@ public class GameServiceTest {
 		Optional<GameModel> gameAfterMove = gameRepository.getByGameId(game.getGameId());
 		assertThat(gameAfterMove.get().getCurrentMoveNumber()).isEqualTo(2);
 		assertThat(gameAfterMove.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEXEEEEEEEEXEXEXEEXEXEXEXXEXEXEXE|2");
+		Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameModel.get().getGameId());
+		assertThat(lastMoveSent.isPresent()).isTrue();
+		assertThat(lastMoveSent.get().getLastMoveSent()).isEqualTo(1);
+		Optional<GameMoveModel> gameMove = gameMoveRepository.findFirstByGameIdOrderByMoveNumberDesc(gameModel.get().getGameId());
+		assertThat(gameMove.isPresent()).isTrue();
+		assertThat(gameMove.get().getMoveNumber()).isEqualTo(1);
+		
 	}
 	
 	@Test
@@ -217,8 +234,8 @@ public class GameServiceTest {
 	@Test
 	public void cannotMoveInactiveGame() throws Exception {
 		UUID secondAccountId = setupSecondUserAndSession();
-		List<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
-		Game game = gameService.createGame(secondSession.get(0).getSessionId(), false);
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
 		gameService.joinGame(sessionId, game.getGameId());
@@ -238,8 +255,8 @@ public class GameServiceTest {
 	@Test
 	public void cannotMoveGameNotInProgress() throws Exception {
 		UUID secondAccountId = setupSecondUserAndSession();
-		List<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
-		Game game = gameService.createGame(secondSession.get(0).getSessionId(), false);
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
 		gameService.joinGame(sessionId, game.getGameId());
@@ -259,8 +276,8 @@ public class GameServiceTest {
 	@Test
 	public void canJoinGameAsRed() throws Exception {
 		UUID secondAccountId = setupSecondUserAndSession();
-		List<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
-		Game game = gameService.createGame(secondSession.get(0).getSessionId(), true);
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), true);
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
 		gameService.joinGame(sessionId, game.getGameId());
@@ -272,8 +289,8 @@ public class GameServiceTest {
 	@Test
 	public void canJoinGameAsBlack() throws Exception {
 		UUID secondAccountId = setupSecondUserAndSession();
-		List<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
-		Game game = gameService.createGame(secondSession.get(0).getSessionId(), false);
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
 		gameService.joinGame(sessionId, game.getGameId());

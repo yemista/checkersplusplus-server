@@ -4,10 +4,14 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
+@Entity
+@Table(name = "game_move")
 public class GameMoveModel {
 
 	@Id
@@ -37,6 +41,9 @@ public class GameMoveModel {
 		this.moveList = moveList;
 		this.created = created;
 		this.moveNumber = moveNumber;
+	}
+
+	public GameMoveModel() {
 	}
 
 	public UUID getGameMoveId() {
