@@ -151,7 +151,7 @@ public class GameServiceTest {
 		assertThat(gameModel.get().getRedId()).isNull();
 		assertThat(gameModel.get().isActive()).isTrue();
 		assertThat(gameModel.get().isInProgress()).isFalse();
-		assertThat(gameModel.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEEEEEEEEXEXEXEXEEXEXEXEXXEXEXEXE|1");
+		assertThat(gameModel.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEEEEEEEEXEXEXEXEEXEXEXEXXEXEXEXE|0");
 	}
 	
 	@Test
@@ -167,7 +167,7 @@ public class GameServiceTest {
 		assertThat(gameModel.get().getBlackId()).isNull();
 		assertThat(gameModel.get().isActive()).isTrue();
 		assertThat(gameModel.get().isInProgress()).isFalse();
-		assertThat(gameModel.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEEEEEEEEXEXEXEXEEXEXEXEXXEXEXEXE|1");
+		assertThat(gameModel.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEEEEEEEEXEXEXEXEEXEXEXEXXEXEXEXE|0");
 	}
 	
 	@Test
@@ -196,12 +196,12 @@ public class GameServiceTest {
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
 		gameService.joinGame(sessionId, game.getGameId());
-		assertThat(gameModel.get().getCurrentMoveNumber()).isEqualTo(1);
+		assertThat(gameModel.get().getCurrentMoveNumber()).isEqualTo(0);
 		List<Move> moves = Arrays.asList(new Move(0, 2, 1, 3));
 		gameService.move(sessionId, gameModel.get().getGameId(), moves);
 		Optional<GameModel> gameAfterMove = gameRepository.getByGameId(game.getGameId());
-		assertThat(gameAfterMove.get().getCurrentMoveNumber()).isEqualTo(2);
-		assertThat(gameAfterMove.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEXEEEEEEEEXEXEXEEXEXEXEXXEXEXEXE|2");
+		assertThat(gameAfterMove.get().getCurrentMoveNumber()).isEqualTo(1);
+		assertThat(gameAfterMove.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEXEEEEEEEEXEXEXEEXEXEXEXXEXEXEXE|1");
 		Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameModel.get().getGameId());
 		assertThat(lastMoveSent.isPresent()).isTrue();
 		assertThat(lastMoveSent.get().getLastMoveSent()).isEqualTo(1);

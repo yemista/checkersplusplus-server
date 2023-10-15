@@ -1,6 +1,8 @@
 package com.checklersplusplus.server.service;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -57,6 +61,7 @@ public class SchedulerService {
 	
 	@Scheduled(fixedDelay = 1000)
 	public void updateClients() throws IOException {
+		LocalDateTime start = LocalDateTime.now();
 		List<OpenWebSocket> openWebSockets = getActiveOpenWebSockets();
 		
 		for (OpenWebSocket openWebSocket : openWebSockets) {
@@ -92,7 +97,7 @@ public class SchedulerService {
 			
 			Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, game.get().getGameId());
 			
-			if (lastMoveSent.isEmpty() || lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
+			if (lastMoveSent.isPresent() && lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
 				if (gameEvent.isPresent() && GameEvent.LOSE.getMessage().equals(gameEvent.get().getEvent())) {
 					forwardGameEvent(openWebSocket, gameEvent.get(), accountId, game.get().getGameId());
 				}
@@ -100,12 +105,15 @@ public class SchedulerService {
 				continue;
 			}
 			
-			if (game.get().getCurrentMoveNumber() - lastMoveSent.get().getLastMoveSent() == 1) {
-				forwardLatestMove(openWebSocket, game.get(), accountId);
+			if (lastMoveSent.isEmpty() || game.get().getCurrentMoveNumber() - lastMoveSent.get().getLastMoveSent() == 1) {
+				forwardLatestMove(openWebSocket, game.get().getGameId(), accountId);
 			} else {
 				logger.error(String.format("Unexpected situation. Account id %s is more than one move behind", accountId.toString()));
 			}
 		}
+		
+		LocalDateTime end = LocalDateTime.now();
+		System.out.println(String.format("Thread: %d updateClients: %d", Thread.currentThread().getId(), Duration.between(start, end).toMillis()));
 	}
 	
 	private List<OpenWebSocket> getActiveOpenWebSockets() {
@@ -113,29 +121,42 @@ public class SchedulerService {
 		return openWebSocketModels.stream()
 								  .map(model -> new OpenWebSocket(model.getSessionId(), model.getWebSocketId()))
 								  .collect(Collectors.toList());
-}
+	}
 
-	private void forwardLatestMove(OpenWebSocket openWebSocket, GameModel game, UUID accountId) {
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void forwardLatestMove(OpenWebSocket openWebSocket, UUID gameId, UUID accountId) {
+		LocalDateTime start = LocalDateTime.now();
 		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketSessionId());
 		
 		if (webSocket == null) {
 			return;
 		}
 		
-		Optional<GameMoveModel> latestMove = gameMoveRepository.findFirstByGameIdOrderByMoveNumberDesc(game.getGameId());
-		String move = "MOVE|" + latestMove.get().getMoveList();
+		Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameId);
+		Optional<GameModel> game = gameRepository.findById(gameId);
+		
+		if (lastMoveSent.isPresent() && lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
+			return;
+		}
+		
+		Optional<GameMoveModel> latestMove = gameMoveRepository.findFirstByGameIdOrderByMoveNumberDesc(game.get().getGameId());
+		String move = "MOVE|" + latestMove.get().getMoveNumber() + "|" + latestMove.get().getMoveList();
 		
 		try {
 			webSocket.getFirst().sendMessage(new TextMessage(move));
 			LastMoveSentModel latestMoveSent = new LastMoveSentModel();
-			latestMoveSent.setGameId(game.getGameId());
+			latestMoveSent.setGameId(gameId);
 			latestMoveSent.setAccountId(accountId);
-			latestMoveSent.setLastMoveSent(game.getCurrentMoveNumber());
-			lastMoveSentRepository.save(latestMoveSent);
+			latestMoveSent.setCreated(LocalDateTime.now());
+			latestMoveSent.setLastMoveSent(game.get().getCurrentMoveNumber());
+			lastMoveSentRepository.saveAndFlush(latestMoveSent);
 		} catch (Exception e) {
 			logger.error(String.format("Failed to send move number %d to accountId %s for gameId %s", 
-					game.getCurrentMoveNumber(), accountId.toString(), game.getGameId().toString()), e);
+					game.get().getCurrentMoveNumber(), accountId.toString(), game.get().getGameId().toString()), e);
 		}
+		
+		LocalDateTime end = LocalDateTime.now();
+		System.out.println(String.format("Thread: %d forwardLatestMove: %d", Thread.currentThread().getId(), Duration.between(start, end).toMillis()));
 	}
 
 	private void forwardGameEvent(OpenWebSocket openWebSocket, GameEventModel gameEvent, UUID accountId, UUID gameId) {

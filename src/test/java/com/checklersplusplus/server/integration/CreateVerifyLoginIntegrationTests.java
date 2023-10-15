@@ -57,8 +57,14 @@ public class CreateVerifyLoginIntegrationTests {
 	public void cleanupDatabaseObjects() {
 		Optional<AccountModel> account = accountRepository.getByEmail(TEST_EMAIL);
 		Optional<SessionModel> session = sessionRepository.getActiveByAccountId(account.get().getAccountId());
-		sessionRepository.delete(session.get());
-		accountRepository.delete(account.get());
+		
+		if (session.isPresent()) {
+			sessionRepository.delete(session.get());
+		}
+		
+		if (account.isPresent()) {
+			accountRepository.delete(account.get());
+		}
 	}
 
 	@Test

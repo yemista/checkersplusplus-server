@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.model;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -25,12 +26,16 @@ public class LastMoveSentModel {
 	
 	@Column(name = "last_move_sent")
 	private int lastMoveSent;
+	
+	@Column(name = "created")
+	private LocalDateTime created;
 
-	public LastMoveSentModel(UUID lastMoveSentId, UUID accountId, UUID gameId, int lastMoveSent) {
+	public LastMoveSentModel(UUID lastMoveSentId, UUID accountId, UUID gameId, int lastMoveSent, LocalDateTime created) {
 		this.lastMoveSentId = lastMoveSentId;
 		this.accountId = accountId;
 		this.gameId = gameId;
 		this.lastMoveSent = lastMoveSent;
+		this.created = created;
 	}
 
 	public LastMoveSentModel() {
@@ -66,5 +71,13 @@ public class LastMoveSentModel {
 
 	public void setLastMoveSent(int lastMoveSent) {
 		this.lastMoveSent = lastMoveSent;
+	}
+
+	public void setCreated(LocalDateTime created) {
+		this.created = created;
+	}
+	
+	public LocalDateTime getCreated() {
+		return created;
 	}
 }

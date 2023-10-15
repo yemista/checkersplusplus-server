@@ -37,7 +37,6 @@ public class CheckersPlusPlusWebSocketHandlerTest {
 	
 	@Test
 	public void canConnectWithWebSocket() throws InterruptedException, ExecutionException, Exception {
-		System.out.println("" + port);
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 		WebSocketSession webSocketSession = webSocketClient.execute(new TextWebSocketHandler() {
             @Override

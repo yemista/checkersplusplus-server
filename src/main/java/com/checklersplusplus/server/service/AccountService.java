@@ -114,20 +114,22 @@ public class AccountService {
 		
 		if (currentGame.isPresent()) {
 			session.setGameId(currentGame.get().getGameId());
-		}
-		
-		UUID opponentId = null;
-		
-		if (account.get().getAccountId().equals(currentGame.get().getBlackId())) {
-			opponentId = currentGame.get().getRedId();
-		} else if(account.get().getAccountId().equals(currentGame.get().getRedId())) {
-			opponentId = currentGame.get().getBlackId();
-		}
-		 
-		if (opponentId != null) {
-			gameEventRepository.inactivateTimeoutEventForOpponent(opponentId);
+			
+			UUID opponentId = null;
+			
+			if (account.get().getAccountId().equals(currentGame.get().getBlackId())) {
+				opponentId = currentGame.get().getRedId();
+			} else if(account.get().getAccountId().equals(currentGame.get().getRedId())) {
+				opponentId = currentGame.get().getBlackId();
+			}
+			 
+			// TODO test
+			if (opponentId != null) {
+				gameEventRepository.inactivateTimeoutEventForOpponent(opponentId);
+			}
 		}
 
+		// TODO test
 		gameEventRepository.inactivateEventsForRecipient(account.get().getAccountId());
 		session.setMessage("Login successful.");
 		logger.info(String.format("Login successful for %s", account.get().getUsername()));

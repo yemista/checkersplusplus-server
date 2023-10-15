@@ -76,7 +76,6 @@ public class GameService {
     	com.checkersplusplus.engine.Game logicalGame = new com.checkersplusplus.engine.Game(gameModel.get().getGameState());
     	
     	if (logicalGame.isMoveLegal(coordinates)) {
-    		int previousMove = logicalGame.getCurrentMove();
     		logicalGame.doMove(coordinates);
     		gameModel.get().setGameState(logicalGame.getGameState());
     		gameModel.get().setLastModified(LocalDateTime.now());
@@ -87,14 +86,15 @@ public class GameService {
     		gameMoveModel.setAccountId(sessionModel.get().getAccountId());
     		gameMoveModel.setGameId(gameId);
     		gameMoveModel.setCreated(LocalDateTime.now());
-    		gameMoveModel.setMoveNumber(previousMove);
+    		gameMoveModel.setMoveNumber(logicalGame.getCurrentMove());
     		gameMoveModel.setMoveList(convertMoveListToString(moves));
     		gameMoveRepository.save(gameMoveModel);
     		
     		LastMoveSentModel lastMoveSentModel = new LastMoveSentModel();
     		lastMoveSentModel.setGameId(gameId);
     		lastMoveSentModel.setAccountId(sessionModel.get().getAccountId());
-    		lastMoveSentModel.setLastMoveSent(previousMove);
+    		lastMoveSentModel.setLastMoveSent(logicalGame.getCurrentMove());
+    		lastMoveSentModel.setCreated(LocalDateTime.now());
     		lastMoveSentRepository.save(lastMoveSentModel);
     	} else {
     		throw new InvalidMoveException();
@@ -182,7 +182,7 @@ public class GameService {
 		
 		com.checkersplusplus.engine.Game game = new com.checkersplusplus.engine.Game();
 		gameModel.setGameState(game.getGameState());
-		gameModel.setCurrentMoveNumber(game.getCurrentMove());
+		gameModel.setCurrentMoveNumber(0);
 		gameRepository.save(gameModel);
 		logger.info(String.format("SessionId: %s   Created game: %s", sessionId.toString(), gameModel.getGameId().toString()));
 		return Game.fromModel(gameModel);

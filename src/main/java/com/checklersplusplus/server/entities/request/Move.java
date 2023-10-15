@@ -67,4 +67,9 @@ public class Move implements Serializable {
 	public void setEndRow(int endRow) {
 		this.endRow = endRow;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("c:%d,r:%d-c:%d,r:%d+", getStartCol(), getStartRow(), getEndCol(), getEndRow());
+	}
 }
