@@ -151,7 +151,7 @@ public class GameServiceTest {
 		assertThat(gameModel.get().getRedId()).isNull();
 		assertThat(gameModel.get().isActive()).isTrue();
 		assertThat(gameModel.get().isInProgress()).isFalse();
-		assertThat(gameModel.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEEEEEEEEXEXEXEXEEXEXEXEXXEXEXEXE|0");
+		assertThat(gameModel.get().getGameState()).isEqualTo("EoEoEoEooEoEoEoEEoEoEoEoEEEEEEEEEEEEEEEExExExExEExExExExxExExExE|0");
 	}
 	
 	@Test
@@ -167,7 +167,7 @@ public class GameServiceTest {
 		assertThat(gameModel.get().getBlackId()).isNull();
 		assertThat(gameModel.get().isActive()).isTrue();
 		assertThat(gameModel.get().isInProgress()).isFalse();
-		assertThat(gameModel.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEEEEEEEEXEXEXEXEEXEXEXEXXEXEXEXE|0");
+		assertThat(gameModel.get().getGameState()).isEqualTo("EoEoEoEooEoEoEoEEoEoEoEoEEEEEEEEEEEEEEEExExExExEExExExExxExExExE|0");
 	}
 	
 	@Test
@@ -201,7 +201,7 @@ public class GameServiceTest {
 		gameService.move(sessionId, gameModel.get().getGameId(), moves);
 		Optional<GameModel> gameAfterMove = gameRepository.getByGameId(game.getGameId());
 		assertThat(gameAfterMove.get().getCurrentMoveNumber()).isEqualTo(1);
-		assertThat(gameAfterMove.get().getGameState()).isEqualTo("EOEOEOEOOEOEOEOEEOEOEOEOEEEEEEEEEXEEEEEEEEXEXEXEEXEXEXEXXEXEXEXE|1");
+		assertThat(gameAfterMove.get().getGameState()).isEqualTo("EoEoEoEooEoEoEoEEoEoEoEoEEEEEEEEExEEEEEEEExExExEExExExExxExExExE|1");
 		Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameModel.get().getGameId());
 		assertThat(lastMoveSent.isPresent()).isTrue();
 		assertThat(lastMoveSent.get().getLastMoveSent()).isEqualTo(1);

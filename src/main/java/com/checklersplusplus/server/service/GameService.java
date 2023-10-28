@@ -53,6 +53,16 @@ public class GameService {
 		return gameRepository.getOpenGames().stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());
 	}
 	
+	public List<Game> getGameHistory(UUID sessionId) throws CheckersPlusPlusServerException {
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
+		
+		if (sessionModel.isEmpty()) {
+			throw new SessionNotFoundException();
+		}
+		
+		return null;
+	}
+	
 	public Game move(UUID sessionId, UUID gameId, List<Move> moves) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		

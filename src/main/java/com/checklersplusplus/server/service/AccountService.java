@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameRepository;
+import com.checklersplusplus.server.dao.RatingRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
 import com.checklersplusplus.server.entities.internal.NewAccount;
@@ -25,6 +26,7 @@ import com.checklersplusplus.server.exception.InvalidVerificationCodeException;
 import com.checklersplusplus.server.exception.UsernameNotFoundException;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameModel;
+import com.checklersplusplus.server.model.RatingModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 import com.checklersplusplus.server.util.CryptoUtil;
@@ -50,6 +52,9 @@ public class AccountService {
 	
 	@Autowired
 	private GameEventRepository gameEventRepository;
+	
+	@Autowired
+	private RatingRepository ratingRepository;
 	
 	public Account findByUsername(String username) {
 		Optional<AccountModel> accountModel = accountRepository.getByUsername(username);
@@ -86,6 +91,11 @@ public class AccountService {
 		verifyAccountModel.setActive(true);
 		verifyAccountRepository.save(verifyAccountModel);
 		NewAccount newAccount = new NewAccount(accountModel.getAccountId(), verificationCode);
+		// TODO test this portion of account creation
+		RatingModel ratingModel = new RatingModel();
+		ratingModel.setAccountId(accountModel.getAccountId());
+		ratingModel.setRating(800);
+		ratingRepository.save(ratingModel);
 		logger.debug(String.format("New account created: %s", accountModel.getAccountId().toString()));
 		return newAccount;
 	}
