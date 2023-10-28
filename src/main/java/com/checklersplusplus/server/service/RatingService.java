@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.RatingRepository;
+import com.checklersplusplus.server.entities.internal.Rating;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.model.GameModel;
@@ -31,7 +32,16 @@ public class RatingService {
 	@Autowired
 	private GameRepository gameRepository;
 	
-	// TODO test
+	public Rating getRatingForPlayer(UUID accountId) throws CheckersPlusPlusServerException {
+		Optional<RatingModel> rating = ratingRepository.findByAccountId(accountId);
+		
+		if (rating.isEmpty()) {
+			throw new CheckersPlusPlusServerException("Illegal state. Missing rating");
+		}
+		
+		return new Rating(rating.get().getRating(), accountId);
+	}
+	
 	public void updatePlayerRatings(UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<GameModel> game = gameRepository.getByGameId(gameId);
 		
