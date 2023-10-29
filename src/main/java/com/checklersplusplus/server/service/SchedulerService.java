@@ -98,7 +98,11 @@ public class SchedulerService {
 			Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, game.get().getGameId());
 			
 			if (lastMoveSent.isPresent() && lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
-				if (gameEvent.isPresent() && GameEvent.LOSE.getMessage().equals(gameEvent.get().getEvent())) {
+				if (gameEvent.isPresent() && 
+						(GameEvent.LOSE.getMessage().equals(gameEvent.get().getEvent())
+								|| GameEvent.WIN.getMessage().equals(gameEvent.get().getEvent()))
+						) 
+				{
 					forwardGameEvent(openWebSocket, gameEvent.get(), accountId, game.get().getGameId());
 				}
 				
@@ -159,7 +163,8 @@ public class SchedulerService {
 		System.out.println(String.format("Thread: %d forwardLatestMove: %d", Thread.currentThread().getId(), Duration.between(start, end).toMillis()));
 	}
 
-	private void forwardGameEvent(OpenWebSocket openWebSocket, GameEventModel gameEvent, UUID accountId, UUID gameId) {
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void forwardGameEvent(OpenWebSocket openWebSocket, GameEventModel gameEvent, UUID accountId, UUID gameId) {
 		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketSessionId());
 		
 		if (webSocket == null) {

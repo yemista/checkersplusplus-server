@@ -4,6 +4,8 @@ public enum GameEvent {
 	FORFEIT("FORFEIT"),
 	BEGIN("BEGIN"),
 	LOSE("LOSE"),
+	WIN("WIN"),
+	DRAW("DRAW"),
 	TIMEOUT("TIMEOUT");
 	
 	private String message;

@@ -14,18 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.engine.Coordinate;
 import com.checkersplusplus.engine.CoordinatePair;
+import com.checkersplusplus.engine.enums.Color;
+import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.LastMoveSentRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.Game;
+import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.exception.CannotCancelGameException;
 import com.checklersplusplus.server.exception.CannotCreateGameException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
+import com.checklersplusplus.server.exception.GameCompleteException;
 import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.exception.InvalidMoveException;
 import com.checklersplusplus.server.exception.SessionNotFoundException;
+import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.GameMoveModel;
 import com.checklersplusplus.server.model.LastMoveSentModel;
@@ -36,6 +41,9 @@ import com.checklersplusplus.server.model.SessionModel;
 public class GameService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(GameService.class);
+	
+	// This is just some dummy value to indicate the game finished in a draw. 
+	private static final UUID TIE_GAME_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
 	@Autowired
 	private GameRepository gameRepository;
@@ -48,19 +56,15 @@ public class GameService {
 	
 	@Autowired
 	private GameMoveRepository gameMoveRepository;
+	
+	@Autowired
+	private GameEventRepository gameEventRepository;
+	
+	@Autowired
+	private RatingService ratingService;
 		
 	public List<Game> getOpenGames() {
 		return gameRepository.getOpenGames().stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());
-	}
-	
-	public List<Game> getGameHistory(UUID sessionId) throws CheckersPlusPlusServerException {
-		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
-		
-		if (sessionModel.isEmpty()) {
-			throw new SessionNotFoundException();
-		}
-		
-		return null;
 	}
 	
 	public Game move(UUID sessionId, UUID gameId, List<Move> moves) throws CheckersPlusPlusServerException {
@@ -72,8 +76,12 @@ public class GameService {
 		
 		Optional<GameModel> gameModel = gameRepository.getByGameId(gameId);
 		
-		if (gameModel.isEmpty() || !gameModel.get().isActive() || !gameModel.get().isInProgress()) {
+		if (gameModel.isEmpty() || !gameModel.get().isActive()) {
 			throw new GameNotFoundException();
+		}
+		
+		if (!gameModel.get().isInProgress()) {
+			throw new GameCompleteException();
 		}
 		
 		if (userNotPlayingGame(sessionModel.get().getAccountId(), gameModel.get())) {
@@ -87,6 +95,57 @@ public class GameService {
     	
     	if (logicalGame.isMoveLegal(coordinates)) {
     		logicalGame.doMove(coordinates);
+    		
+    		Color winner = logicalGame.getWinner();
+    		
+    		// TODO test
+    		if (winner != null) {    			
+    			UUID winnerId = winner == Color.BLACK ? gameModel.get().getBlackId() : gameModel.get().getRedId();
+    			GameEventModel winnerEvent = new GameEventModel();
+    			winnerEvent.setActive(true);
+    			winnerEvent.setEvent(GameEvent.WIN.getMessage());
+    			winnerEvent.setEventRecipientAccountId(winnerId);
+    			winnerEvent.setGameId(gameId);
+    			gameEventRepository.save(winnerEvent);
+    			
+    			UUID loserId = winner == Color.RED ? gameModel.get().getBlackId() : gameModel.get().getRedId();
+    			GameEventModel loserEvent = new GameEventModel();
+    			loserEvent.setActive(true);
+    			loserEvent.setEvent(GameEvent.WIN.getMessage());
+    			loserEvent.setEventRecipientAccountId(loserId);
+    			loserEvent.setGameId(gameId);
+    			gameEventRepository.save(loserEvent);
+    			
+    			gameModel.get().setActive(false);
+    			gameModel.get().setInProgress(false);
+    			gameModel.get().setWinnerId(winnerId);
+    			logger.info(String.format("GameId: %s   WinnerId: %s", gameId, winnerId));
+    		}
+    		
+    		boolean isDraw = logicalGame.isDraw();
+    		
+    		// TODO test
+    		if (isDraw) {
+    			GameEventModel winnerEvent = new GameEventModel();
+    			winnerEvent.setActive(true);
+    			winnerEvent.setEvent(GameEvent.DRAW.getMessage());
+    			winnerEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
+    			winnerEvent.setGameId(gameId);
+    			gameEventRepository.save(winnerEvent);
+    			
+    			GameEventModel loserEvent = new GameEventModel();
+    			loserEvent.setActive(true);
+    			loserEvent.setEvent(GameEvent.DRAW.getMessage());
+    			loserEvent.setEventRecipientAccountId(gameModel.get().getRedId());
+    			loserEvent.setGameId(gameId);
+    			gameEventRepository.save(loserEvent);
+    			
+    			gameModel.get().setActive(false);
+    			gameModel.get().setInProgress(false);
+    			gameModel.get().setWinnerId(TIE_GAME_ID);
+    			logger.info(String.format("GameId: %s   DRAW", gameId));
+    		}
+    		
     		gameModel.get().setGameState(logicalGame.getGameState());
     		gameModel.get().setLastModified(LocalDateTime.now());
     		gameModel.get().setCurrentMoveNumber(logicalGame.getCurrentMove());
@@ -224,6 +283,7 @@ public class GameService {
 		gameModel.get().setActive(false);
 		gameModel.get().setInProgress(false);
 		gameRepository.save(gameModel.get());
+		ratingService.updatePlayerRatings(gameId);
 		logger.info(String.format("SessionId: %s   Forfeited game: %s", sessionId.toString(), gameModel.get().getGameId().toString()));
 	}
 
