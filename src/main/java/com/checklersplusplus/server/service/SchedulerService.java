@@ -83,6 +83,7 @@ public class SchedulerService {
 			if (gameEvent.isPresent() && GameEvent.TIMEOUT.getMessage().equals(gameEvent.get().getEvent())) {
 				forwardGameEvent(openWebSocket, gameEvent.get(), accountId, game.get().getGameId());
 				game.get().setActive(false);
+				game.get().setInProgress(false);
 				game.get().setWinnerId(accountId);
 				gameRepository.save(game.get());
 				continue;

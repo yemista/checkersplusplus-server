@@ -1,0 +1,105 @@
+package com.checklersplusplus.server.integration;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import com.checklersplusplus.server.entities.request.Move;
+
+public class TestWebSocketHandler extends TextWebSocketHandler {
+	private List<Move> moves;
+	private int moveNumber;
+	private List<Integer> movesReceived = new ArrayList<>();
+	private int numErrors = 0;
+	private List<String> errorMessages = new ArrayList<>();
+	
+	public TestWebSocketHandler(List<Move> moves, int moveNumber) {
+		this.moves = moves;
+		this.moveNumber = moveNumber;
+	}
+	
+    @Override
+    public void handleTextMessage(WebSocketSession session, TextMessage message) {
+       	String payload = message.getPayload();
+    	String[] parts = payload.split("\\|");
+    	
+    	if (parts.length != 3) {
+    		numErrors++;
+    		errorMessages.add("Invalid MOVE event from server: " + payload);
+    		return;
+    	}
+    	
+    	if (!"MOVE".equals(parts[0])) {
+    		numErrors++;
+    		errorMessages.add("Invalid event from server: " + payload);
+    		return;
+    	}
+    	
+    	int receivedMoveNumber = 0;
+    	
+    	try {
+    		receivedMoveNumber = Integer.parseInt(parts[1]);
+    	} catch (Exception e) {
+    		numErrors++;
+    		errorMessages.add("Invalid move number from server: " + payload);
+    		return;
+    	}
+    	
+    	// We are OK here. Duplicate move received which we will ignore
+    	if (movesReceived.contains(receivedMoveNumber)) {
+    		return;
+    	}
+    	
+    	if (receivedMoveNumber != moveNumber) {
+    		numErrors++;
+    		errorMessages.add("Mismatched move number from server. Got: " + receivedMoveNumber + " Expected: " + moveNumber);
+    		return;
+    	}
+    	
+    	movesReceived.add(receivedMoveNumber);
+    	moveNumber += 2;
+    	
+    	String move = parts[2];
+    	
+    	if (!moves.get(movesReceived.size() - 1).toString().equals(move)) {
+    		numErrors++;
+    		errorMessages.add("Mismatched move from server. Got: " + move + " Expected: " + moves.get(movesReceived.size() - 1).toString());
+    		return;
+    	}
+    }
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+
+    }
+    
+    @Override
+	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+    	session.close();
+	}
+
+	@Override
+	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+		System.out.println("Connection close");
+		
+		if (movesReceived.size() != moves.size()) {
+    		numErrors++;
+    		errorMessages.add("Did not receive all moves from server");
+    		System.out.println("Error after close: Did not receive all moves from server");
+    	}
+		
+		session.close();
+	}
+	
+	public int getNumErrors() {
+		return numErrors;
+	}
+	
+	public List<String> getErrorMessages() {
+		return errorMessages;
+	}
+}
