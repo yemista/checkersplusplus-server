@@ -39,9 +39,22 @@ public class IntegrationTestUtil {
 	
 	public static TestWebSocketHandler createWebSocket(TestRestTemplate restTemplate, int port, OpenWebSocketRepository openWebSocketRepository, 
 			List<OpenWebSocketModel> webSocketsToDelete, UUID session, List<Move> moves, int startingMoveNumber) {
+		TestWebSocketHandler testHandler = new TestWebSocketHandler(moves, startingMoveNumber);
+		setupWebSocket(testHandler, port, openWebSocketRepository, webSocketsToDelete, session);
+		return testHandler;
+	}
+	
+	public static TestWebSocketHandler createWebSocket(TestRestTemplate restTemplate, int port, OpenWebSocketRepository openWebSocketRepository, 
+			List<OpenWebSocketModel> webSocketsToDelete, UUID session, List<String> gameEvent) {
+		TestWebSocketHandler testHandler = new TestWebSocketHandler(gameEvent);
+		setupWebSocket(testHandler, port, openWebSocketRepository, webSocketsToDelete, session);
+		return testHandler;
+	}
+	
+	private static void setupWebSocket(TestWebSocketHandler testHandler, int port, OpenWebSocketRepository openWebSocketRepository, 
+			List<OpenWebSocketModel> webSocketsToDelete, UUID session) {
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 		WebSocketSession webSocketSession = null;
-		TestWebSocketHandler testHandler = new TestWebSocketHandler(moves, startingMoveNumber);
 		
 		try {
 			webSocketSession = webSocketClient.execute(testHandler, new WebSocketHttpHeaders(), URI.create(getWebSocketUrl(port))).get();
@@ -59,8 +72,6 @@ public class IntegrationTestUtil {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		return testHandler;
 	}
 
 	private static String getWebSocketUrl(int port) {

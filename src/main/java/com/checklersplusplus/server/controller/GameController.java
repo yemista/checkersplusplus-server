@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.controller;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.checklersplusplus.server.entities.request.CreateGame;
@@ -31,6 +33,13 @@ import jakarta.validation.Valid;
 public class GameController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(GameController.class);
+	
+	private static final List<String> VALID_SORTS = Arrays.asList("created", "rating");
+	private static final List<String> VALID_SORT_DIRECTIONS = Arrays.asList("asc", "desc");
+	
+	private static final Integer DEFAULT_PAGE_SIZE = 25;
+	private static final Integer MAX_PAGE_SIZE = 100;
+	private static final String DEFAULT_SORT_DIRECTION = "desc";
 
 	@Autowired
 	private GameService gameService;
@@ -46,11 +55,60 @@ public class GameController {
 	    }
 	}
 	
-	// TODO - add filter and sort @RequestParam
+	// TODO test
+	@GetMapping("/{sessiondId}/history")
+	public ResponseEntity<List<Game>> getGameHistory(@RequestParam String sortDirection, @RequestParam Integer page, @RequestParam Integer pageSize) {
+	   if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {
+		   sortDirection = DEFAULT_SORT_DIRECTION;
+	   }
+	   
+	   if (page == null) {
+		   page = 0;
+	   }
+	   
+	   if (pageSize == null || pageSize > MAX_PAGE_SIZE) {
+		   pageSize = DEFAULT_PAGE_SIZE;
+	   }
+		   
+	   return null;
+	}
+	
+	// TODO test
 	@GetMapping("/open")
-	public ResponseEntity<List<Game>> getOpenGames() {
+	public ResponseEntity<List<Game>> getOpenGames(
+			@RequestParam Integer ratingLow, 
+			@RequestParam Integer ratingHigh,
+			@RequestParam String sortBy,
+			@RequestParam String sortDirection,
+			@RequestParam Integer page,
+			@RequestParam Integer pageSize) {
 	   try {
-		   List<Game> games = gameService.getOpenGames();
+		   // TODO test
+		   if (ratingLow == null || ratingLow <= 0) {
+			   ratingLow = 0;
+		   }
+		   
+		   if (ratingHigh == null || ratingHigh > 10000) {
+			   ratingHigh = 10000;
+		   }
+		   
+		   if (!VALID_SORTS.contains(sortBy)) {
+			   sortBy = "";
+		   }
+
+		   if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {
+			   sortDirection = DEFAULT_SORT_DIRECTION;
+		   }
+		   
+		   if (page == null) {
+			   page = 0;
+		   }
+		   
+		   if (pageSize == null || pageSize > MAX_PAGE_SIZE) {
+			   pageSize = DEFAULT_PAGE_SIZE;
+		   }
+		   
+		   List<Game> games = gameService.getOpenGames(ratingLow, ratingHigh, sortBy, sortDirection, page, pageSize);
 		   return new ResponseEntity<>(games, HttpStatus.OK);
 	    } catch(Exception ex) {
 	    	logger.error(ex.getMessage());

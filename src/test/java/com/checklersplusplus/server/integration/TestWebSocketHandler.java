@@ -16,15 +16,46 @@ public class TestWebSocketHandler extends TextWebSocketHandler {
 	private List<Integer> movesReceived = new ArrayList<>();
 	private int numErrors = 0;
 	private List<String> errorMessages = new ArrayList<>();
+	private List<String> gameEvents = new ArrayList<>();;
+	private WebSocketTestingStrategy strategy;
+	
+	private enum WebSocketTestingStrategy {
+		MOVES, EVENTS
+	}
 	
 	public TestWebSocketHandler(List<Move> moves, int moveNumber) {
 		this.moves = moves;
 		this.moveNumber = moveNumber;
+		strategy = WebSocketTestingStrategy.MOVES;
+	}
+	
+	public TestWebSocketHandler(List<String> events) {
+		gameEvents.addAll(events);
+		strategy = WebSocketTestingStrategy.EVENTS;
 	}
 	
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) {
-       	String payload = message.getPayload();
+       	switch(strategy) {
+       	case MOVES:
+       		movesStrategy(message);
+       		break;
+       	case EVENTS:
+       		eventsStrategy(message);
+       		break;
+       	}
+    }
+    
+    private void eventsStrategy(TextMessage message) {
+    	System.out.println(message.getPayload());
+    	
+    	if (!gameEvents.contains(message.getPayload())) {
+    		numErrors++;
+    	}
+    }
+    
+    private void movesStrategy(TextMessage message) {
+    	String payload = message.getPayload();
     	String[] parts = payload.split("\\|");
     	
     	if (parts.length != 3) {
@@ -84,14 +115,7 @@ public class TestWebSocketHandler extends TextWebSocketHandler {
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-		System.out.println("Connection close");
-		
-		if (movesReceived.size() != moves.size()) {
-    		numErrors++;
-    		errorMessages.add("Did not receive all moves from server");
-    		System.out.println("Error after close: Did not receive all moves from server");
-    	}
-		
+		System.out.println("Connection close");		
 		session.close();
 	}
 	

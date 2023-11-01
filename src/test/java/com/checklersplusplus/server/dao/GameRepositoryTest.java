@@ -27,6 +27,9 @@ public class GameRepositoryTest {
 	@Autowired
 	private GameRepository gameRepository;
 	
+	@Autowired
+	private AccountRepository accountRepository;
+	
 	@Test
 	public void canGetByGameId() {
 		GameModel gameModel = new GameModel();
@@ -61,7 +64,7 @@ public class GameRepositoryTest {
 		gameModel.setActive(true);
 		gameModel.setInProgress(true);
 		gameModel.setGameState("");
-		gameModel.setRedId(blackId);
+		gameModel.setBlackId(blackId);
 		gameRepository.saveAndFlush(gameModel);
 		assertThat(gameModel.getGameId()).isNotNull();
 		Optional<GameModel> fetchedGame = gameRepository.getActiveGameByAccountId(blackId);

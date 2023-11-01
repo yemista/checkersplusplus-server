@@ -9,19 +9,26 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.engine.Coordinate;
 import com.checkersplusplus.engine.CoordinatePair;
 import com.checkersplusplus.engine.enums.Color;
+import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
+import com.checklersplusplus.server.dao.GameHistoryRepository;
 import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.LastMoveSentRepository;
+import com.checklersplusplus.server.dao.OpenGameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.Game;
+import com.checklersplusplus.server.entities.response.GameHistory;
 import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.exception.CannotCancelGameException;
 import com.checklersplusplus.server.exception.CannotCreateGameException;
@@ -30,6 +37,7 @@ import com.checklersplusplus.server.exception.GameCompleteException;
 import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.exception.InvalidMoveException;
 import com.checklersplusplus.server.exception.SessionNotFoundException;
+import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.GameMoveModel;
@@ -46,10 +54,19 @@ public class GameService {
 	private static final UUID TIE_GAME_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
 	@Autowired
+	private OpenGameRepository openGameRepository;
+	
+	@Autowired
 	private GameRepository gameRepository;
 	
 	@Autowired
+	private GameHistoryRepository gameHistoryRepository;
+	
+	@Autowired
 	private SessionRepository sessionRepository;
+	
+	@Autowired
+	private AccountRepository accountRepository;
 	
 	@Autowired
 	private LastMoveSentRepository lastMoveSentRepository;
@@ -63,8 +80,55 @@ public class GameService {
 	@Autowired
 	private RatingService ratingService;
 		
-	public List<Game> getOpenGames() {
-		return gameRepository.getOpenGames().stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());
+	// TODO test
+	public List<GameHistory> getGameHistory(UUID sessionId, String sortDirection, Integer page, Integer pageSize) throws CheckersPlusPlusServerException {
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
+		
+		if (sessionModel.isEmpty()) {
+			throw new SessionNotFoundException();
+		}
+		
+		PageRequest pageRequest = PageRequest.of(pageSize, page, "asc".equalsIgnoreCase(sortDirection) ? Sort.by("lastModified").ascending() : Sort.by("lastModified").descending());
+		Page<GameModel> openGames = gameHistoryRepository.findByRedIdOrBlackId(sessionModel.get().getAccountId(), pageRequest);
+		List<GameHistory> gameHistory = openGames.stream().map(gameModel -> GameHistory.fromModel(gameModel)).collect(Collectors.toList());
+		
+		for (GameHistory game : gameHistory) {
+			if (game.getBlackAccountId() != null) {
+				Optional<AccountModel> account = accountRepository.findById(game.getBlackAccountId());
+				
+				if (account.isEmpty()) {
+					logger.error("Failed to find account from given black accountId %s for game %s", game.getBlackAccountId().toString(), game.getGameId().toString());
+				}
+				
+				game.setBlackUsername(account.get().getUsername());
+			}
+			
+			if (game.getRedAccountId() != null) {
+				Optional<AccountModel> account = accountRepository.findById(game.getRedAccountId());
+				
+				if (account.isEmpty()) {
+					logger.error("Failed to find account from given red accountId %s for game %s", game.getRedAccountId().toString(), game.getGameId().toString());
+				}
+				
+				game.setRedUsername(account.get().getUsername());
+			}
+		}
+		
+		return gameHistory;
+	}
+	
+	// TODO test
+	public List<Game> getOpenGames(Integer ratingLow, Integer ratingHigh, String sortBy, String sortDirection, Integer page, Integer pageSize) {
+		PageRequest pageRequest = null;
+	
+		if (sortBy != null && sortBy.length() > 0) {
+			pageRequest = PageRequest.of(pageSize, page, "asc".equalsIgnoreCase(sortDirection) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+		} else {
+			pageRequest = PageRequest.of(pageSize, page);
+		}
+		
+		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrue(ratingLow, ratingHigh, pageRequest);
+		return openGames.stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());
 	}
 	
 	public Game move(UUID sessionId, UUID gameId, List<Move> moves) throws CheckersPlusPlusServerException {
@@ -98,7 +162,6 @@ public class GameService {
     		
     		Color winner = logicalGame.getWinner();
     		
-    		// TODO test
     		if (winner != null) {    			
     			UUID winnerId = winner == Color.BLACK ? gameModel.get().getBlackId() : gameModel.get().getRedId();
     			GameEventModel winnerEvent = new GameEventModel();
@@ -111,7 +174,7 @@ public class GameService {
     			UUID loserId = winner == Color.RED ? gameModel.get().getBlackId() : gameModel.get().getRedId();
     			GameEventModel loserEvent = new GameEventModel();
     			loserEvent.setActive(true);
-    			loserEvent.setEvent(GameEvent.WIN.getMessage());
+    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + logicalGame.getCurrentMove() + "|" + convertMoveListToString(moves));
     			loserEvent.setEventRecipientAccountId(loserId);
     			loserEvent.setGameId(gameId);
     			gameEventRepository.save(loserEvent);

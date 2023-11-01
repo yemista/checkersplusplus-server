@@ -79,10 +79,25 @@ public class GameServiceTest {
 	
 	@Before
 	public void createAccountForTest() throws Exception {
-		accountService.createAccount(new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME));
-		Optional<AccountModel> account = accountRepository.getByUsername(TEST_USERNAME);
+		accountId = createTestAccount(TEST_EMAIL, TEST_USERNAME);
+		sessionId = loginAndCreateTestSession(TEST_USERNAME, TEST_PASSWORD);
+	}
+	
+	
+	private UUID loginAndCreateTestSession(String testUsername, String testPassword) throws Exception {
+		Session session = accountService.login(testUsername, testPassword);
+		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(session.getSessionId());
+		assertThat(sessionModel.isPresent()).isTrue();
+		UUID sessionId = sessionModel.get().getSessionId();
+		sessionsToDelete.add(sessionModel.get());
+		return sessionId;
+	}
+
+	private UUID createTestAccount(String email, String username) throws Exception {
+		accountService.createAccount(new CreateAccount(email, TEST_PASSWORD, TEST_PASSWORD, username));
+		Optional<AccountModel> account = accountRepository.getByUsername(username);
 		assertThat(account.isPresent()).isTrue();
-		accountId = account.get().getAccountId();
+		UUID accountId = account.get().getAccountId();
 		account.get().setVerified(LocalDateTime.now());
 		accountRepository.save(account.get());
 		accountsToDelete.add(account.get());
@@ -91,14 +106,9 @@ public class GameServiceTest {
 		assertThat(verifyAccountModel.isPresent()).isTrue();
 		verifyAccountsToDelete.add(verifyAccountModel.get());
 		
-		Session session = accountService.login(TEST_USERNAME, TEST_PASSWORD);
-		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(session.getSessionId());
-		assertThat(sessionModel.isPresent()).isTrue();
-		sessionId = sessionModel.get().getSessionId();
-		sessionsToDelete.add(sessionModel.get());
+		return accountId;
 	}
-	
-	
+
 	@After
 	public void cleanupDatabaseObjects() {
 		gamesToDelete.forEach(game -> gameRepository.delete(game));
@@ -165,6 +175,7 @@ public class GameServiceTest {
 		assertThat(gameModel.get().getLastModified()).isNotNull();
 		assertThat(gameModel.get().getWinnerId()).isNull();
 		assertThat(gameModel.get().getBlackId()).isNull();
+		assertThat(gameModel.get().getCurrentMoveNumber()).isEqualTo(0);
 		assertThat(gameModel.get().isActive()).isTrue();
 		assertThat(gameModel.get().isInProgress()).isFalse();
 		assertThat(gameModel.get().getGameState()).isEqualTo("EoEoEoEooEoEoEoEEoEoEoEoEEEEEEEEEEEEEEEExExExExEExExExExxExExExE|0");
@@ -420,21 +431,22 @@ public class GameServiceTest {
 	}
 	
 	@Test
-	public void canForfeitGame() throws CheckersPlusPlusServerException {
+	public void canForfeitGame() throws Exception {
 		Game game = gameService.createGame(sessionId, true);
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		assertThat(gameModel.isPresent()).isTrue();
 		gamesToDelete.add(gameModel.get());
 		gameModel.get().setInProgress(true);
-		UUID opponentId = UUID.randomUUID();
-		gameModel.get().setRedId(opponentId);;
+		UUID opponentAccountId = createTestAccount("test_email@test.com", "xyz123");
+		loginAndCreateTestSession("xyz123", TEST_PASSWORD);
+		gameModel.get().setRedId(opponentAccountId);;
 		gameRepository.save(gameModel.get());
 		gameService.forfeitGame(sessionId, gameModel.get().getGameId());
 		Optional<GameModel> forfeitedGameModel = gameRepository.getByGameId(game.getGameId());
 		assertThat(forfeitedGameModel.isPresent()).isTrue();
 		assertThat(forfeitedGameModel.get().isActive()).isFalse();
 		assertThat(forfeitedGameModel.get().isInProgress()).isFalse();
-		assertThat(forfeitedGameModel.get().getWinnerId()).isEqualTo(opponentId);
+		assertThat(forfeitedGameModel.get().getWinnerId()).isEqualTo(opponentAccountId);
 	}
 	
 	@Test

@@ -1,5 +1,7 @@
 package com.checklersplusplus.server.dao;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,4 +22,11 @@ public interface SessionRepository extends JpaRepository<SessionModel, UUID> {
 	
 	@Query("SELECT s FROM SessionModel s WHERE s.accountId = ?1 AND active=true")
 	public Optional<SessionModel> getActiveByAccountId(UUID accountId);
+	
+	@Query("SELECT s FROM SessionModel s WHERE s.lastModified < ?1 AND active=true")
+	public List<SessionModel> getActiveSessionsOlderThan(LocalDateTime timestamp);
+
+	@Modifying
+	@Query("UPDATE SessionModel SET active = false WHERE sessionId IN ?1")
+	public void invalidateSessionsBySessionIds(List<UUID> sessionModelsToInactivate);
 }

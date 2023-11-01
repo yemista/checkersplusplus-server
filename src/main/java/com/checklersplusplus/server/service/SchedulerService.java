@@ -1,6 +1,5 @@
 package com.checklersplusplus.server.service;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,65 +59,58 @@ public class SchedulerService {
 	private GameEventRepository gameEventRepository;
 	
 	@Scheduled(fixedDelay = 1000)
-	public void updateClients() throws IOException {
-		LocalDateTime start = LocalDateTime.now();
-		List<OpenWebSocket> openWebSockets = getActiveOpenWebSockets();
-		
-		for (OpenWebSocket openWebSocket : openWebSockets) {
-			Optional<SessionModel> serverSession = sessionRepository.getActiveBySessionId(openWebSocket.getSessionId());
+	public void updateClients() {
+		try {
+			List<OpenWebSocket> openWebSockets = getActiveOpenWebSockets();
 			
-			if (serverSession.isEmpty()) {
-				continue;
-			}
-			
-			UUID accountId = serverSession.get().getAccountId();
-			Optional<GameModel> game = gameRepository.getActiveGameByAccountId(accountId);
-			
-			if (game.isEmpty()) {
-				continue;
-			}
-			
-			Optional<GameEventModel> gameEvent = gameEventRepository.findActiveEventForAccountIdAndGameId(accountId, game.get().getGameId());
-			
-			if (gameEvent.isPresent() && GameEvent.TIMEOUT.getMessage().equals(gameEvent.get().getEvent())) {
-				forwardGameEvent(openWebSocket, gameEvent.get(), accountId, game.get().getGameId());
-				game.get().setActive(false);
-				game.get().setInProgress(false);
-				game.get().setWinnerId(accountId);
-				gameRepository.save(game.get());
-				continue;
-			}
-			
-			if (gameEvent.isPresent()
-					&& (GameEvent.FORFEIT.getMessage().equals(gameEvent.get().getEvent()) || 
-						GameEvent.BEGIN.getMessage().equals(gameEvent.get().getEvent()))) {
-				forwardGameEvent(openWebSocket, gameEvent.get(), accountId, game.get().getGameId());				
-				continue;
-			}
-			
-			Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, game.get().getGameId());
-			
-			if (lastMoveSent.isPresent() && lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
-				if (gameEvent.isPresent() && 
-						(GameEvent.LOSE.getMessage().equals(gameEvent.get().getEvent())
-								|| GameEvent.WIN.getMessage().equals(gameEvent.get().getEvent()))
-						) 
-				{
-					forwardGameEvent(openWebSocket, gameEvent.get(), accountId, game.get().getGameId());
+			for (OpenWebSocket openWebSocket : openWebSockets) {
+				Optional<SessionModel> serverSession = sessionRepository.getActiveBySessionId(openWebSocket.getSessionId());
+				
+				if (serverSession.isEmpty()) {
+					continue;
 				}
 				
-				continue;
+				// Update the session since the websocket is still connected. We treat this like a heart beat.
+				serverSession.get().setLastModified(LocalDateTime.now());
+				sessionRepository.save(serverSession.get());
+				
+				UUID accountId = serverSession.get().getAccountId();
+				Optional<GameEventModel> gameEvent = gameEventRepository.findActiveEventForAccountId(accountId);
+				Optional<GameModel> game = gameRepository.getActiveGameByAccountId(accountId);
+				
+				// TODO be careful here, when are TIMEOUT events going to happen and to/from who?
+				if (gameEvent.isPresent()) {
+					forwardGameEvent(openWebSocket, gameEvent.get());
+					
+					// If the other player timed out from lack of activity they lose the game
+					if (game.isPresent() && GameEvent.TIMEOUT.getMessage().equals(gameEvent.get().getEvent())) {
+						game.get().setActive(false);
+						game.get().setInProgress(false);
+						game.get().setWinnerId(accountId);
+						gameRepository.save(game.get());
+					}
+					
+					continue;
+				}
+				
+				if (game.isPresent()) {
+					UUID gameId = game.get().getGameId();				
+					Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameId);
+					
+					if (lastMoveSent.isPresent() && lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
+						continue;
+					}
+					
+					if (lastMoveSent.isEmpty() || game.get().getCurrentMoveNumber() - lastMoveSent.get().getLastMoveSent() == 1) {
+						forwardLatestMove(openWebSocket, gameId, accountId);
+					} else {
+						logger.error(String.format("Unexpected situation. Account id %s is more than one move behind", accountId.toString()));
+					}
+				}
 			}
-			
-			if (lastMoveSent.isEmpty() || game.get().getCurrentMoveNumber() - lastMoveSent.get().getLastMoveSent() == 1) {
-				forwardLatestMove(openWebSocket, game.get().getGameId(), accountId);
-			} else {
-				logger.error(String.format("Unexpected situation. Account id %s is more than one move behind", accountId.toString()));
-			}
+		} catch (Exception e) {
+			logger.error("Exception thrown in scheduler service body", e);
 		}
-		
-		LocalDateTime end = LocalDateTime.now();
-		System.out.println(String.format("Thread: %d updateClients: %d", Thread.currentThread().getId(), Duration.between(start, end).toMillis()));
 	}
 	
 	private List<OpenWebSocket> getActiveOpenWebSockets() {
@@ -165,10 +157,11 @@ public class SchedulerService {
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void forwardGameEvent(OpenWebSocket openWebSocket, GameEventModel gameEvent, UUID accountId, UUID gameId) {
+	public void forwardGameEvent(OpenWebSocket openWebSocket, GameEventModel gameEvent) {
 		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketSessionId());
 		
 		if (webSocket == null) {
+			logger.debug("forwardGameEvent: Unexpected websocket close for accountId %s gameId: %s", gameEvent.getEventRecipientAccountId().toString(), gameEvent.getGameId().toString());
 			return;
 		}
 		
@@ -178,7 +171,7 @@ public class SchedulerService {
 			gameEventRepository.save(gameEvent);
 		} catch (Exception e) {
 			logger.error(String.format("Failed to send event %s to accountId %s for gameId %s", 
-					gameEvent.getEvent(), accountId.toString(), gameId.toString()), e);
+					gameEvent.getEvent(), gameEvent.getEventRecipientAccountId().toString(), gameEvent.getGameId().toString()), e);
 		}
 	}
 }

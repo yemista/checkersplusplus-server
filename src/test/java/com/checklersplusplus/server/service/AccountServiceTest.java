@@ -23,6 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
+import com.checklersplusplus.server.dao.RatingRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
 import com.checklersplusplus.server.entities.request.CreateAccount;
@@ -31,6 +32,7 @@ import com.checklersplusplus.server.entities.response.Session;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameEventModel;
+import com.checklersplusplus.server.model.RatingModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
 import com.checklersplusplus.server.util.CryptoUtil;
@@ -49,6 +51,9 @@ public class AccountServiceTest {
 	
 	@Autowired
 	private AccountRepository accountRepository;
+	
+	@Autowired
+	private RatingRepository ratingRepository;
 	
 	@Autowired
 	private SessionRepository sessionRepository;
@@ -121,6 +126,10 @@ public class AccountServiceTest {
 		assertEquals(accountModel.getPassword(), CryptoUtil.encryptPassword(TEST_PASSWORD));
 		assertEquals(accountModel.getUsername(), TEST_USERNAME);
 		assertNull(accountModel.getVerified());
+		
+		Optional<RatingModel> rating = ratingRepository.findByAccountId(accountModel.getAccountId());
+		assertThat(rating.isPresent()).isTrue();
+		assertThat(rating.get().getRating()).isEqualTo(800);
 	}
 	
 	@Test

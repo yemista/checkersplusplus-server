@@ -2,7 +2,6 @@ package com.checklersplusplus.server.service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +82,7 @@ public class AccountService {
 		accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword()));
 		accountModel.setCreated(LocalDateTime.now());
 		accountRepository.save(accountModel);
+		
 		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
 		verifyAccountModel.setAccountId(accountModel.getAccountId());
 		verifyAccountModel.setCreated(LocalDateTime.now());
@@ -91,11 +91,12 @@ public class AccountService {
 		verifyAccountModel.setActive(true);
 		verifyAccountRepository.save(verifyAccountModel);
 		NewAccount newAccount = new NewAccount(accountModel.getAccountId(), verificationCode);
-		// TODO test this portion of account creation
+
 		RatingModel ratingModel = new RatingModel();
 		ratingModel.setAccountId(accountModel.getAccountId());
 		ratingModel.setRating(800);
 		ratingRepository.save(ratingModel);
+
 		logger.debug(String.format("New account created: %s", accountModel.getAccountId().toString()));
 		return newAccount;
 	}
@@ -124,19 +125,6 @@ public class AccountService {
 		
 		if (currentGame.isPresent()) {
 			session.setGameId(currentGame.get().getGameId());
-			
-			UUID opponentId = null;
-			
-			if (account.get().getAccountId().equals(currentGame.get().getBlackId())) {
-				opponentId = currentGame.get().getRedId();
-			} else if(account.get().getAccountId().equals(currentGame.get().getRedId())) {
-				opponentId = currentGame.get().getBlackId();
-			}
-			 
-			// TODO test
-			if (opponentId != null) {
-				gameEventRepository.inactivateTimeoutEventForOpponent(opponentId);
-			}
 		}
 
 		// TODO test

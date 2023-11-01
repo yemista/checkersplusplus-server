@@ -2,6 +2,9 @@ package com.checklersplusplus.server.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,5 +59,38 @@ public class SessionRepositoryTest {
 		Optional<SessionModel> fetchedSession = sessionRepository.getActiveBySessionId(session.getSessionId());
 		assertThat(fetchedSession).isPresent();
 		assertThat(fetchedSession.get().getAccountId()).isEqualTo(accountId);
+	}
+	
+	@Test
+	public void canInvalidateSessionsBySessionIds() {
+		UUID accountId = UUID.randomUUID();
+		SessionModel session = new SessionModel();
+		session.setAccountId(accountId);
+		session.setActive(true);
+		session.setLastModified(LocalDateTime.now());
+		sessionRepository.save(session);
+		assertThat(session.getSessionId()).isNotNull();
+		
+		UUID accountId2 = UUID.randomUUID();
+		SessionModel session2 = new SessionModel();
+		session2.setAccountId(accountId2);
+		session2.setLastModified(LocalDateTime.now());
+		session2.setActive(true);
+		sessionRepository.save(session2);
+		assertThat(session2.getSessionId()).isNotNull();
+		
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		List<SessionModel> oldSessions = sessionRepository.getActiveSessionsOlderThan(LocalDateTime.now());
+		assertThat(oldSessions.size()).isEqualTo(2);
+		
+		sessionRepository.invalidateSessionsBySessionIds(Arrays.asList(session.getSessionId(), session2.getSessionId()));
+		
+		List<SessionModel> activeSessions = sessionRepository.getActiveSessionsOlderThan(LocalDateTime.now());
+		assertThat(activeSessions.size()).isEqualTo(0);
 	}
 }

@@ -23,6 +23,18 @@ public class GameModel {
 	
 	@Column(name = "black_id")
 	private UUID blackId;
+
+	// TODO test this field
+	@Column(name = "creator_rating")
+	private Integer creatorRating;
+	
+	// TODO test this field
+	@Column(name = "red_rating")
+	private Integer redRating;
+	
+	// TODO test this field
+	@Column(name = "black_rating")
+	private Integer blackRating;
 	
 	@Column(name = "winner_id")
 	private UUID winnerId;
@@ -44,21 +56,6 @@ public class GameModel {
 	
 	@Column(name = "current_move_number")
 	private int currentMoveNumber;
-
-	public GameModel(UUID gameId, UUID redId, UUID blackId, UUID winnerId, LocalDateTime created,
-			LocalDateTime lastModified, String gameState, boolean active, boolean inProgress, int currentMoveNumber) {
-		super();
-		this.gameId = gameId;
-		this.redId = redId;
-		this.blackId = blackId;
-		this.winnerId = winnerId;
-		this.created = created;
-		this.lastModified = lastModified;
-		this.gameState = gameState;
-		this.active = active;
-		this.inProgress = inProgress;
-		this.currentMoveNumber = currentMoveNumber;
-	}
 
 	public GameModel() {
 	}
@@ -141,5 +138,21 @@ public class GameModel {
 
 	public void setCurrentMoveNumber(int currentMoveNumber) {
 		this.currentMoveNumber = currentMoveNumber;
+	}
+
+	public Integer getRedRating() {
+		return redRating;
+	}
+
+	public void setRedRating(Integer redRating) {
+		this.redRating = redRating;
+	}
+
+	public Integer getBlackRating() {
+		return blackRating;
+	}
+
+	public void setBlackRating(Integer blackRating) {
+		this.blackRating = blackRating;
 	}
 }

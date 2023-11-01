@@ -1,10 +1,12 @@
 package com.checklersplusplus.server.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.After;
@@ -21,6 +23,8 @@ import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.OpenWebSocketRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
+import com.checklersplusplus.server.entities.request.Move;
+import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.OpenWebSocketModel;
@@ -66,18 +70,35 @@ public class WinGameIntegrationTest {
 	}
 	
 	@Test
-	public void playGame() throws InterruptedException {
+	public void winGame() throws InterruptedException {
 		UUID session1 = IntegrationTestUtil.createAccountAndLogin(accountRepository, sessionRepository, accountsToDelete, sessionsToDelete, TEST_USERNAME_1, TEST_EMAIL_1);
 		UUID session2 = IntegrationTestUtil.createAccountAndLogin(accountRepository, sessionRepository, accountsToDelete, sessionsToDelete, TEST_USERNAME_2, TEST_EMAIL_2);
 		UUID game = IntegrationTestUtil.createGame(restTemplate, port, gameRepository, gamesToDelete, session1);
 		
-		TestWebSocketHandler webSocketHandler1 = IntegrationTestUtil.createWebSocket(restTemplate, port, openWebSocketRepository, webSocketsToDelete, session2, Collections.emptyList(), 2);
-		IntegrationTestUtil.joinGame(restTemplate, port, session2, game);
-		TestWebSocketHandler webSocketHandler2 = IntegrationTestUtil.createWebSocket(restTemplate, port, openWebSocketRepository, webSocketsToDelete, session1, moves, 1);
-
-		// TODO test by setting game state where one move will equal a win
+		Move redMove = new Move(3, 3, 5, 1);
+		List<String> winnerEvents = Arrays.asList(GameEvent.WIN.getMessage());
+		List<String> loserEvents = Arrays.asList(GameEvent.LOSE.getMessage());
 		
-		System.out.println("Check for errors after close");
+		TestWebSocketHandler webSocketHandler1 = IntegrationTestUtil.createWebSocket(restTemplate, port, openWebSocketRepository, webSocketsToDelete, session2, winnerEvents);
+		IntegrationTestUtil.joinGame(restTemplate, port, session2, game);
+		TestWebSocketHandler webSocketHandler2 = IntegrationTestUtil.createWebSocket(restTemplate, port, openWebSocketRepository, webSocketsToDelete, session1, loserEvents);
+
+		String boardState = "EEEEEoEoEEEEEEoEEEEEEoEoEEEEEEEEEEEoEEEEEEEExEEEEEEEEEEEEEEEEEEE|1";
+		Optional<GameModel> gameModel = gameRepository.getByGameId(game);
+		gameModel.get().setGameState(boardState);
+		gameModel.get().setCurrentMoveNumber(1);
+		gameRepository.save(gameModel.get());
+		
+		IntegrationTestUtil.makeMove(restTemplate, port, session2, game, redMove);
+		Thread.sleep(5000);
+		
+		Optional<SessionModel> winnerSession = sessionRepository.getActiveBySessionId(session2);
+		UUID winnerId = winnerSession.get().getAccountId();
+		
+		Optional<GameModel> updatedGameModel = gameRepository.getByGameId(game);
+		assertThat(updatedGameModel.get().getWinnerId()).isEqualTo(winnerId);
+		assertThat(updatedGameModel.get().isActive()).isFalse();
+		assertThat(updatedGameModel.get().isInProgress()).isFalse();
 		
 		if (webSocketHandler1.getNumErrors() > 0) {
 			webSocketHandler1.getErrorMessages().forEach(m -> System.out.println(m));
