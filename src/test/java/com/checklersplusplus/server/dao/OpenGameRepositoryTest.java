@@ -2,7 +2,7 @@ package com.checklersplusplus.server.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -66,7 +66,7 @@ public class OpenGameRepositoryTest {
 		game.setActive(true);
 		game.setBlackId(UUID.randomUUID());
 		game.setCreatorRating(rating);
-		game.setCreated(LocalDateTime.now());
+		game.setCreated(LocalDate.now());
 		game.setCurrentMoveNumber(0);
 		game.setBlackRating(rating);
 		gameRepository.save(game);
@@ -77,7 +77,7 @@ public class OpenGameRepositoryTest {
 		game.setActive(true);
 		game.setRedId(UUID.randomUUID());
 		game.setCreatorRating(rating);
-		game.setCreated(LocalDateTime.now());
+		game.setCreated(LocalDate.now());
 		game.setCurrentMoveNumber(0);
 		game.setRedRating(rating);
 		gameRepository.save(game);
@@ -88,7 +88,7 @@ public class OpenGameRepositoryTest {
 		game.setActive(false);
 		game.setBlackId(UUID.randomUUID());
 		game.setCreatorRating(rating);
-		game.setCreated(LocalDateTime.now());
+		game.setCreated(LocalDate.now());
 		game.setCurrentMoveNumber(0);
 		game.setBlackRating(rating);
 		gameRepository.save(game);
@@ -99,7 +99,7 @@ public class OpenGameRepositoryTest {
 		game.setActive(false);
 		game.setRedId(UUID.randomUUID());
 		game.setCreatorRating(rating);
-		game.setCreated(LocalDateTime.now());
+		game.setCreated(LocalDate.now());
 		game.setCurrentMoveNumber(0);
 		game.setRedRating(rating);
 		gameRepository.save(game);

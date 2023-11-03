@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +29,6 @@ import com.checklersplusplus.server.dao.OpenGameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.Game;
-import com.checklersplusplus.server.entities.response.GameHistory;
 import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.exception.CannotCancelGameException;
 import com.checklersplusplus.server.exception.CannotCreateGameException;
@@ -37,7 +37,6 @@ import com.checklersplusplus.server.exception.GameCompleteException;
 import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.exception.InvalidMoveException;
 import com.checklersplusplus.server.exception.SessionNotFoundException;
-import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.GameMoveModel;
@@ -79,43 +78,6 @@ public class GameService {
 	
 	@Autowired
 	private RatingService ratingService;
-		
-	// TODO test
-	public List<GameHistory> getGameHistory(UUID sessionId, String sortDirection, Integer page, Integer pageSize) throws CheckersPlusPlusServerException {
-		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
-		
-		if (sessionModel.isEmpty()) {
-			throw new SessionNotFoundException();
-		}
-		
-		PageRequest pageRequest = PageRequest.of(pageSize, page, "asc".equalsIgnoreCase(sortDirection) ? Sort.by("lastModified").ascending() : Sort.by("lastModified").descending());
-		Page<GameModel> openGames = gameHistoryRepository.findByRedIdOrBlackId(sessionModel.get().getAccountId(), pageRequest);
-		List<GameHistory> gameHistory = openGames.stream().map(gameModel -> GameHistory.fromModel(gameModel)).collect(Collectors.toList());
-		
-		for (GameHistory game : gameHistory) {
-			if (game.getBlackAccountId() != null) {
-				Optional<AccountModel> account = accountRepository.findById(game.getBlackAccountId());
-				
-				if (account.isEmpty()) {
-					logger.error("Failed to find account from given black accountId %s for game %s", game.getBlackAccountId().toString(), game.getGameId().toString());
-				}
-				
-				game.setBlackUsername(account.get().getUsername());
-			}
-			
-			if (game.getRedAccountId() != null) {
-				Optional<AccountModel> account = accountRepository.findById(game.getRedAccountId());
-				
-				if (account.isEmpty()) {
-					logger.error("Failed to find account from given red accountId %s for game %s", game.getRedAccountId().toString(), game.getGameId().toString());
-				}
-				
-				game.setRedUsername(account.get().getUsername());
-			}
-		}
-		
-		return gameHistory;
-	}
 	
 	// TODO test
 	public List<Game> getOpenGames(Integer ratingLow, Integer ratingHigh, String sortBy, String sortDirection, Integer page, Integer pageSize) {
@@ -303,7 +265,7 @@ public class GameService {
 		GameModel gameModel = new GameModel();
 		gameModel.setActive(true);
 		gameModel.setInProgress(false);
-		gameModel.setCreated(LocalDateTime.now());
+		gameModel.setCreated(LocalDate.now());
 		gameModel.setLastModified(LocalDateTime.now());
 		
 		if (isBlack) {

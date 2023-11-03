@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +24,9 @@ import com.checklersplusplus.server.entities.request.CreateGame;
 import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
 import com.checklersplusplus.server.entities.response.Game;
+import com.checklersplusplus.server.entities.response.GameHistory;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
+import com.checklersplusplus.server.service.GameHistoryService;
 import com.checklersplusplus.server.service.GameService;
 
 import jakarta.validation.Valid;
@@ -44,6 +47,9 @@ public class GameController {
 	@Autowired
 	private GameService gameService;
 	
+	@Autowired
+	private GameHistoryService gameHistoryService;
+	
 	@GetMapping("/{gameId}")
 	public ResponseEntity<Game> getGameById(@PathVariable("gameId") UUID gameId) {
 	    Optional<Game> gameData = gameService.findByGameId(gameId);
@@ -57,20 +63,30 @@ public class GameController {
 	
 	// TODO test
 	@GetMapping("/{sessiondId}/history")
-	public ResponseEntity<List<Game>> getGameHistory(@RequestParam String sortDirection, @RequestParam Integer page, @RequestParam Integer pageSize) {
-	   if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {
-		   sortDirection = DEFAULT_SORT_DIRECTION;
-	   }
-	   
-	   if (page == null) {
-		   page = 0;
-	   }
-	   
-	   if (pageSize == null || pageSize > MAX_PAGE_SIZE) {
-		   pageSize = DEFAULT_PAGE_SIZE;
-	   }
-		   
-	   return null;
+	public ResponseEntity<List<GameHistory>> getGameHistory(@PathVariable("sessionId") UUID sessionId,
+			@RequestParam String sortDirection, @RequestParam Integer page, @RequestParam Integer pageSize) {
+		if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {
+			sortDirection = DEFAULT_SORT_DIRECTION;
+		}
+
+		if (page == null) {
+			page = 0;
+		}
+
+		if (pageSize == null || pageSize > MAX_PAGE_SIZE) {
+			pageSize = DEFAULT_PAGE_SIZE;
+		}
+
+		List<GameHistory> history = new ArrayList<>();
+
+		try {
+			history = gameHistoryService.getGameHistory(sessionId, sortDirection, page, pageSize);
+		} catch (CheckersPlusPlusServerException e) {
+			logger.error(e.getMessage());
+			return new ResponseEntity<>(history, HttpStatus.BAD_REQUEST);
+		}
+
+		return new ResponseEntity<>(history, HttpStatus.OK);
 	}
 	
 	// TODO test
@@ -83,7 +99,6 @@ public class GameController {
 			@RequestParam Integer page,
 			@RequestParam Integer pageSize) {
 	   try {
-		   // TODO test
 		   if (ratingLow == null || ratingLow <= 0) {
 			   ratingLow = 0;
 		   }

@@ -23,8 +23,8 @@ import com.checklersplusplus.server.entities.request.VerifyAccount;
 import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.service.AccountService;
-import com.checklersplusplus.server.service.EmailService;
 import com.checklersplusplus.server.service.VerificationService;
+import com.checklersplusplus.server.service.mail.EmailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringRunner.class)

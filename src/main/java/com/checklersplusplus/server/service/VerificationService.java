@@ -61,6 +61,7 @@ public class VerificationService {
 		verifyAccountRepository.save(verifyAccountModel);
 		accountModel.setVerified(LocalDateTime.now());
 		accountRepository.save(accountModel);
+		logger.debug(String.format("Account verified by %s", username));
 	}
 
 }

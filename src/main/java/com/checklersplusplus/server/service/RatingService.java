@@ -24,8 +24,6 @@ public class RatingService {
 
 	private static final Logger logger = LoggerFactory.getLogger(RatingService.class);
 
-	private static final int DEFAULT_INITIAL_RATING = 800;
-
 	@Autowired
 	private RatingRepository ratingRepository;
 	

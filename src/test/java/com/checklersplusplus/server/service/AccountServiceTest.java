@@ -145,7 +145,7 @@ public class AccountServiceTest {
 	@Test
 	public void testCannotLoginUnverifiedAccount() throws Exception {
 		CreateAccount createAccountInput = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
-		AccountModel accountModel = createAccount(createAccountInput);
+		createAccount(createAccountInput);
 		
 		try {
 			accountService.login(TEST_USERNAME, TEST_PASSWORD);
@@ -183,7 +183,7 @@ public class AccountServiceTest {
 	@Test
 	public void testCannotResetPasswordInvalidAccount() throws Exception {
 		CreateAccount createAccountInput = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
-		AccountModel accountModel = createAccount(createAccountInput);
+		createAccount(createAccountInput);
 		
 		try {
 			accountService.resetPassword("abc", "abc", TEST_PASSWORD);

@@ -21,9 +21,4 @@ public interface GameEventRepository extends JpaRepository<GameEventModel, UUID>
 	@Query("UPDATE GameEventModel g SET active = false WHERE eventRecipientAccountId = ?1")
 	void inactivateEventsForRecipient(UUID accountId);
 
-	// TODO test
-	@Modifying
-	@Query("UPDATE GameEventModel g SET active = false WHERE eventRecipientAccountId = ?1 AND event = 'TIMEOUT'")
-	void inactivateTimeoutEventForOpponent(UUID opponentId);
-
 }

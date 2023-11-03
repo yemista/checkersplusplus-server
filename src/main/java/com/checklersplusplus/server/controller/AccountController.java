@@ -23,8 +23,8 @@ import com.checklersplusplus.server.exception.AccountNotVerifiedException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.exception.UsernameNotFoundException;
 import com.checklersplusplus.server.service.AccountService;
-import com.checklersplusplus.server.service.EmailService;
 import com.checklersplusplus.server.service.VerificationService;
+import com.checklersplusplus.server.service.mail.EmailService;
 
 import jakarta.validation.Valid;
 

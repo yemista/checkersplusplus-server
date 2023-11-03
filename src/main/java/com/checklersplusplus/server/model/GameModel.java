@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -39,8 +40,9 @@ public class GameModel {
 	@Column(name = "winner_id")
 	private UUID winnerId;
 	
+	// TODO add db index on created
 	@Column(name = "created")
-	private LocalDateTime created;
+	private LocalDate created;
 	
 	@Column(name = "last_modified")
 	private LocalDateTime lastModified;
@@ -92,11 +94,11 @@ public class GameModel {
 		this.winnerId = winnerId;
 	}
 
-	public LocalDateTime getCreated() {
+	public LocalDate getCreated() {
 		return created;
 	}
 
-	public void setCreated(LocalDateTime created) {
+	public void setCreated(LocalDate created) {
 		this.created = created;
 	}
 
@@ -154,5 +156,13 @@ public class GameModel {
 
 	public void setBlackRating(Integer blackRating) {
 		this.blackRating = blackRating;
+	}
+
+	public Integer getCreatorRating() {
+		return creatorRating;
+	}
+
+	public void setCreatorRating(Integer creatorRating) {
+		this.creatorRating = creatorRating;
 	}
 }

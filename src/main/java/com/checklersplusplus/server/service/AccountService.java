@@ -127,7 +127,7 @@ public class AccountService {
 			session.setGameId(currentGame.get().getGameId());
 		}
 
-		// TODO test
+		// TODO do we really want to do this? Or should a login only receive events if a game is actice?
 		gameEventRepository.inactivateEventsForRecipient(account.get().getAccountId());
 		session.setMessage("Login successful.");
 		logger.info(String.format("Login successful for %s", account.get().getUsername()));

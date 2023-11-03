@@ -1,4 +1,4 @@
-package com.checklersplusplus.server.service;
+package com.checklersplusplus.server.service.job;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -82,8 +82,9 @@ public class SchedulerService {
 				if (gameEvent.isPresent()) {
 					forwardGameEvent(openWebSocket, gameEvent.get());
 					
+					// TODO is timeout event associated with player who timed out?
 					// If the other player timed out from lack of activity they lose the game
-					if (game.isPresent() && GameEvent.TIMEOUT.getMessage().equals(gameEvent.get().getEvent())) {
+					if (GameEvent.TIMEOUT.getMessage().equals(gameEvent.get().getEvent())) {
 						game.get().setActive(false);
 						game.get().setInProgress(false);
 						game.get().setWinnerId(accountId);

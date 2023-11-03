@@ -3,6 +3,7 @@ package com.checklersplusplus.server.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -133,7 +134,7 @@ public class GameServiceTest {
 		game.setActive(true);
 		game.setInProgress(true);
 		game.setBlackId(accountId);
-		game.setCreated(LocalDateTime.now());
+		game.setCreated(LocalDate.now());
 		game.setGameState("");
 		game.setLastModified(LocalDateTime.now());
 		gameRepository.save(game);
