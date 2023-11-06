@@ -14,8 +14,8 @@ public interface OpenWebSocketRepository extends JpaRepository<OpenWebSocketMode
 
 	// TODO test
 	@Modifying
-	@Query("UPDATE OpenWebSocketModel SET active = false WHERE webSocketId = ?1 AND active = true")
-	public void inactivateBySessionId(String sessionId);
+	@Query("UPDATE OpenWebSocketModel o SET o.active = false WHERE o.webSocketId = ?1")
+	public void inactivateByWebSocketId(String webSocketId);
 
 	// TODO test
 	@Query("SELECT o FROM OpenWebSocketModel o WHERE active = true AND sessionId = ?1")
@@ -27,4 +27,6 @@ public interface OpenWebSocketRepository extends JpaRepository<OpenWebSocketMode
 	
 	@Query("SELECT o FROM OpenWebSocketModel o WHERE serverId = ?1")
 	public List<OpenWebSocketModel> getAllByServerId(UUID serverId);
+	
+	public Optional<OpenWebSocketModel> findByWebSocketId(String webSocketId);
 }

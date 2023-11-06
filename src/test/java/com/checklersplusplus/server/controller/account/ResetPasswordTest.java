@@ -66,6 +66,7 @@ public class ResetPasswordTest {
 		String contentAsString = result.getResponse().getContentAsString();
 		CheckersPlusPlusResponse response = objectMapper.readValue(contentAsString, CheckersPlusPlusResponse.class);
 		assertEquals(response.getMessage(), "Password reset successful.");
+		System.out.println(objectMapper.writeValueAsString(resetPassword));
 	}
 	
 	@Test

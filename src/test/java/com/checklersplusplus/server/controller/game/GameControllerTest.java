@@ -2,12 +2,14 @@ package com.checklersplusplus.server.controller.game;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -22,11 +24,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.checkersplusplus.engine.Board;
 import com.checklersplusplus.server.controller.GameController;
 import com.checklersplusplus.server.entities.request.CreateGame;
 import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
 import com.checklersplusplus.server.entities.response.Game;
+import com.checklersplusplus.server.entities.response.GameHistory;
+import com.checklersplusplus.server.service.GameHistoryService;
 import com.checklersplusplus.server.service.GameService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,11 +42,51 @@ public class GameControllerTest {
 	@MockBean
 	private GameService gameService;
 	
+	@MockBean
+	private GameHistoryService gameHistoryService;
+	
 	@Autowired
 	private MockMvc mockMvc;
 	
 	@Autowired
 	private ObjectMapper objectMapper;
+	
+	@Test
+	public void canGetGameHistory() throws Exception {
+		UUID sessionId = UUID.randomUUID();
+		GameHistory gameHistory = new GameHistory();
+		List<GameHistory> gameHistoryList = new ArrayList<>();
+		gameHistoryList.add(gameHistory);
+		Mockito.when(gameHistoryService.getGameHistory(any(), any(), any(), any())).thenReturn(gameHistoryList);
+		ResultActions resultActions = mockMvc.perform(get("/checkersplusplus/api/game/history" + sessionId + "?sortDirection=ASC&page=0&pageSize=10").contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		@SuppressWarnings("unchecked")
+		List<GameHistory> response = objectMapper.readValue(contentAsString, List.class);
+	}
+	
+	@Test
+	public void canGetGameById() throws Exception {
+		UUID gameId = UUID.randomUUID();
+		UUID blackId = UUID.randomUUID();
+		UUID redId = UUID.randomUUID();
+		Board board = new Board();
+		String gameState = board.getBoardState();
+		Mockito.when(gameService.findByGameId(any())).thenReturn(Optional.of(new Game(gameId, gameState, blackId, redId)));
+		ResultActions resultActions = mockMvc.perform(get("/checkersplusplus/api/game/" + gameId).contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		Game response = objectMapper.readValue(contentAsString, Game.class);
+		assertEquals(response.getMessage(), null);
+		assertEquals(response.getGameId(), gameId);
+		assertEquals(response.getBlackId(), blackId);
+		assertEquals(response.getRedId(), redId);
+		assertEquals(response.getGameState(), gameState);
+	}
 	
 	@Test
 	public void canMove() throws Exception {

@@ -11,7 +11,7 @@ public class Game extends CheckersPlusPlusResponse implements Serializable {
 	private UUID redAccountId;
 	private UUID blackAccountId;
 	
-	private Game(UUID gameId, String gameState, UUID blackAccountId, UUID redAccountId) {
+	public Game(UUID gameId, String gameState, UUID blackAccountId, UUID redAccountId) {
 		this.gameId = gameId;
 		this.gameState = gameState;
 		this.blackAccountId = blackAccountId;
@@ -44,4 +44,26 @@ public class Game extends CheckersPlusPlusResponse implements Serializable {
 	public UUID getBlackId() {
 		return blackAccountId;
 	}
+
+	public UUID getRedAccountId() {
+		return redAccountId;
+	}
+
+	public void setRedAccountId(UUID redAccountId) {
+		this.redAccountId = redAccountId;
+	}
+
+	public UUID getBlackAccountId() {
+		return blackAccountId;
+	}
+
+	public void setBlackAccountId(UUID blackAccountId) {
+		this.blackAccountId = blackAccountId;
+	}
+
+	public void setGameId(UUID gameId) {
+		this.gameId = gameId;
+	}
+	
+	
 }

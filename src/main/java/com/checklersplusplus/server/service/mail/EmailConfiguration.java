@@ -14,7 +14,7 @@ public class EmailConfiguration {
 	@Value("${spring.mail.host}")
     private String mailServerHost;
 
-    @Value("${spring.mail.port}")
+    @Value("${spring.mail.properties.mail.smtp.port}")
     private Integer mailServerPort;
 
     @Value("${spring.mail.username}")
@@ -22,15 +22,6 @@ public class EmailConfiguration {
 
     @Value("${spring.mail.password}")
     private String mailServerPassword;
-
-    @Value("${spring.mail.properties.mail.smtp.auth}")
-    private String mailServerAuth;
-
-    @Value("${spring.mail.properties.mail.smtp.starttls.enable}")
-    private String mailServerStartTls;
-
-    @Value("${spring.mail.templates.path}")
-    private String mailTemplatesPath;
     
     @Bean
     public JavaMailSender getJavaMailSender() {

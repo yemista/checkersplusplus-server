@@ -63,13 +63,13 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 
 	@Override
 	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-		openWebSocketService.inactivateWebSocketSession(session.getId());
-		WebSocketMap.getInstance().getMap().remove(session.getId());
+		logger.error(String.format("Error occured for web socket session: %s", session.getId()), exception);
         super.handleTransportError(session, exception);
 	}
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+		logger.debug(String.format("Connection closed for web socket session: %s", session.getId()));
 		openWebSocketService.inactivateWebSocketSession(session.getId());
 		WebSocketMap.getInstance().getMap().remove(session.getId());
         super.afterConnectionClosed(session, closeStatus);

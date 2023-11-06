@@ -26,6 +26,9 @@ public class GameHistory extends CheckersPlusPlusResponse implements Serializabl
 		this.completedTime = completedTime;
 	}
 	
+	public GameHistory() {
+	}
+
 	public static GameHistory fromModel(GameModel model) {
 		return new GameHistory(model.getGameId(), model.getRedId(), model.getBlackId(), model.getRedRating(), model.getBlackRating(), model.getLastModified());
 	}

@@ -10,6 +10,5 @@ import com.checklersplusplus.server.model.GameModel;
 
 public interface OpenGameRepository extends PagingAndSortingRepository<GameModel, UUID> {
 	
-	// TODO test this
 	Page<GameModel> findByCreatorRatingBetweenAndActiveTrue(Integer lowRating, Integer highRating, Pageable pageable);
 }

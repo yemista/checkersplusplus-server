@@ -6,6 +6,9 @@ public class Session extends CheckersPlusPlusResponse {
 	private UUID sessionId;
 	private UUID gameId;
 	
+	// TODO fill this out
+	private UUID accountId;
+	
 	public Session() {
 	}
 	

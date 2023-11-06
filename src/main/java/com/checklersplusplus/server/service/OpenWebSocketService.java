@@ -35,7 +35,7 @@ public class OpenWebSocketService {
 	}
 
 	public void inactivateWebSocketSession(String webSocketSessionId) {
-		openWebSocketRepository.inactivateBySessionId(webSocketSessionId);
+		openWebSocketRepository.inactivateByWebSocketId(webSocketSessionId);
 	}
 	
 	public List<OpenWebSocket> getOpenWebSocketsForServer() {

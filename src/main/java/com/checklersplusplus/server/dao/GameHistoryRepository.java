@@ -11,8 +11,7 @@ import com.checklersplusplus.server.model.GameModel;
 
 public interface GameHistoryRepository extends PagingAndSortingRepository<GameModel, UUID> {
 
-	// TODO test
-	@Query("SELECT g FROM GameModel g WHERE redId = ?1 OR blackId = ?1")
+	@Query("SELECT g FROM GameModel g WHERE redId = ?1 OR blackId = ?1 AND active=false")
 	Page<GameModel> findByRedIdOrBlackId(UUID accountId, PageRequest pageRequest);
 
 }

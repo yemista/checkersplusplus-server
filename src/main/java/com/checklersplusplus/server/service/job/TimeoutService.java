@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
@@ -18,6 +20,7 @@ import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.SessionModel;
 
 @Service
+@Transactional
 public class TimeoutService {
 
 	private static final int QUEUE_SIZE = 500;
@@ -48,7 +51,7 @@ public class TimeoutService {
 				accountIdsToCheck.add(expiredSessions.get(counter).getAccountId());
 			}
 			
-			sessionRepository.invalidateSessionsBySessionIds(sessionModelsToInactivate);
+			invalidateSesions(sessionModelsToInactivate);
 			
 			// TODO should we only timeout games that are inProgress=true?
 			List<GameModel> activeGames = gameRepository.getActiveGamesByAccountId(accountIdsToCheck);
@@ -73,5 +76,10 @@ public class TimeoutService {
 		} catch (Exception e) {
 			logger.error("Exception thrown in timeout service body", e);
 		}
+	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void invalidateSesions(List<UUID> sessionModels) {
+		sessionRepository.invalidateSessionsBySessionIds(sessionModels);		
 	}
 }
