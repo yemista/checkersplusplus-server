@@ -34,3 +34,4 @@ build/
 *.log
 *.log
 logs/
+logs/checkersplusplus.log
