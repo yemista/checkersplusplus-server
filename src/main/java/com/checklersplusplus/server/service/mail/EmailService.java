@@ -43,7 +43,7 @@ public class EmailService {
 		}
 	}
 	
-	private void sendSimpleMessage(String to, String subject, String text) {
+	public void sendSimpleMessage(String to, String subject, String text) {
 		SimpleMailMessage message = new SimpleMailMessage();
 		message.setFrom(ADMIN_EMAIL);
 		message.setTo(to);

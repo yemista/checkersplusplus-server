@@ -14,7 +14,7 @@ public interface OpenWebSocketRepository extends JpaRepository<OpenWebSocketMode
 
 	// TODO test
 	@Modifying
-	@Query("UPDATE OpenWebSocketModel o SET o.active = false WHERE o.webSocketId = ?1")
+	@Query("UPDATE OpenWebSocketModel SET active = false WHERE webSocketId = :webSocketId")
 	public void inactivateByWebSocketId(String webSocketId);
 
 	// TODO test

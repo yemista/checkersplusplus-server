@@ -14,8 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
+import com.checklersplusplus.server.enums.GameEvent;
+import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.SessionModel;
 
@@ -24,6 +27,7 @@ import com.checklersplusplus.server.model.SessionModel;
 public class TimeoutService {
 
 	private static final int QUEUE_SIZE = 500;
+	private static final int TEN_SECONDS_MILLIS = 10000;
 	
 	private static final Logger logger = LoggerFactory.getLogger(TimeoutService.class);
 	
@@ -33,16 +37,19 @@ public class TimeoutService {
 	@Autowired
 	private GameRepository gameRepository;
 	
+	@Autowired
+	private GameEventRepository gameEventRepository;
+	
 	@Value("${checkersplusplus.timeout.minutes}")
 	private Integer timeoutMinutes;
 	
-	@Scheduled(fixedDelay = 10000)
+	@Scheduled(fixedDelay = TEN_SECONDS_MILLIS)
 	public void checkForTimeouts() {
 		// TODO test
 		try {
 			LocalDateTime now = LocalDateTime.now();
-			LocalDateTime fiveMinutesAgo = now.minusMinutes(timeoutMinutes);
-			List<SessionModel> expiredSessions = sessionRepository.getActiveSessionsOlderThan(fiveMinutesAgo);
+			LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);
+			List<SessionModel> expiredSessions = sessionRepository.getActiveSessionsOlderThan(timeoutThreshold);
 			List<UUID> sessionModelsToInactivate = new ArrayList<>();
 			List<UUID> accountIdsToCheck = new ArrayList<>();
 			
@@ -53,8 +60,7 @@ public class TimeoutService {
 			
 			invalidateSesions(sessionModelsToInactivate);
 			
-			// TODO should we only timeout games that are inProgress=true?
-			List<GameModel> activeGames = gameRepository.getActiveGamesByAccountId(accountIdsToCheck);
+			List<GameModel> activeGames = gameRepository.getActiveGamesInProgressByAccountId(accountIdsToCheck);
 			
 			for (GameModel game : activeGames) {
 				if (game.isInProgress()) {
@@ -69,7 +75,17 @@ public class TimeoutService {
 					}
 					
 					if (accountToSendEvent != null) {
+						game.setWinnerId(accountToSendEvent);
+						game.setInProgress(false);
+						game.setActive(false);
+						gameRepository.save(game);
 						
+						GameEventModel gameEvent = new GameEventModel();
+						gameEvent.setActive(true);
+						gameEvent.setEvent(GameEvent.TIMEOUT.getMessage());
+						gameEvent.setEventRecipientAccountId(accountToSendEvent);
+						gameEvent.setGameId(game.getGameId());
+						gameEventRepository.save(gameEvent);
 					}
 				}
 			}

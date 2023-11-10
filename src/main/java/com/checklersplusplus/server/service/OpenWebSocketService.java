@@ -24,7 +24,7 @@ public class OpenWebSocketService {
 	@Autowired
 	private OpenWebSocketRepository openWebSocketRepository;
 
-	public void createWebSocketSession(UUID serverSessionId, String webSocketSessionId) {
+	public UUID createWebSocketSession(UUID serverSessionId, String webSocketSessionId) {
 		OpenWebSocketModel openWebSocket = new OpenWebSocketModel();
 		openWebSocket.setActive(true);
 		openWebSocket.setCreated(LocalDateTime.now());
@@ -32,6 +32,7 @@ public class OpenWebSocketService {
 		openWebSocket.setSessionId(serverSessionId);
 		openWebSocket.setServerId(WebSocketServerId.getInstance().getId());
 		openWebSocketRepository.save(openWebSocket);
+		return openWebSocket.getOpenWebSocketId();
 	}
 
 	public void inactivateWebSocketSession(String webSocketSessionId) {

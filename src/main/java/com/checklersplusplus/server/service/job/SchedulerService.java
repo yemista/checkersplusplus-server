@@ -25,7 +25,6 @@ import com.checklersplusplus.server.dao.LastMoveSentRepository;
 import com.checklersplusplus.server.dao.OpenWebSocketRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.entities.internal.OpenWebSocket;
-import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.GameMoveModel;
@@ -76,23 +75,13 @@ public class SchedulerService {
 				
 				UUID accountId = serverSession.get().getAccountId();
 				Optional<GameEventModel> gameEvent = gameEventRepository.findActiveEventForAccountId(accountId);
-				Optional<GameModel> game = gameRepository.getActiveGameByAccountId(accountId);
-				
-				// TODO be careful here, when are TIMEOUT events going to happen and to/from who?
+								
 				if (gameEvent.isPresent()) {
-					forwardGameEvent(openWebSocket, gameEvent.get());
-					
-					// TODO is timeout event associated with player who timed out?
-					// If the other player timed out from lack of activity they lose the game
-					if (GameEvent.TIMEOUT.getMessage().equals(gameEvent.get().getEvent())) {
-						game.get().setActive(false);
-						game.get().setInProgress(false);
-						game.get().setWinnerId(accountId);
-						gameRepository.save(game.get());
-					}
-					
+					forwardGameEvent(openWebSocket, gameEvent.get().getGameEventId());
 					continue;
 				}
+				
+				Optional<GameModel> game = gameRepository.getActiveGameByAccountId(accountId);
 				
 				if (game.isPresent()) {
 					UUID gameId = game.get().getGameId();				
@@ -158,21 +147,29 @@ public class SchedulerService {
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void forwardGameEvent(OpenWebSocket openWebSocket, GameEventModel gameEvent) {
+	public void forwardGameEvent(OpenWebSocket openWebSocket, UUID gameEventId) {
+		Optional<GameEventModel> gameEvent = gameEventRepository.findById(gameEventId);
+		
+		if (gameEvent.isEmpty()) {
+			logger.error("Missing gameEventId: %s", gameEventId.toString());
+			return;
+		}
+		
 		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketSessionId());
 		
 		if (webSocket == null) {
-			logger.debug("forwardGameEvent: Unexpected websocket close for accountId %s gameId: %s", gameEvent.getEventRecipientAccountId().toString(), gameEvent.getGameId().toString());
+			logger.debug("forwardGameEvent: Unexpected websocket close for accountId %s gameId: %s", 
+					gameEvent.get().getEventRecipientAccountId().toString(), gameEvent.get().getGameId().toString());
 			return;
 		}
 		
 		try {
-			webSocket.getFirst().sendMessage(new TextMessage(gameEvent.getEvent()));
-			gameEvent.setActive(false);
-			gameEventRepository.save(gameEvent);
+			webSocket.getFirst().sendMessage(new TextMessage(gameEvent.get().getEvent()));
+			gameEvent.get().setActive(false);
+			gameEventRepository.save(gameEvent.get());
 		} catch (Exception e) {
 			logger.error(String.format("Failed to send event %s to accountId %s for gameId %s", 
-					gameEvent.getEvent(), gameEvent.getEventRecipientAccountId().toString(), gameEvent.getGameId().toString()), e);
+					gameEvent.get().getEvent(), gameEvent.get().getEventRecipientAccountId().toString(), gameEvent.get().getGameId().toString()), e);
 		}
 	}
 }

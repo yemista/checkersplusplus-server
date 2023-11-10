@@ -37,10 +37,11 @@ public class OpenWebSocketRepositoryTest {
 		assertThat(findBeforeInactive.get().isActive()).isTrue();
 		
 		openWebSocketRepository.inactivateByWebSocketId(webSocketSessionId);
-		openWebSocketRepository.flush();
 		
 		Optional<OpenWebSocketModel> findAfterInactive = openWebSocketRepository.findByWebSocketId(webSocketSessionId);
 		assertThat(findAfterInactive.isPresent()).isTrue();
+		
+		// for some reason the next line fails...
 		assertThat(findAfterInactive.get().isActive()).isFalse();
 	}
 	

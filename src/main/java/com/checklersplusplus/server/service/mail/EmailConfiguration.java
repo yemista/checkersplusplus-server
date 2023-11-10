@@ -41,7 +41,7 @@ public class EmailConfiguration {
         props.put("mail.smtp.connectiontimeout", 5000);
         props.put("mail.smtp.writetimeout", 5000);
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.ssl.enable", "true");
+       // props.put("mail.smtp.ssl.enable", "true");
         props.put("mail.smtp.ssl.trust", "*");
         
         return mailSender;

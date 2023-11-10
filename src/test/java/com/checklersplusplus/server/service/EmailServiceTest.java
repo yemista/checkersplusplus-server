@@ -7,15 +7,16 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import com.checklersplusplus.server.service.mail.EmailService;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class EmailServiceTest {
 	
 	@Autowired
-    private JavaMailSender emailSender;
+    private EmailService emailService;
 
 	public void emailVerificationCode(UUID accountId, String verificationCode) {
 		
@@ -27,7 +28,7 @@ public class EmailServiceTest {
 		message.setTo(to);
 		message.setSubject(subject);
 		message.setText(text);
-		emailSender.send(message);
+		emailService.sendSimpleMessage("elias.kopsiaftis@gmail.com", "test", "hello");
 	}
 	
 	@Test
