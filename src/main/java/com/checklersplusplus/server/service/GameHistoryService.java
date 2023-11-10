@@ -39,7 +39,6 @@ public class GameHistoryService {
 	@Autowired
 	private AccountRepository accountRepository;
 	
-	// TODO test
 	public List<GameHistory> getGameHistory(UUID sessionId, String sortDirection, Integer page, Integer pageSize) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -47,7 +46,7 @@ public class GameHistoryService {
 			throw new SessionNotFoundException();
 		}
 		
-		PageRequest pageRequest = PageRequest.of(pageSize, page, "asc".equalsIgnoreCase(sortDirection) ? Sort.by("lastModified").ascending() : Sort.by("lastModified").descending());
+		PageRequest pageRequest = PageRequest.of(page, pageSize, "asc".equalsIgnoreCase(sortDirection) ? Sort.by("lastModified").ascending() : Sort.by("lastModified").descending());
 		Page<GameModel> openGames = gameHistoryRepository.findByRedIdOrBlackId(sessionModel.get().getAccountId(), pageRequest);
 		List<GameHistory> gameHistory = openGames.stream().map(gameModel -> GameHistory.fromModel(gameModel)).collect(Collectors.toList());
 		

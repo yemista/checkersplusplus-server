@@ -120,15 +120,16 @@ public class AccountService {
 		sessionRepository.save(sessionModel);
 		Session session = new Session();
 		session.setSessionId(sessionModel.getSessionId());
+		session.setAccountId(account.get().getAccountId());
 		
 		Optional<GameModel> currentGame = gameRepository.getActiveGameByAccountId(account.get().getAccountId());
 		
 		if (currentGame.isPresent()) {
 			session.setGameId(currentGame.get().getGameId());
+		} else {
+			gameEventRepository.inactivateEventsForRecipient(account.get().getAccountId());
 		}
 
-		// TODO do we really want to do this? Or should a login only receive events if a game is actice?
-		gameEventRepository.inactivateEventsForRecipient(account.get().getAccountId());
 		session.setMessage("Login successful.");
 		logger.info(String.format("Login successful for %s", account.get().getUsername()));
 		return session;

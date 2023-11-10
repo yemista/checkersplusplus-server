@@ -52,13 +52,30 @@ public class GameControllerTest {
 	private ObjectMapper objectMapper;
 	
 	@Test
+	public void canGetOpenGames() throws Exception {
+		Game game = new Game();
+		List<Game> gameList = new ArrayList<>();
+		gameList.add(game);
+		Mockito.when(gameService.getOpenGames(any(), any(), any(), any(), any(), any()))
+				.thenReturn(gameList);
+		ResultActions resultActions = mockMvc.perform(get("/checkersplusplus/api/game/open").contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andDo(print());
+		MvcResult result = resultActions.andReturn();
+		String contentAsString = result.getResponse().getContentAsString();
+		@SuppressWarnings("unchecked")
+		List<Game> response = objectMapper.readValue(contentAsString, List.class);
+	}
+	
+	@Test
 	public void canGetGameHistory() throws Exception {
 		UUID sessionId = UUID.randomUUID();
 		GameHistory gameHistory = new GameHistory();
 		List<GameHistory> gameHistoryList = new ArrayList<>();
 		gameHistoryList.add(gameHistory);
-		Mockito.when(gameHistoryService.getGameHistory(any(), any(), any(), any())).thenReturn(gameHistoryList);
-		ResultActions resultActions = mockMvc.perform(get("/checkersplusplus/api/game/history" + sessionId + "?sortDirection=ASC&page=0&pageSize=10").contentType(MediaType.APPLICATION_JSON))
+		Mockito.when(gameHistoryService.getGameHistory(any(), any(), any(), any()))
+				.thenReturn(gameHistoryList);
+		ResultActions resultActions = mockMvc.perform(get("/checkersplusplus/api/game/history/" + sessionId).contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andDo(print());
 		MvcResult result = resultActions.andReturn();

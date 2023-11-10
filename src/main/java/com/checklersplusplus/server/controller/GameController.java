@@ -37,7 +37,7 @@ public class GameController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(GameController.class);
 	
-	private static final List<String> VALID_SORTS = Arrays.asList("created", "rating");
+	private static final List<String> VALID_SORTS = Arrays.asList("created", "creatorRating");
 	private static final List<String> VALID_SORT_DIRECTIONS = Arrays.asList("asc", "desc");
 	
 	private static final Integer DEFAULT_PAGE_SIZE = 25;
@@ -61,28 +61,20 @@ public class GameController {
 	    }
 	}
 	
-	@GetMapping("/history/{sessiondId}")
+	@GetMapping("/history/{sessionId}")
 	public ResponseEntity<List<GameHistory>> getGameHistory(@PathVariable("sessionId") UUID sessionId,
-			@RequestParam String sortDirection, @RequestParam Integer page, @RequestParam Integer pageSize) {
-		logger.error("here1");
-		
+			@RequestParam(required = false) String sortDirection, @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize) {
 		if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {
 			sortDirection = DEFAULT_SORT_DIRECTION;
 		}
-		
-		logger.error("here2");
 
 		if (page == null) {
 			page = 0;
 		}
-		
-		logger.error("here3");
 
 		if (pageSize == null || pageSize > MAX_PAGE_SIZE) {
 			pageSize = DEFAULT_PAGE_SIZE;
 		}
-		
-		logger.error("here4");
 
 		List<GameHistory> history = new ArrayList<>();
 
@@ -105,11 +97,10 @@ public class GameController {
 		return new ResponseEntity<>(history, HttpStatus.OK);
 	}
 	
-	// TODO test
 	@GetMapping("/open")
-	public ResponseEntity<List<Game>> getOpenGames(@RequestParam Integer ratingLow, @RequestParam Integer ratingHigh,
-			@RequestParam String sortBy, @RequestParam String sortDirection, @RequestParam Integer page,
-			@RequestParam Integer pageSize) {
+	public ResponseEntity<List<Game>> getOpenGames(@RequestParam(required = false) Integer ratingLow, @RequestParam(required = false) Integer ratingHigh,
+			@RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDirection, 
+			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize) {
 	   try {
 		   if (ratingLow == null || ratingLow <= 0) {
 			   ratingLow = 0;
@@ -120,7 +111,7 @@ public class GameController {
 		   }
 		   
 		   if (!VALID_SORTS.contains(sortBy)) {
-			   sortBy = "";
+			   sortBy = "lastModified";
 		   }
 
 		   if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {

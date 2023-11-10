@@ -5,16 +5,15 @@ import java.util.UUID;
 public class Session extends CheckersPlusPlusResponse {
 	private UUID sessionId;
 	private UUID gameId;
-	
-	// TODO fill this out
 	private UUID accountId;
 	
 	public Session() {
 	}
 	
-	public Session(UUID sessionId, UUID gameId) {
+	public Session(UUID sessionId, UUID gameId, UUID accountId) {
 		this.gameId = gameId;
 		this.sessionId = sessionId;
+		this.accountId = accountId;
 	}
 
 	public UUID getSessionId() {
@@ -31,5 +30,13 @@ public class Session extends CheckersPlusPlusResponse {
 	
 	public void setSessionId(UUID sessionId) {
 		this.sessionId = sessionId;
+	}
+
+	public UUID getAccountId() {
+		return accountId;
+	}
+
+	public void setAccountId(UUID accountId) {
+		this.accountId = accountId;
 	}
 }

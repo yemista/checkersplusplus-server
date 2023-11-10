@@ -54,7 +54,7 @@ public class LoginTest {
 	
 	@Test
 	public void canLogin() throws Exception {
-		Session sessionResponse = new Session(UUID.randomUUID(), null);
+		Session sessionResponse = new Session(UUID.randomUUID(), null, UUID.randomUUID());
 		sessionResponse.setMessage("Login successful.");
 		Mockito.when(accountService.login(any(), any())).thenReturn(sessionResponse);
 		Login login = new Login(TEST_USERNAME, TEST_PASSWORD);

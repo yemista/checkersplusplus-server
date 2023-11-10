@@ -25,15 +25,12 @@ public class GameModel {
 	@Column(name = "black_id")
 	private UUID blackId;
 
-	// TODO test this field
 	@Column(name = "creator_rating")
 	private Integer creatorRating;
 	
-	// TODO test this field
 	@Column(name = "red_rating")
 	private Integer redRating;
 	
-	// TODO test this field
 	@Column(name = "black_rating")
 	private Integer blackRating;
 	

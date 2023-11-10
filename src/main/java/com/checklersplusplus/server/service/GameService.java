@@ -19,13 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.checkersplusplus.engine.Coordinate;
 import com.checkersplusplus.engine.CoordinatePair;
 import com.checkersplusplus.engine.enums.Color;
-import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameHistoryRepository;
 import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.LastMoveSentRepository;
 import com.checklersplusplus.server.dao.OpenGameRepository;
+import com.checklersplusplus.server.dao.RatingRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.Game;
@@ -41,6 +41,7 @@ import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.GameMoveModel;
 import com.checklersplusplus.server.model.LastMoveSentModel;
+import com.checklersplusplus.server.model.RatingModel;
 import com.checklersplusplus.server.model.SessionModel;
 
 @Service
@@ -65,7 +66,7 @@ public class GameService {
 	private SessionRepository sessionRepository;
 	
 	@Autowired
-	private AccountRepository accountRepository;
+	private RatingRepository ratingRepository;
 	
 	@Autowired
 	private LastMoveSentRepository lastMoveSentRepository;
@@ -79,14 +80,13 @@ public class GameService {
 	@Autowired
 	private RatingService ratingService;
 	
-	// TODO test
 	public List<Game> getOpenGames(Integer ratingLow, Integer ratingHigh, String sortBy, String sortDirection, Integer page, Integer pageSize) {
 		PageRequest pageRequest = null;
 	
 		if (sortBy != null && sortBy.length() > 0) {
-			pageRequest = PageRequest.of(pageSize, page, "asc".equalsIgnoreCase(sortDirection) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
+			pageRequest = PageRequest.of(page, pageSize, "asc".equalsIgnoreCase(sortDirection) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
 		} else {
-			pageRequest = PageRequest.of(pageSize, page);
+			pageRequest = PageRequest.of(page, pageSize);
 		}
 		
 		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrue(ratingLow, ratingHigh, pageRequest);
@@ -149,7 +149,6 @@ public class GameService {
     		
     		boolean isDraw = logicalGame.isDraw();
     		
-    		// TODO test
     		if (isDraw) {
     			GameEventModel winnerEvent = new GameEventModel();
     			winnerEvent.setActive(true);
@@ -237,10 +236,18 @@ public class GameService {
 			throw new GameNotFoundException();
 		}
 		
+		Optional<RatingModel> rating = ratingRepository.findByAccountId(sessionModel.get().getAccountId());
+		
+		if (rating.isEmpty()) {
+			throw new CheckersPlusPlusServerException("Illegal state. Missing rating");
+		}
+		
 		if (gameModel.get().getBlackId() == null) {
 			gameModel.get().setBlackId(sessionModel.get().getAccountId());
+			gameModel.get().setBlackRating(rating.get().getRating());
 		} else {
 			gameModel.get().setRedId(sessionModel.get().getAccountId());
+			gameModel.get().setRedRating(rating.get().getRating());
 		}
 		
 		gameModel.get().setInProgress(true);
@@ -268,10 +275,20 @@ public class GameService {
 		gameModel.setCreated(LocalDate.now());
 		gameModel.setLastModified(LocalDateTime.now());
 		
+		Optional<RatingModel> rating = ratingRepository.findByAccountId(sessionModel.get().getAccountId());
+		
+		if (rating.isEmpty()) {
+			throw new CheckersPlusPlusServerException("Illegal state. Missing rating");
+		}
+		
 		if (isBlack) {
 			gameModel.setBlackId(sessionModel.get().getAccountId());
+			gameModel.setBlackRating(rating.get().getRating());
+			gameModel.setCreatorRating(rating.get().getRating());
 		} else {
 			gameModel.setRedId(sessionModel.get().getAccountId());
+			gameModel.setRedRating(rating.get().getRating());
+			gameModel.setCreatorRating(rating.get().getRating());
 		}
 		
 		com.checkersplusplus.engine.Game game = new com.checkersplusplus.engine.Game();

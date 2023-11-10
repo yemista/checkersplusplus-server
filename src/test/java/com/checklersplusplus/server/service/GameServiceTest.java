@@ -84,7 +84,6 @@ public class GameServiceTest {
 		sessionId = loginAndCreateTestSession(TEST_USERNAME, TEST_PASSWORD);
 	}
 	
-	
 	private UUID loginAndCreateTestSession(String testUsername, String testPassword) throws Exception {
 		Session session = accountService.login(testUsername, testPassword);
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(session.getSessionId());
@@ -116,6 +115,63 @@ public class GameServiceTest {
 		sessionsToDelete.forEach(verifyAccount -> sessionRepository.delete(verifyAccount));
 		verifyAccountsToDelete.forEach(verifyAccount -> verifyAccountRepository.delete(verifyAccount));
 		accountsToDelete.forEach(account -> accountRepository.delete(account));
+	}
+	
+	@Test
+	public void redCanWinGame() throws Exception {
+		UUID secondAccountId = setupSecondUserAndSession();
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
+		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
+		String gameState = "EEEEEoEoEEEEEEoEEEEEEEEEEEoEEEoEEEEEEEEEEEEEEEEEExEEEEEEEEEEEEEE|0";
+		gameModel.get().setGameState(gameState);
+		gameRepository.save(gameModel.get());		gamesToDelete.add(gameModel.get());
+		gameService.joinGame(sessionId, game.getGameId());
+		
+		List<Move> moves = Arrays.asList(new Move(1, 1, 2, 2));
+		gameService.move(sessionId, gameModel.get().getGameId(), moves);
+		
+		List<Move> winningMove = Arrays.asList(new Move(2, 4, 2, 0));
+		gameService.move(secondSession.get().getSessionId(), gameModel.get().getGameId(), winningMove);
+		
+		Optional<GameModel> gameAfterMove = gameRepository.getByGameId(game.getGameId());
+		assertThat(gameAfterMove.get().getWinnerId()).isEqualTo(secondSession.get().getAccountId());
+		assertThat(gameAfterMove.get().getRedId()).isEqualTo(secondSession.get().getAccountId());
+	}
+	
+	@Test
+	public void blackCanWinGame() throws Exception {
+		UUID secondAccountId = setupSecondUserAndSession();
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
+		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
+		String gameState = "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEoEEEEEEEExEEExEEEEEEEExEEEExExE|0";
+		gameModel.get().setGameState(gameState);
+		gameRepository.save(gameModel.get());		
+		gamesToDelete.add(gameModel.get());
+		gameService.joinGame(sessionId, game.getGameId());
+		List<Move> moves = Arrays.asList(new Move(2, 2, 0, 4));
+		gameService.move(sessionId, gameModel.get().getGameId(), moves);
+		Optional<GameModel> gameAfterMove = gameRepository.getByGameId(game.getGameId());
+		assertThat(gameAfterMove.get().getWinnerId()).isEqualTo(accountId);
+		assertThat(gameAfterMove.get().getBlackId()).isEqualTo(accountId);
+	}
+	
+	@Test
+	public void CanDrawGame() throws Exception {
+		UUID secondAccountId = setupSecondUserAndSession();
+		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
+		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
+		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
+		String gameState = "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEoEEEEEEEEEEEEEEEEEExEEEEEEEEEEEEEE|0";
+		gameModel.get().setGameState(gameState);
+		gameRepository.save(gameModel.get());		
+		gamesToDelete.add(gameModel.get());
+		gameService.joinGame(sessionId, game.getGameId());
+		List<Move> moves = Arrays.asList(new Move(1, 1, 2, 2));
+		gameService.move(sessionId, gameModel.get().getGameId(), moves);
+		Optional<GameModel> gameAfterMove = gameRepository.getByGameId(game.getGameId());
+		assertThat(gameAfterMove.get().getWinnerId()).isEqualTo(UUID.fromString("00000000-0000-0000-0000-000000000001"));
 	}
 	
 	@Test
@@ -159,6 +215,8 @@ public class GameServiceTest {
 		assertThat(gameModel.get().getCreated()).isNotNull();
 		assertThat(gameModel.get().getLastModified()).isNotNull();
 		assertThat(gameModel.get().getWinnerId()).isNull();
+		assertThat(gameModel.get().getBlackRating()).isEqualTo(800);
+		assertThat(gameModel.get().getCreatorRating()).isEqualTo(800);
 		assertThat(gameModel.get().getRedId()).isNull();
 		assertThat(gameModel.get().isActive()).isTrue();
 		assertThat(gameModel.get().isInProgress()).isFalse();
@@ -175,6 +233,8 @@ public class GameServiceTest {
 		assertThat(gameModel.get().getCreated()).isNotNull();
 		assertThat(gameModel.get().getLastModified()).isNotNull();
 		assertThat(gameModel.get().getWinnerId()).isNull();
+		assertThat(gameModel.get().getRedRating()).isEqualTo(800);
+		assertThat(gameModel.get().getCreatorRating()).isEqualTo(800);
 		assertThat(gameModel.get().getBlackId()).isNull();
 		assertThat(gameModel.get().getCurrentMoveNumber()).isEqualTo(0);
 		assertThat(gameModel.get().isActive()).isTrue();
@@ -281,7 +341,7 @@ public class GameServiceTest {
 			gameService.move(sessionId, gameModel.get().getGameId(), moves);
 			fail();
 		} catch(CheckersPlusPlusServerException e) {
-			assertThat(e.getMessage()).isEqualTo("Game not found.");
+			assertThat(e.getMessage()).isEqualTo("Game finished.");
 		}
 	}
 	
@@ -305,9 +365,12 @@ public class GameServiceTest {
 		Game game = gameService.createGame(secondSession.get().getSessionId(), false);
 		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
 		gamesToDelete.add(gameModel.get());
+		assertThat(gameModel.get().getRedRating()).isEqualTo(800);
+		assertThat(gameModel.get().getCreatorRating()).isEqualTo(800);
 		gameService.joinGame(sessionId, game.getGameId());
 		Optional<GameModel> joinedGame = gameRepository.getByGameId(game.getGameId());
 		assertThat(joinedGame.get().getBlackId()).isEqualTo(accountId);
+		assertThat(joinedGame.get().getBlackRating()).isEqualTo(800);
 		assertThat(joinedGame.get().isInProgress()).isTrue();
 	}
 	
@@ -530,6 +593,39 @@ public class GameServiceTest {
 		assertThat(forfeitedGameModel.get().isActive()).isFalse();
 		assertThat(forfeitedGameModel.get().isInProgress()).isFalse();
 		assertThat(forfeitedGameModel.get().getWinnerId()).isNull();
+	}
+	
+	@Test
+	public void canGetOpenGames() throws Exception {
+		Game game = gameService.createGame(sessionId, true);
+		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
+		assertThat(gameModel.isPresent()).isTrue();
+		gamesToDelete.add(gameModel.get());
+		List<Game> games = gameService.getOpenGames(0, 5000, "", "", 0, 5);
+		assertThat(games.size()).isEqualTo(1);
+		assertThat(games.get(0).getGameId()).isEqualTo(game.getGameId());
+	}
+	
+	@Test
+	public void canGetOpenGamesWithSortByCreatorRating() throws Exception {
+		Game game = gameService.createGame(sessionId, true);
+		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
+		assertThat(gameModel.isPresent()).isTrue();
+		gamesToDelete.add(gameModel.get());
+		List<Game> games = gameService.getOpenGames(0, 5000, "creatorRating", "asc", 0, 5);
+		assertThat(games.size()).isEqualTo(1);
+		assertThat(games.get(0).getGameId()).isEqualTo(game.getGameId());
+	}
+	
+	@Test
+	public void canGetOpenGamesWithSortByCreated() throws Exception {
+		Game game = gameService.createGame(sessionId, true);
+		Optional<GameModel> gameModel = gameRepository.getByGameId(game.getGameId());
+		assertThat(gameModel.isPresent()).isTrue();
+		gamesToDelete.add(gameModel.get());
+		List<Game> games = gameService.getOpenGames(0, 5000, "created", "desc", 0, 5);
+		assertThat(games.size()).isEqualTo(1);
+		assertThat(games.get(0).getGameId()).isEqualTo(game.getGameId());
 	}
 	
 	private UUID setupSecondUserAndSession() throws Exception {
