@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.integration.util;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class TestWebSocketHandler extends TextWebSocketHandler {
 	private List<String> errorMessages = new ArrayList<>();
 	private List<String> gameEvents = new ArrayList<>();;
 	private WebSocketTestingStrategy strategy;
+	private WebSocketSession webSocketSession;
 	
 	private enum WebSocketTestingStrategy {
 		MOVES, EVENTS
@@ -32,6 +34,14 @@ public class TestWebSocketHandler extends TextWebSocketHandler {
 	public TestWebSocketHandler(List<String> events) {
 		gameEvents.addAll(events);
 		strategy = WebSocketTestingStrategy.EVENTS;
+	}
+	
+	public void sendMessage(String message) {
+		try {
+			webSocketSession.sendMessage(new TextMessage(message));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
     @Override
@@ -126,5 +136,9 @@ public class TestWebSocketHandler extends TextWebSocketHandler {
 	
 	public List<String> getErrorMessages() {
 		return errorMessages;
+	}
+
+	public void setWebSocketSession(WebSocketSession webSocketSession) {
+		this.webSocketSession = webSocketSession;
 	}
 }

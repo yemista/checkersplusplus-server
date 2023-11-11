@@ -32,7 +32,7 @@ import com.checklersplusplus.server.model.VerifyAccountModel;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @RunWith(SpringRunner.class)
-public class CreateVerifyLoginIntegrationTests {
+public class CreateVerifyLoginIntegrationTest {
 	
 	private static final String TEST_EMAIL = "test@test.com";
 	private static final String TEST_PASSWORD = "Password123";

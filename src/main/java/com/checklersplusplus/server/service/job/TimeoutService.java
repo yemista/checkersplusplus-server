@@ -27,7 +27,7 @@ import com.checklersplusplus.server.model.SessionModel;
 public class TimeoutService {
 
 	private static final int QUEUE_SIZE = 500;
-	private static final int TEN_SECONDS_MILLIS = 10000;
+	private static final int TEN_SECONDS_MILLIS = 10 * 1000;
 	
 	private static final Logger logger = LoggerFactory.getLogger(TimeoutService.class);
 	
@@ -45,10 +45,10 @@ public class TimeoutService {
 	
 	@Scheduled(fixedDelay = TEN_SECONDS_MILLIS)
 	public void checkForTimeouts() {
-		// TODO test
 		try {
 			LocalDateTime now = LocalDateTime.now();
 			LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);
+			List<SessionModel> sessions = sessionRepository.findAll();
 			List<SessionModel> expiredSessions = sessionRepository.getActiveSessionsOlderThan(timeoutThreshold);
 			List<UUID> sessionModelsToInactivate = new ArrayList<>();
 			List<UUID> accountIdsToCheck = new ArrayList<>();
@@ -58,7 +58,7 @@ public class TimeoutService {
 				accountIdsToCheck.add(expiredSessions.get(counter).getAccountId());
 			}
 			
-			invalidateSesions(sessionModelsToInactivate);
+			invalidateSessions(sessionModelsToInactivate);
 			
 			List<GameModel> activeGames = gameRepository.getActiveGamesInProgressByAccountId(accountIdsToCheck);
 			
@@ -95,7 +95,7 @@ public class TimeoutService {
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void invalidateSesions(List<UUID> sessionModels) {
+	public void invalidateSessions(List<UUID> sessionModels) {
 		sessionRepository.invalidateSessionsBySessionIds(sessionModels);		
 	}
 }

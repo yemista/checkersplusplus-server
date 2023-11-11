@@ -38,6 +38,8 @@ import com.checklersplusplus.server.websocket.WebSocketServerId;
 public class SchedulerService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
+
+	private static final long ONE_SECOND_MILLIS = 1000;
 	
 	@Autowired
 	private OpenWebSocketRepository openWebSocketRepository;
@@ -57,7 +59,7 @@ public class SchedulerService {
 	@Autowired
 	private GameEventRepository gameEventRepository;
 	
-	@Scheduled(fixedDelay = 1000)
+	@Scheduled(fixedDelay = ONE_SECOND_MILLIS)
 	public void updateClients() {
 		try {
 			List<OpenWebSocket> openWebSockets = getActiveOpenWebSockets();
@@ -68,10 +70,6 @@ public class SchedulerService {
 				if (serverSession.isEmpty()) {
 					continue;
 				}
-				
-				// Update the session since the websocket is still connected. We treat this like a heart beat.
-				serverSession.get().setLastModified(LocalDateTime.now());
-				sessionRepository.save(serverSession.get());
 				
 				UUID accountId = serverSession.get().getAccountId();
 				Optional<GameEventModel> gameEvent = gameEventRepository.findActiveEventForAccountId(accountId);

@@ -1,5 +1,7 @@
 package com.checklersplusplus.server.websocket;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -12,6 +14,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.checklersplusplus.server.dao.SessionRepository;
+import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.service.OpenWebSocketService;
 
 /**
@@ -37,6 +41,9 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 	@Autowired
 	private OpenWebSocketService openWebSocketService;
 	
+	@Autowired
+	private SessionRepository sessionRepository;
+	
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 		WebSocketMap.getInstance().getMap().put(session.getId(), Pair.of(session, SYSTEM_ID));
@@ -49,6 +56,13 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 		
 		try {
 			UUID serverSessionId = UUID.fromString(serverSession);
+			Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(serverSessionId);
+			
+			if (sessionModel.isEmpty()) {
+				logger.error("Failed to handle websocket message for sessionId: %s", serverSession);
+				return;
+			}
+			
 			Pair<WebSocketSession, UUID> pair = WebSocketMap.getInstance().getMap().get(session.getId());
 			
 			if (pair == null || pair.getSecond().equals(SYSTEM_ID) || !pair.getSecond().equals(serverSessionId)) {
@@ -56,6 +70,10 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 				WebSocketMap.getInstance().getMap().put(session.getId(), Pair.of(session, serverSessionId));
 				openWebSocketService.createWebSocketSession(serverSessionId, session.getId());
 			}
+			
+			// Update the session when the websocket receives a valid sessionId. We treat this like a heart beat.
+			sessionModel.get().setLastModified(LocalDateTime.now());
+			sessionRepository.save(sessionModel.get());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
