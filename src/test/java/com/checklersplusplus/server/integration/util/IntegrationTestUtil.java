@@ -1,4 +1,4 @@
-package com.checklersplusplus.server.integration;
+package com.checklersplusplus.server.integration.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -24,6 +24,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.OpenWebSocketRepository;
+import com.checklersplusplus.server.dao.RatingRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.entities.request.CreateGame;
 import com.checklersplusplus.server.entities.request.Move;
@@ -31,6 +32,7 @@ import com.checklersplusplus.server.entities.response.Game;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.OpenWebSocketModel;
+import com.checklersplusplus.server.model.RatingModel;
 import com.checklersplusplus.server.model.SessionModel;
 
 public class IntegrationTestUtil {
@@ -92,16 +94,16 @@ public class IntegrationTestUtil {
 		createGame.setMoveFirst(true);
 		ResponseEntity<Game> createGameResponse = 
 				restTemplate.postForEntity("http://localhost:" + String.valueOf(port) + "/checkersplusplus/api/game/" + session + "/create", createGame, Game.class);
-		assertEquals(createGameResponse.getStatusCode(), HttpStatusCode.valueOf(200));
 		assertEquals(createGameResponse.getBody().getMessage(), "Game created.");
+		assertEquals(createGameResponse.getStatusCode(), HttpStatusCode.valueOf(200));
 		UUID gameId = createGameResponse.getBody().getGameId();
 		Optional<GameModel> game = gameRepository.findById(gameId);
 		gamesToDelete.add(game.get());
 		return gameId;
 	}
 
-	public static UUID createAccountAndLogin(AccountRepository accountRepository, SessionRepository sessionRepository, 
-			List<AccountModel> accountsToDelete, List<SessionModel> sessionsToDelete, String username, String email) {
+	public static UUID createAccountAndLogin(RatingRepository ratingRepository, AccountRepository accountRepository, SessionRepository sessionRepository, 
+			List<AccountModel> accountsToDelete, List<SessionModel> sessionsToDelete, List<RatingModel> ratingsToDelete, String username, String email) {
 		AccountModel account = new AccountModel();
 		account.setCreated(LocalDateTime.now());
 		account.setEmail(email);
@@ -110,6 +112,13 @@ public class IntegrationTestUtil {
 		account.setVerified(LocalDateTime.now());
 		accountRepository.save(account);
 		accountsToDelete.add(account);
+		
+		RatingModel rating = new RatingModel();
+		rating.setAccountId(account.getAccountId());
+		rating.setRating(800);
+		ratingRepository.save(rating);
+		ratingsToDelete.add(rating);
+		
 		SessionModel session = new SessionModel();
 		session.setActive(true);
 		session.setLastModified(LocalDateTime.now());

@@ -1,4 +1,4 @@
-package com.checklersplusplus.server.integration;
+package com.checklersplusplus.server.integration.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +48,9 @@ public class TestWebSocketHandler extends TextWebSocketHandler {
     
     private void eventsStrategy(TextMessage message) {
     	System.out.println(message.getPayload());
+    	String event = message.getPayload().split("\\|")[0];
     	
-    	if (!gameEvents.contains(message.getPayload())) {
+    	if (!gameEvents.contains(event)) {
     		numErrors++;
     	}
     }

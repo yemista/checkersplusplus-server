@@ -19,11 +19,15 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.OpenWebSocketRepository;
+import com.checklersplusplus.server.dao.RatingRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.entities.request.Move;
+import com.checklersplusplus.server.integration.util.IntegrationTestUtil;
+import com.checklersplusplus.server.integration.util.TestWebSocketHandler;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.OpenWebSocketModel;
+import com.checklersplusplus.server.model.RatingModel;
 import com.checklersplusplus.server.model.SessionModel;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -56,6 +60,9 @@ public class PlayGameIntegrationTest {
 	private GameRepository gameRepository;
 	
 	@Autowired
+	private RatingRepository ratingRepository;
+	
+	@Autowired
 	private SessionRepository sessionRepository;
 	
 	@Autowired
@@ -64,6 +71,7 @@ public class PlayGameIntegrationTest {
 	private List<AccountModel> accountsToDelete = new ArrayList<>();
 	private List<SessionModel> sessionsToDelete = new ArrayList<>();
 	private List<GameModel> gamesToDelete = new ArrayList<>();
+	private List<RatingModel> ratingsToDelete = new ArrayList<>();
 	private List<OpenWebSocketModel> webSocketsToDelete = new ArrayList<>();
 	
 	@After
@@ -72,12 +80,13 @@ public class PlayGameIntegrationTest {
 		sessionsToDelete.forEach(session -> sessionRepository.delete(session));
 		gamesToDelete.forEach(game -> gameRepository.delete(game));
 		webSocketsToDelete.forEach(webSocket -> openWebSocketRepository.delete(webSocket));
+		ratingsToDelete.forEach(rating -> ratingRepository.delete(rating));
 	}
 	
 	@Test
 	public void playGame() throws InterruptedException {
-		UUID session1 = IntegrationTestUtil.createAccountAndLogin(accountRepository, sessionRepository, accountsToDelete, sessionsToDelete, TEST_USERNAME_1, TEST_EMAIL_1);
-		UUID session2 = IntegrationTestUtil.createAccountAndLogin(accountRepository, sessionRepository, accountsToDelete, sessionsToDelete, TEST_USERNAME_2, TEST_EMAIL_2);
+		UUID session1 = IntegrationTestUtil.createAccountAndLogin(ratingRepository, accountRepository, sessionRepository, accountsToDelete, sessionsToDelete, ratingsToDelete, TEST_USERNAME_1, TEST_EMAIL_1);
+		UUID session2 = IntegrationTestUtil.createAccountAndLogin(ratingRepository, accountRepository, sessionRepository, accountsToDelete, sessionsToDelete, ratingsToDelete, TEST_USERNAME_2, TEST_EMAIL_2);
 		UUID game = IntegrationTestUtil.createGame(restTemplate, port, gameRepository, gamesToDelete, session1);
 		List<Move> moves1 = new ArrayList<>();
 		moves1.add(MOVE_1_2);
