@@ -97,6 +97,7 @@ public class AccountService {
 		ratingModel.setRating(800);
 		ratingRepository.save(ratingModel);
 
+		logger.error(String.format("Size: %d Encrypted: %s", CryptoUtil.encryptPassword(createAccount.getPassword()).length(), CryptoUtil.encryptPassword(createAccount.getPassword())));
 		logger.debug(String.format("New account created: %s", accountModel.getAccountId().toString()));
 		return newAccount;
 	}
@@ -105,7 +106,7 @@ public class AccountService {
 		Optional<AccountModel> account = accountRepository.findByUsernameAndPassword(username, CryptoUtil.encryptPassword(password));
 		
 		if (account.isEmpty()) {
-			throw new CheckersPlusPlusServerException("Failed to login. Account not found.");
+			throw new CheckersPlusPlusServerException(String.format("Failed to login. Account %s not found.", username));
 		}
 		
 		if (account.get().getVerified() == null) {

@@ -1,6 +1,10 @@
 package com.checklersplusplus.server.entities.response;
 
-public class CheckersPlusPlusResponse {
+import java.io.Serializable;
+
+public class CheckersPlusPlusResponse implements Serializable {
+	private static final long serialVersionUID = 3913902219489451126L;
+
 	private String message;
 
 	public CheckersPlusPlusResponse() {

@@ -107,7 +107,7 @@ public class TimeoutServiceTest {
 		TestWebSocketHandler webSocketHandler1 = IntegrationTestUtil.createWebSocket(restTemplate, port, openWebSocketRepository, webSocketsToDelete, session1, 
 				Arrays.asList(GameEvent.TIMEOUT.getMessage()));
 		IntegrationTestUtil.joinGame(restTemplate, port, session2, game);
-		TestWebSocketHandler webSocketHandler2 = IntegrationTestUtil.createWebSocket(restTemplate, port, openWebSocketRepository, webSocketsToDelete, session2, 
+		IntegrationTestUtil.createWebSocket(restTemplate, port, openWebSocketRepository, webSocketsToDelete, session2, 
 				Collections.emptyList());
 		
 		Thread.sleep(45 * 1000);

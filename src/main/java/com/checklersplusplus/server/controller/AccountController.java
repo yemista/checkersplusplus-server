@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,7 +44,7 @@ public class AccountController {
 	@Autowired
 	private VerificationService verificationService;
 	
-	@PostMapping("/login")
+	@PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Session> login(@Valid @RequestBody Login login) {
 		try {
 			Session session = accountService.login(login.getUsername(), login.getPassword());
@@ -112,7 +113,7 @@ public class AccountController {
 	public ResponseEntity<CheckersPlusPlusResponse> verifyAccount(@Valid @RequestBody VerifyAccount verifyAccount) {
 		try {
 			verificationService.verifyAccount(verifyAccount.getUsername(), verifyAccount.getVerificationCode());
-			return new ResponseEntity<>(new CheckersPlusPlusResponse("Account verified."), HttpStatus.OK);
+			return new ResponseEntity<>(new CheckersPlusPlusResponse("Account verified. Please log in."), HttpStatus.OK);
 		} catch (CheckersPlusPlusServerException e) {
 			logger.info(e.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to verify account. Please enter the most recent verification code."), HttpStatus.BAD_REQUEST);
@@ -124,26 +125,28 @@ public class AccountController {
 	
 	@PostMapping("/create")
 	public ResponseEntity<CheckersPlusPlusResponse> createAccount(@Valid @RequestBody CreateAccount createAccount) {
-		if (isEmailInUse(createAccount.getEmail())) {
-			return new ResponseEntity<>(new CheckersPlusPlusResponse("Email address is already in use."), HttpStatus.BAD_REQUEST);
-		}
-		
-		if (isUsernameInUse(createAccount.getUsername())) {
-			return new ResponseEntity<>(new CheckersPlusPlusResponse("Username is already in use."), HttpStatus.BAD_REQUEST);
-		}
-		
-		if (!isPasswordsMatch(createAccount.getPassword(), createAccount.getConfirmPassword())) {
-			return new ResponseEntity<>(new CheckersPlusPlusResponse("Password and confirmation password do not match."), HttpStatus.BAD_REQUEST);
-		}
-		
 		try {
+			if (isEmailInUse(createAccount.getEmail())) {
+				logger.debug("11");
+				return new ResponseEntity<>(new CheckersPlusPlusResponse("Email address is already in use."), HttpStatus.OK);
+			}
+
+			if (isUsernameInUse(createAccount.getUsername())) {
+				return new ResponseEntity<>(new CheckersPlusPlusResponse("Username is already in use."), HttpStatus.BAD_REQUEST);
+			}
+
+			if (!isPasswordsMatch(createAccount.getPassword(), createAccount.getConfirmPassword())) {
+				return new ResponseEntity<>(new CheckersPlusPlusResponse("Password and confirmation password do not match."), HttpStatus.BAD_REQUEST);
+			}
+
 			NewAccount newAccount = accountService.createAccount(createAccount);
-			emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
+			logger.debug(String.format("Created new account %s", createAccount.getUsername()));
+			//emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
 		} catch (CheckersPlusPlusServerException e) {
-			logger.info(e.getMessage());
+			logger.info(e.getMessage(), e);
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to create account. Please try again."), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
-			logger.error(ex.getMessage());
+			logger.error(ex.getMessage(), ex);
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
 		

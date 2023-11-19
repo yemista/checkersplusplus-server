@@ -1,8 +1,11 @@
 package com.checklersplusplus.server.entities.response;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-public class Session extends CheckersPlusPlusResponse {
+public class Session extends CheckersPlusPlusResponse implements Serializable {
+	private static final long serialVersionUID = 8690591879893264238L;
+
 	private UUID sessionId;
 	private UUID gameId;
 	private UUID accountId;
