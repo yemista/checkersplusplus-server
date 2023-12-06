@@ -19,8 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.checkersplusplus.engine.Coordinate;
 import com.checkersplusplus.engine.CoordinatePair;
 import com.checkersplusplus.engine.enums.Color;
+import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
-import com.checklersplusplus.server.dao.GameHistoryRepository;
 import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.LastMoveSentRepository;
@@ -37,6 +37,7 @@ import com.checklersplusplus.server.exception.GameCompleteException;
 import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.exception.InvalidMoveException;
 import com.checklersplusplus.server.exception.SessionNotFoundException;
+import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.GameMoveModel;
@@ -60,7 +61,7 @@ public class GameService {
 	private GameRepository gameRepository;
 	
 	@Autowired
-	private GameHistoryRepository gameHistoryRepository;
+	private AccountRepository accountRepository;
 	
 	@Autowired
 	private SessionRepository sessionRepository;
@@ -90,7 +91,48 @@ public class GameService {
 		}
 		
 		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrue(ratingLow, ratingHigh, pageRequest);
-		return openGames.stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());
+		List<Game> games = openGames.stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());
+		
+		for (Game game : games) {
+			if (game.getBlackAccountId() != null) {
+				Optional<AccountModel> account = accountRepository.findById(game.getBlackAccountId());
+				
+				if (account.isEmpty()) {
+					logger.error("Failed to find account from given black accountId %s for game %s", game.getBlackAccountId().toString(), game.getGameId().toString());
+				} else {
+					game.setBlackUsername(account.get().getUsername());
+				}
+				
+				Optional<RatingModel> rating = ratingRepository.findByAccountId(game.getBlackAccountId());
+				
+				if (rating.isEmpty()) {
+					logger.error("Failed to find rating from given black accountId %s for game %s", game.getBlackAccountId().toString(), game.getGameId().toString());
+				} else {
+					game.setBlackUsername(account.get().getUsername() + "(" + rating.get().getRating() + ")");
+				}
+				
+			}
+			
+			if (game.getRedAccountId() != null) {
+				Optional<AccountModel> account = accountRepository.findById(game.getRedAccountId());
+				
+				if (account.isEmpty()) {
+					logger.error("Failed to find account from given red accountId %s for game %s", game.getRedAccountId().toString(), game.getGameId().toString());
+				} else {
+					game.setRedUsername(account.get().getUsername());
+				}
+				
+				Optional<RatingModel> rating = ratingRepository.findByAccountId(game.getRedAccountId());
+				
+				if (rating.isEmpty()) {
+					logger.error("Failed to find rating from given black accountId %s for game %s", game.getRedAccountId().toString(), game.getGameId().toString());
+				} else {
+					game.setRedUsername(account.get().getUsername() + "(" + rating.get().getRating() + ")");
+				}
+			}
+		}
+		
+		return games;
 	}
 	
 	public Game move(UUID sessionId, UUID gameId, List<Move> moves) throws CheckersPlusPlusServerException {

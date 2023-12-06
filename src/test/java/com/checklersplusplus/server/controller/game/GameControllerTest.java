@@ -91,7 +91,7 @@ public class GameControllerTest {
 		UUID redId = UUID.randomUUID();
 		Board board = new Board();
 		String gameState = board.getBoardState();
-		Mockito.when(gameService.findByGameId(any())).thenReturn(Optional.of(new Game(gameId, gameState, blackId, redId)));
+		Mockito.when(gameService.findByGameId(any())).thenReturn(Optional.of(new Game(gameId, gameState, blackId, redId, redId)));
 		ResultActions resultActions = mockMvc.perform(get("/checkersplusplus/api/game/" + gameId).contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andDo(print());

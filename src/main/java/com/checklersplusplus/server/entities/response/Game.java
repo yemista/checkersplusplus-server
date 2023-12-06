@@ -10,12 +10,16 @@ public class Game extends CheckersPlusPlusResponse implements Serializable {
 	private String gameState;
 	private UUID redAccountId;
 	private UUID blackAccountId;
+	private String blackUsername;
+	private String redUsername;
+	private UUID currentTurnId;
 	
-	public Game(UUID gameId, String gameState, UUID blackAccountId, UUID redAccountId) {
+	public Game(UUID gameId, String gameState, UUID blackAccountId, UUID redAccountId, UUID currentTurnId) {
 		this.gameId = gameId;
 		this.gameState = gameState;
 		this.blackAccountId = blackAccountId;
 		this.redAccountId = redAccountId;
+		this.currentTurnId = currentTurnId;
 	}
 	
 	public Game() {
@@ -30,7 +34,17 @@ public class Game extends CheckersPlusPlusResponse implements Serializable {
 	}
 
 	public static Game fromModel(GameModel gameModel) {
-		return new Game(gameModel.getGameId(), gameModel.getGameState(), gameModel.getBlackId(), gameModel.getRedId());
+		UUID currentTurnId = null;
+		String[] gameStateParts = gameModel.getGameState().split("\\|");
+		
+		if (gameStateParts.length > 1) {
+			int currentTurn = Integer.parseInt(gameStateParts[1]);
+			currentTurnId = currentTurn % 2 == 0 ? gameModel.getBlackId() : gameModel.getRedId();
+		} else {
+			currentTurnId = gameModel.getBlackId();
+		}
+		
+		return new Game(gameModel.getGameId(), gameModel.getGameState(), gameModel.getBlackId(), gameModel.getRedId(), currentTurnId);
 	}
 
 	public void setGameState(String boardState) {
@@ -64,6 +78,29 @@ public class Game extends CheckersPlusPlusResponse implements Serializable {
 	public void setGameId(UUID gameId) {
 		this.gameId = gameId;
 	}
-	
+
+	public String getBlackUsername() {
+		return blackUsername;
+	}
+
+	public void setBlackUsername(String blackUsername) {
+		this.blackUsername = blackUsername;
+	}
+
+	public String getRedUsername() {
+		return redUsername;
+	}
+
+	public void setRedUsername(String redUsername) {
+		this.redUsername = redUsername;
+	}
+
+	public UUID getCurrentTurnId() {
+		return currentTurnId;
+	}
+
+	public void setCurrentTurnId(UUID currentTurnId) {
+		this.currentTurnId = currentTurnId;
+	}
 	
 }

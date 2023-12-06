@@ -72,13 +72,7 @@ public class AccountServiceTest {
 		accountsToDelete.forEach(account -> accountRepository.delete(account));
 		verifyAccountsToDelete.forEach(verifyAccount -> verifyAccountRepository.delete(verifyAccount));
 	}
-
 	
-//	@Test
-//	public void dummyTest() throws Exception {
-//		CreateAccount createAccount = new CreateAccount("yemista@gmail.com", "Testing123", "Testing123", "test");
-//		AccountModel accountModel = createAccount(createAccount);
-//	}
 	@Test
 	public void testFindByUsername() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);

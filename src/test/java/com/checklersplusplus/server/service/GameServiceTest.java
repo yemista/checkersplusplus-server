@@ -118,6 +118,35 @@ public class GameServiceTest {
 	}
 	
 	@Test
+	public void generateOpenGames() throws Exception {
+		for (int i = 0; i < 20; ++i) {
+			accountService.createAccount(new CreateAccount(TEST_EMAIL + i, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME + "1" + i));
+			Optional<AccountModel> account = accountRepository.getByUsername(TEST_USERNAME + "1" + i);
+			assertThat(account.isPresent()).isTrue();
+			UUID accountId = account.get().getAccountId();
+			GameModel game = new GameModel();
+			game.setActive(true);
+			
+			if (i % 2 == 0) {
+				game.setBlackId(accountId);
+				game.setBlackRating(800);
+				game.setCreatorRating(800);
+			} else {
+				game.setRedId(accountId);
+				game.setRedRating(800);
+				game.setCreatorRating(800);
+			}
+			
+			game.setCreated(LocalDate.now());
+			game.setCurrentMoveNumber(1);
+			game.setGameState("");
+			game.setInProgress(false);
+			game.setLastModified(LocalDateTime.now());
+			gameRepository.save(game);
+		}
+	}
+	
+	@Test
 	public void redCanWinGame() throws Exception {
 		UUID secondAccountId = setupSecondUserAndSession();
 		Optional<SessionModel> secondSession = sessionRepository.getActiveByAccountId(secondAccountId);
