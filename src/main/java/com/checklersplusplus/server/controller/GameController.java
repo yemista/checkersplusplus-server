@@ -55,9 +55,11 @@ public class GameController {
 	    Optional<Game> gameData = gameService.findByGameId(gameId);
 
 	    if (gameData.isPresent()) {
-	      return new ResponseEntity<>(gameData.get(), HttpStatus.OK);
+	        logger.debug(String.format("Found game: %s", gameData.get().getGameId().toString()));
+	        return new ResponseEntity<>(gameData.get(), HttpStatus.OK);
 	    } else {
-	      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	        logger.debug(String.format("Game not found: %s", gameId));
+	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	    }
 	}
 	

@@ -13,17 +13,17 @@ public class Move implements Serializable {
 	@Min(value = 0, message = "Invalid coordinate for start column.")
 	private int startCol;
 	
-	@Positive
+	@Positive(message = "Invalid coordinate for start row.")
 	@Max(value = 7, message = "Invalid coordinate for start row.")
 	@Min(value = 0, message = "Invalid coordinate for start row.")
 	private int startRow;
 	
-	@Positive
+	@Positive(message = "Invalid coordinate for start column.")
 	@Max(value = 7, message = "Invalid coordinate for end column.")
 	@Min(value = 0, message = "Invalid coordinate for end column.")
 	private int endCol;
 	
-	@Positive
+	@Positive(message = "Invalid coordinate for end row.")
 	@Max(value = 7, message = "Invalid coordinate for end row.")
 	@Min(value = 0, message = "Invalid coordinate for end row.")
 	private int endRow;

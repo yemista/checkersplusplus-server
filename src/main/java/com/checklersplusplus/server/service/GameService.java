@@ -32,6 +32,7 @@ import com.checklersplusplus.server.entities.response.Game;
 import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.exception.CannotCancelGameException;
 import com.checklersplusplus.server.exception.CannotCreateGameException;
+import com.checklersplusplus.server.exception.CannotJoinGameException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.exception.GameCompleteException;
 import com.checklersplusplus.server.exception.GameNotFoundException;
@@ -272,6 +273,12 @@ public class GameService {
 			throw new SessionNotFoundException();
 		}
 		
+		Optional<GameModel> activeGame = gameRepository.getActiveGameByAccountId(sessionModel.get().getAccountId());
+		
+		if (activeGame.isPresent()) {
+			throw new CannotJoinGameException();
+		}
+		
 		Optional<GameModel> gameModel = gameRepository.getByGameId(gameId);
 		
 		if (gameModel.isEmpty() || !gameModel.get().isActive() || gameModel.get().isInProgress()) {
@@ -356,17 +363,28 @@ public class GameService {
 			throw new GameNotFoundException();
 		}
 		
+		UUID opponentId = null;
+		
 		if (accountId.equals(gameModel.get().getBlackId())) {
-			gameModel.get().setWinnerId(gameModel.get().getRedId());
+			opponentId = gameModel.get().getRedId();
 		} else if (accountId.equals(gameModel.get().getRedId())) {
-			gameModel.get().setWinnerId(gameModel.get().getBlackId());
+			opponentId = gameModel.get().getBlackId();
 		} else {
 			throw new CheckersPlusPlusServerException("User not found for game.");
 		}
 		
+		GameEventModel forfeitEvent = new GameEventModel();
+		forfeitEvent.setActive(true);
+		forfeitEvent.setEvent(GameEvent.FORFEIT.getMessage());
+		forfeitEvent.setEventRecipientAccountId(opponentId);
+		forfeitEvent.setGameId(gameId);
+		gameEventRepository.save(forfeitEvent);
+		
+		gameModel.get().setWinnerId(opponentId);
 		gameModel.get().setActive(false);
 		gameModel.get().setInProgress(false);
 		gameRepository.save(gameModel.get());
+		
 		ratingService.updatePlayerRatings(gameId);
 		logger.info(String.format("SessionId: %s   Forfeited game: %s", sessionId.toString(), gameModel.get().getGameId().toString()));
 	}

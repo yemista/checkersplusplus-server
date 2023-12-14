@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,6 +22,7 @@ import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.SessionModel;
+import com.checklersplusplus.server.service.RatingService;
 
 @Service
 @Transactional
@@ -40,6 +42,9 @@ public class TimeoutService {
 	@Autowired
 	private GameEventRepository gameEventRepository;
 	
+	@Autowired
+	private RatingService ratingService;
+	
 	@Value("${checkersplusplus.timeout.minutes}")
 	private Integer timeoutMinutes;
 	
@@ -58,9 +63,8 @@ public class TimeoutService {
 				accountIdsToCheck.add(expiredSessions.get(counter).getAccountId());
 			}
 			
-			invalidateSessions(sessionModelsToInactivate);
-			
 			List<GameModel> activeGames = gameRepository.getActiveGamesInProgressByAccountId(accountIdsToCheck);
+			List<Pair<GameModel, UUID>> gamesToUpdate = new ArrayList<>();
 			
 			for (GameModel game : activeGames) {
 				if (game.isInProgress()) {
@@ -75,19 +79,33 @@ public class TimeoutService {
 					}
 					
 					if (accountToSendEvent != null) {
-						game.setWinnerId(accountToSendEvent);
-						game.setInProgress(false);
-						game.setActive(false);
-						gameRepository.save(game);
+						gamesToUpdate.add(Pair.of(game,  accountToSendEvent));
 						
-						GameEventModel gameEvent = new GameEventModel();
-						gameEvent.setActive(true);
-						gameEvent.setEvent(GameEvent.TIMEOUT.getMessage());
-						gameEvent.setEventRecipientAccountId(accountToSendEvent);
-						gameEvent.setGameId(game.getGameId());
-						gameEventRepository.save(gameEvent);
 					}
 				}
+			}
+			
+			invalidateSessions(sessionModelsToInactivate);
+			
+			for (Pair<GameModel, UUID> forUpdate : gamesToUpdate) {
+				GameModel game = forUpdate.getFirst();
+				UUID accountToSendEvent = forUpdate.getSecond();
+				game.setWinnerId(accountToSendEvent);
+				game.setInProgress(false);
+				game.setActive(false);
+				gameRepository.save(game);
+				
+				GameEventModel gameEvent = new GameEventModel();
+				gameEvent.setActive(true);
+				gameEvent.setEvent(GameEvent.TIMEOUT.getMessage());
+				gameEvent.setEventRecipientAccountId(accountToSendEvent);
+				gameEvent.setGameId(game.getGameId());
+				gameEventRepository.save(gameEvent);
+			}
+			
+			for (Pair<GameModel, UUID> forUpdate : gamesToUpdate) {
+				GameModel game = forUpdate.getFirst();
+				ratingService.updatePlayerRatings(game.getGameId());
 			}
 		} catch (Exception e) {
 			logger.error("Exception thrown in timeout service body", e);
