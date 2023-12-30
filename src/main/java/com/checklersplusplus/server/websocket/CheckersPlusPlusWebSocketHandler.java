@@ -81,7 +81,7 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 
 	@Override
 	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-		logger.error(String.format("Error occured for web socket session: %s", session.getId()), exception);
+		logger.debug(String.format("Error occured for web socket session: %s", session.getId()), exception);
         super.handleTransportError(session, exception);
 	}
 

@@ -85,6 +85,10 @@ public class SchedulerService {
 					UUID gameId = game.get().getGameId();				
 					Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameId);
 					
+					if (game.get().getCurrentMoveNumber() == 0) {
+						continue;
+					}
+					
 					if (lastMoveSent.isPresent() && lastMoveSent.get().getLastMoveSent() == game.get().getCurrentMoveNumber()) {
 						continue;
 					}
@@ -110,6 +114,7 @@ public class SchedulerService {
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void forwardLatestMove(OpenWebSocket openWebSocket, UUID gameId, UUID accountId) {
+		logger.debug("Attempting to forward move to accountId: " + accountId.toString());
 		LocalDateTime start = LocalDateTime.now();
 		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketSessionId());
 		
@@ -126,6 +131,7 @@ public class SchedulerService {
 		
 		Optional<GameMoveModel> latestMove = gameMoveRepository.findFirstByGameIdOrderByMoveNumberDesc(game.get().getGameId());
 		String move = "MOVE|" + latestMove.get().getMoveNumber() + "|" + latestMove.get().getMoveList();
+		logger.debug("Attempting to forward move: " + move);
 		
 		try {
 			webSocket.getFirst().sendMessage(new TextMessage(move));
@@ -147,6 +153,8 @@ public class SchedulerService {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void forwardGameEvent(OpenWebSocket openWebSocket, UUID gameEventId) {
 		Optional<GameEventModel> gameEvent = gameEventRepository.findById(gameEventId);
+		
+		logger.debug(String.format("Forwarding game event: %s to %s", gameEvent.get().getEvent(), gameEvent.get().getEventRecipientAccountId().toString()));
 		
 		if (gameEvent.isEmpty()) {
 			logger.error("Missing gameEventId: %s", gameEventId.toString());

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public class GameController {
 	    Optional<Game> gameData = gameService.findByGameId(gameId);
 
 	    if (gameData.isPresent()) {
-	        logger.debug(String.format("Found game: %s", gameData.get().getGameId().toString()));
+	        //logger.debug(String.format("Found game: %s", gameData.get().getGameId().toString()));
 	        return new ResponseEntity<>(gameData.get(), HttpStatus.OK);
 	    } else {
 	        logger.debug(String.format("Game not found: %s", gameId));
@@ -139,7 +140,11 @@ public class GameController {
 	@PostMapping("/{sessionId}/{gameId}/move")
 	public ResponseEntity<Game> move(@PathVariable("sessionId") UUID sessionId, @PathVariable("gameId") UUID gameId, @RequestBody List<Move> moves) {
 		try {
+			logger.debug("HERE1");
+			List<String> moveList = moves.stream().map(Move::toString).collect(Collectors.toList()); 
+			logger.debug(moveList.get(0));
 			Game updatedGame = gameService.move(sessionId, gameId, moves);
+			logger.debug("HERE2");
 			updatedGame.setMessage("Move successful.");
 			return new ResponseEntity<>(updatedGame, HttpStatus.OK);
 		} catch(CheckersPlusPlusServerException e) {

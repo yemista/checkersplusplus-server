@@ -294,9 +294,11 @@ public class GameService {
 		if (gameModel.get().getBlackId() == null) {
 			gameModel.get().setBlackId(sessionModel.get().getAccountId());
 			gameModel.get().setBlackRating(rating.get().getRating());
+			createBeginEvent(gameModel.get().getGameId(), gameModel.get().getRedId());
 		} else {
 			gameModel.get().setRedId(sessionModel.get().getAccountId());
 			gameModel.get().setRedRating(rating.get().getRating());
+			createBeginEvent(gameModel.get().getGameId(), gameModel.get().getRedId());
 		}
 		
 		gameModel.get().setInProgress(true);
@@ -305,6 +307,15 @@ public class GameService {
 		return Game.fromModel(gameModel.get());
 	}
 	
+	private void createBeginEvent(UUID gameId, UUID opponentId) {
+		GameEventModel beginEvent = new GameEventModel();
+		beginEvent.setActive(true);
+		beginEvent.setEvent(GameEvent.BEGIN.getMessage());
+		beginEvent.setEventRecipientAccountId(opponentId);
+		beginEvent.setGameId(gameId);
+		gameEventRepository.save(beginEvent);
+	}
+
 	public Game createGame(UUID sessionId, boolean isBlack) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		

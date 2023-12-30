@@ -112,6 +112,10 @@ public class GameControllerTest {
 		Mockito.when(gameService.move(any(), any(), any())).thenReturn(new Game());
 		List<Move> moves = new ArrayList<>();
 		moves.add(new Move(0, 0, 0, 0));
+		moves.add(new Move(1, 1, 1, 1));
+		
+		System.out.println(objectMapper.writeValueAsString(moves));
+		
 		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/game/" + sessionId + "/" + gameId + "/move").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(moves)))
 							.andExpect(status().isOk())

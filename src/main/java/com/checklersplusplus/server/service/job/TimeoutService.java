@@ -3,6 +3,7 @@ package com.checklersplusplus.server.service.job;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -14,15 +15,20 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameRepository;
+import com.checklersplusplus.server.dao.OpenWebSocketRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
+import com.checklersplusplus.server.model.OpenWebSocketModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.service.RatingService;
+import com.checklersplusplus.server.websocket.WebSocketMap;
 
 @Service
 @Transactional
@@ -45,6 +51,9 @@ public class TimeoutService {
 	@Autowired
 	private RatingService ratingService;
 	
+	@Autowired
+	private OpenWebSocketRepository openWebSocketRepository;
+	
 	@Value("${checkersplusplus.timeout.minutes}")
 	private Integer timeoutMinutes;
 	
@@ -65,27 +74,29 @@ public class TimeoutService {
 			
 			List<GameModel> activeGames = gameRepository.getActiveGamesInProgressByAccountId(accountIdsToCheck);
 			List<Pair<GameModel, UUID>> gamesToUpdate = new ArrayList<>();
+			List<Pair<GameModel, UUID>> gamesToUpdateAsLosers = new ArrayList<>();
 			
 			for (GameModel game : activeGames) {
 				if (game.isInProgress()) {
 					UUID accountToSendEvent = null;
+					UUID accountWhichLoses = null;
 					
 					if (accountIdsToCheck.contains(game.getBlackId())) {
 						accountToSendEvent = game.getRedId();
+						accountWhichLoses = game.getBlackId();
 					}
 					
 					if (accountIdsToCheck.contains(game.getRedId())) {
 						accountToSendEvent = game.getBlackId();
+						accountWhichLoses = game.getRedId();
 					}
 					
 					if (accountToSendEvent != null) {
 						gamesToUpdate.add(Pair.of(game,  accountToSendEvent));
-						
+						gamesToUpdateAsLosers.add(Pair.of(game,  accountWhichLoses));
 					}
 				}
 			}
-			
-			invalidateSessions(sessionModelsToInactivate);
 			
 			for (Pair<GameModel, UUID> forUpdate : gamesToUpdate) {
 				GameModel game = forUpdate.getFirst();
@@ -103,6 +114,15 @@ public class TimeoutService {
 				gameEventRepository.save(gameEvent);
 			}
 			
+			for (Pair<GameModel, UUID> forUpdate : gamesToUpdateAsLosers) {
+				GameModel game = forUpdate.getFirst();
+				UUID accountToSendEvent = forUpdate.getSecond();
+				
+				forwardTimeoutLossGameEvent(accountToSendEvent, game.getGameId());
+			}
+			
+			invalidateSessions(sessionModelsToInactivate);
+			
 			for (Pair<GameModel, UUID> forUpdate : gamesToUpdate) {
 				GameModel game = forUpdate.getFirst();
 				ratingService.updatePlayerRatings(game.getGameId());
@@ -116,4 +136,48 @@ public class TimeoutService {
 	public void invalidateSessions(List<UUID> sessionModels) {
 		sessionRepository.invalidateSessionsBySessionIds(sessionModels);		
 	}
+	
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void forwardTimeoutLossGameEvent(UUID accountId, UUID gameId) {
+		Optional<SessionModel> session = sessionRepository.getActiveByAccountId(accountId);
+		
+		if (session.isEmpty()) {
+			logger.error("Empty session for " + accountId.toString());
+			return;
+		}
+		
+		logger.debug(String.format("Forwarding timeout loss event: accountId %s gameId: %s", accountId.toString(), gameId.toString()));
+		
+		GameEventModel gameEvent = new GameEventModel();
+		gameEvent.setActive(true);
+		gameEvent.setEvent(GameEvent.TIMEOUT_LOSS.getMessage());
+		gameEvent.setEventRecipientAccountId(accountId);
+		gameEvent.setGameId(gameId);
+		Optional<OpenWebSocketModel> openWebSocket = openWebSocketRepository.getActiveByServerSessionId(session.get().getSessionId());
+		
+		if (openWebSocket.isEmpty()) {
+			logger.debug(String.format("Forwarding timeout loss event: No active websocket for accountId %s gameId: %s", 
+					accountId.toString(), gameId.toString()));
+			return;
+		}
+		
+		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.get().getWebSocketId());
+		
+		if (webSocket == null) {
+			logger.debug(String.format("Forwarding timeout loss event: Unexpected websocket close for accountId %s gameId: %s", 
+					accountId.toString(), gameId.toString()));
+			return;
+		}
+		
+		try {
+			webSocket.getFirst().sendMessage(new TextMessage(gameEvent.getEvent()));
+			gameEvent.setActive(false);
+			gameEventRepository.save(gameEvent);
+		} catch (Exception e) {
+			logger.error(String.format("Failed to send event %s to accountId %s for gameId %s", 
+					gameEvent.getEvent(), gameEvent.getEventRecipientAccountId().toString(), gameEvent.getGameId().toString()), e);
+		}
+	}
 }
+
+

@@ -6,7 +6,8 @@ public enum GameEvent {
 	LOSE("LOSE"),
 	WIN("WIN"),
 	DRAW("DRAW"),
-	TIMEOUT("TIMEOUT");
+	TIMEOUT("TIMEOUT"),
+	TIMEOUT_LOSS("TIMEOUT_LOSS");
 	
 	private String message;
 	
