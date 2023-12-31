@@ -58,11 +58,11 @@ public class TimeoutService {
 	private Integer timeoutMinutes;
 	
 	@Scheduled(fixedDelay = TEN_SECONDS_MILLIS)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void checkForTimeouts() {
 		try {
 			LocalDateTime now = LocalDateTime.now();
 			LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);
-			List<SessionModel> sessions = sessionRepository.findAll();
 			List<SessionModel> expiredSessions = sessionRepository.getActiveSessionsOlderThan(timeoutThreshold);
 			List<UUID> sessionModelsToInactivate = new ArrayList<>();
 			List<UUID> accountIdsToCheck = new ArrayList<>();
@@ -121,7 +121,7 @@ public class TimeoutService {
 				forwardTimeoutLossGameEvent(accountToSendEvent, game.getGameId());
 			}
 			
-			invalidateSessions(sessionModelsToInactivate);
+			sessionRepository.invalidateSessionsBySessionIds(sessionModelsToInactivate);	
 			
 			for (Pair<GameModel, UUID> forUpdate : gamesToUpdate) {
 				GameModel game = forUpdate.getFirst();
@@ -131,14 +131,8 @@ public class TimeoutService {
 			logger.error("Exception thrown in timeout service body", e);
 		}
 	}
-
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void invalidateSessions(List<UUID> sessionModels) {
-		sessionRepository.invalidateSessionsBySessionIds(sessionModels);		
-	}
 	
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void forwardTimeoutLossGameEvent(UUID accountId, UUID gameId) {
+	private void forwardTimeoutLossGameEvent(UUID accountId, UUID gameId) {
 		Optional<SessionModel> session = sessionRepository.getActiveByAccountId(accountId);
 		
 		if (session.isEmpty()) {

@@ -55,6 +55,9 @@ public class GameModel {
 	
 	@Column(name = "current_move_number")
 	private int currentMoveNumber;
+	
+	@Column(name = "finalized")
+	private boolean finalized;
 
 	public GameModel() {
 	}
@@ -162,4 +165,14 @@ public class GameModel {
 	public void setCreatorRating(Integer creatorRating) {
 		this.creatorRating = creatorRating;
 	}
+
+	public boolean isFinalized() {
+		return finalized;
+	}
+
+	public void setFinalized(boolean finalized) {
+		this.finalized = finalized;
+	}
+	
+	
 }

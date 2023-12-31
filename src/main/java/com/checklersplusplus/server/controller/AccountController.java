@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,7 @@ import jakarta.validation.Valid;
 public class AccountController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
+	private static final String VERSION_STRING = "1.0";
 
 	@Autowired
 	private AccountService accountService;
@@ -43,6 +45,11 @@ public class AccountController {
 	
 	@Autowired
 	private VerificationService verificationService;
+	
+	@GetMapping("/version")
+	public ResponseEntity<String> getVersion() {
+		return new ResponseEntity<>(VERSION_STRING, HttpStatus.OK);
+	}
 	
 	@PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Session> login(@Valid @RequestBody Login login) {

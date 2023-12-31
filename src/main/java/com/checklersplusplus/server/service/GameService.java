@@ -298,7 +298,7 @@ public class GameService {
 		} else {
 			gameModel.get().setRedId(sessionModel.get().getAccountId());
 			gameModel.get().setRedRating(rating.get().getRating());
-			createBeginEvent(gameModel.get().getGameId(), gameModel.get().getRedId());
+			createBeginEvent(gameModel.get().getGameId(), gameModel.get().getBlackId());
 		}
 		
 		gameModel.get().setInProgress(true);

@@ -14,7 +14,6 @@ import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.RatingRepository;
 import com.checklersplusplus.server.entities.internal.Rating;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
-import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.RatingModel;
 
@@ -43,8 +42,8 @@ public class RatingService {
 	public void updatePlayerRatings(UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<GameModel> game = gameRepository.getByGameId(gameId);
 		
-		if (game.isEmpty()) {
-			throw new GameNotFoundException();
+		if (game.get().isFinalized()) {
+			return;
 		}
 		
 		if (game.get().getWinnerId() == null) {
@@ -73,6 +72,8 @@ public class RatingService {
 		loserRating.get().setRating(winnerAndLoserUpdatedRatings.getSecond());
 		ratingRepository.save(winnerRating.get());
 		ratingRepository.save(loserRating.get());
+		game.get().setFinalized(true);
+		gameRepository.save(game.get());
 	}
 
 	private Pair<Integer, Integer> calculateNewPlayerRatings(RatingModel winnerRating, RatingModel loserRating) {

@@ -161,6 +161,11 @@ public class SchedulerService {
 			return;
 		}
 		
+		if (!gameEvent.get().isActive()) {
+			logger.debug("Already forwarded gameEventId: %s", gameEventId.toString());
+			return;
+		}
+		
 		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketSessionId());
 		
 		if (webSocket == null) {
