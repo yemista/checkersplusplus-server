@@ -19,7 +19,7 @@ public class BotModel {
 	private UUID botId;
 	
 	@Column(name = "bot_account_id", unique = true)
-	private String botAccountId;
+	private UUID botAccountId;
 	
 	@Column(name = "in_use")
 	private boolean inUse;
@@ -32,11 +32,11 @@ public class BotModel {
 		this.botId = botId;
 	}
 
-	public String getBotAccountId() {
+	public UUID getBotAccountId() {
 		return botAccountId;
 	}
 
-	public void setBotAccountId(String botAccountId) {
+	public void setBotAccountId(UUID botAccountId) {
 		this.botAccountId = botAccountId;
 	}
 

@@ -140,11 +140,8 @@ public class GameController {
 	@PostMapping("/{sessionId}/{gameId}/move")
 	public ResponseEntity<Game> move(@PathVariable("sessionId") UUID sessionId, @PathVariable("gameId") UUID gameId, @RequestBody List<Move> moves) {
 		try {
-			logger.debug("HERE1");
 			List<String> moveList = moves.stream().map(Move::toString).collect(Collectors.toList()); 
-			logger.debug(moveList.get(0));
 			Game updatedGame = gameService.move(sessionId, gameId, moves);
-			logger.debug("HERE2");
 			updatedGame.setMessage("Move successful.");
 			return new ResponseEntity<>(updatedGame, HttpStatus.OK);
 		} catch(CheckersPlusPlusServerException e) {

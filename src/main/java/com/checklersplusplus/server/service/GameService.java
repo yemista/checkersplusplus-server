@@ -14,12 +14,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.engine.Coordinate;
 import com.checkersplusplus.engine.CoordinatePair;
 import com.checkersplusplus.engine.enums.Color;
 import com.checklersplusplus.server.dao.AccountRepository;
+import com.checklersplusplus.server.dao.BotRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
@@ -39,6 +41,7 @@ import com.checklersplusplus.server.exception.GameNotFoundException;
 import com.checklersplusplus.server.exception.InvalidMoveException;
 import com.checklersplusplus.server.exception.SessionNotFoundException;
 import com.checklersplusplus.server.model.AccountModel;
+import com.checklersplusplus.server.model.BotModel;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.model.GameMoveModel;
@@ -78,6 +81,9 @@ public class GameService {
 	
 	@Autowired
 	private GameEventRepository gameEventRepository;
+	
+	@Autowired
+	private BotRepository botRepository;
 	
 	@Autowired
 	private RatingService ratingService;
@@ -136,6 +142,138 @@ public class GameService {
 		return games;
 	}
 	
+	@Transactional(propagation = Propagation.MANDATORY)
+	public void makeLogicalMove(UUID accountId, UUID gameId, List<CoordinatePair> coordinates, boolean isBot) throws InvalidMoveException {
+		Optional<GameModel> gameModel = gameRepository.getByGameId(gameId);
+		com.checkersplusplus.engine.Game logicalGame = new com.checkersplusplus.engine.Game(gameModel.get().getGameState());
+		
+		if (logicalGame.isMoveLegal(coordinates)) {
+    		logicalGame.doMove(coordinates);
+    		
+    		Color winner = logicalGame.getWinner();
+    		
+    		if (winner != null) {
+    			UUID winnerId = winner == Color.BLACK ? gameModel.get().getBlackId() : gameModel.get().getRedId();
+    			UUID loserId = winner == Color.RED ? gameModel.get().getBlackId() : gameModel.get().getRedId();
+    			
+    			if (isBot) {
+    				Optional<BotModel> bot = botRepository.findByBotAccountId(accountId);
+    				bot.get().setInUse(false);
+    				botRepository.save(bot.get());
+    				
+    				if (!winnerId.equals(accountId)) {
+    					GameEventModel winnerEvent = new GameEventModel();
+    	    			winnerEvent.setActive(true);
+    	    			winnerEvent.setEvent(GameEvent.WIN.getMessage());
+    	    			winnerEvent.setEventRecipientAccountId(winnerId);
+    	    			winnerEvent.setGameId(gameId);
+    	    			gameEventRepository.save(winnerEvent);
+    				} else {
+    					GameEventModel loserEvent = new GameEventModel();
+    	    			loserEvent.setActive(true);
+    	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + logicalGame.getCurrentMove() + "|" + convertCoordinatePairsToString(coordinates));
+    	    			loserEvent.setEventRecipientAccountId(loserId);
+    	    			loserEvent.setGameId(gameId);
+    	    			gameEventRepository.save(loserEvent);
+    				}
+    			} else {
+    				GameEventModel winnerEvent = new GameEventModel();
+	    			winnerEvent.setActive(true);
+	    			winnerEvent.setEvent(GameEvent.WIN.getMessage());
+	    			winnerEvent.setEventRecipientAccountId(winnerId);
+	    			winnerEvent.setGameId(gameId);
+	    			gameEventRepository.save(winnerEvent);
+	    			
+	    			GameEventModel loserEvent = new GameEventModel();
+	    			loserEvent.setActive(true);
+	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + logicalGame.getCurrentMove() + "|" + convertCoordinatePairsToString(coordinates));
+	    			loserEvent.setEventRecipientAccountId(loserId);
+	    			loserEvent.setGameId(gameId);
+	    			gameEventRepository.save(loserEvent);
+    			}
+    			
+    			gameModel.get().setActive(false);
+    			gameModel.get().setInProgress(false);
+    			gameModel.get().setWinnerId(winnerId);
+    			logger.info(String.format("GameId: %s   WinnerId: %s", gameId, winnerId));
+    		}
+    		
+    		boolean isDraw = logicalGame.isDraw();
+    		
+    		if (isDraw) {
+    			if (isBot) {
+    				Optional<BotModel> bot = botRepository.findByBotAccountId(accountId);
+    				bot.get().setInUse(false);
+    				botRepository.save(bot.get());
+    				
+    				if (accountId.equals(gameModel.get().getBlackId())) {
+    					GameEventModel redEvent = new GameEventModel();
+    	    			redEvent.setActive(true);
+    	    			redEvent.setEvent(GameEvent.DRAW.getMessage());
+    	    			redEvent.setEventRecipientAccountId(gameModel.get().getRedId());
+    	    			redEvent.setGameId(gameId);
+    	    			gameEventRepository.save(redEvent);
+    				} else {
+    					GameEventModel blackEvent = new GameEventModel();
+    	    			blackEvent.setActive(true);
+    	    			blackEvent.setEvent(GameEvent.DRAW.getMessage());
+    	    			blackEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
+    	    			blackEvent.setGameId(gameId);
+    	    			gameEventRepository.save(blackEvent);
+    				}
+    			} else {
+	    			GameEventModel blackEvent = new GameEventModel();
+	    			blackEvent.setActive(true);
+	    			blackEvent.setEvent(GameEvent.DRAW.getMessage());
+	    			blackEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
+	    			blackEvent.setGameId(gameId);
+	    			gameEventRepository.save(blackEvent);
+	    			
+	    			GameEventModel redEvent = new GameEventModel();
+	    			redEvent.setActive(true);
+	    			redEvent.setEvent(GameEvent.DRAW.getMessage());
+	    			redEvent.setEventRecipientAccountId(gameModel.get().getRedId());
+	    			redEvent.setGameId(gameId);
+	    			gameEventRepository.save(redEvent);
+    			}
+    			
+    			gameModel.get().setActive(false);
+    			gameModel.get().setInProgress(false);
+    			gameModel.get().setWinnerId(TIE_GAME_ID);
+    			logger.info(String.format("GameId: %s   DRAW", gameId));
+    		}
+    		
+    		gameModel.get().setGameState(logicalGame.getGameState());
+    		gameModel.get().setLastModified(LocalDateTime.now());
+    		gameModel.get().setCurrentMoveNumber(logicalGame.getCurrentMove());
+    		gameRepository.save(gameModel.get());
+    		
+    		GameMoveModel gameMoveModel = new GameMoveModel();
+    		gameMoveModel.setAccountId(accountId);
+    		gameMoveModel.setGameId(gameId);
+    		gameMoveModel.setCreated(LocalDateTime.now());
+    		gameMoveModel.setMoveNumber(logicalGame.getCurrentMove());
+    		gameMoveModel.setMoveList(convertCoordinatePairsToString(coordinates));
+    		gameMoveRepository.save(gameMoveModel);
+    		
+    		LastMoveSentModel lastMoveSentModel = new LastMoveSentModel();
+    		lastMoveSentModel.setGameId(gameId);
+    		lastMoveSentModel.setAccountId(accountId);
+    		lastMoveSentModel.setLastMoveSent(logicalGame.getCurrentMove());
+    		lastMoveSentModel.setCreated(LocalDateTime.now());
+    		lastMoveSentRepository.save(lastMoveSentModel);
+    	} else {
+    		throw new InvalidMoveException();
+    	}
+	}
+	
+	public void botMove(UUID accountId, UUID gameId, List<com.checkersplusplus.engine.moves.Move> moves) throws CheckersPlusPlusServerException {
+		List<CoordinatePair> coordinates = moves.stream()
+    			.map(move -> new CoordinatePair(new Coordinate(move.getStart().getCol(), move.getStart().getRow()), new Coordinate(move.getEnd().getCol(), move.getEnd().getRow())))
+    			.collect(Collectors.toList());
+		makeLogicalMove(accountId, gameId, coordinates, true);
+	}
+	
 	public Game move(UUID sessionId, UUID gameId, List<Move> moves) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -160,82 +298,9 @@ public class GameService {
     	List<CoordinatePair> coordinates = moves.stream()
     			.map(move -> new CoordinatePair(new Coordinate(move.getStartCol(), move.getStartRow()), new Coordinate(move.getEndCol(), move.getEndRow())))
     			.collect(Collectors.toList());
-    	com.checkersplusplus.engine.Game logicalGame = new com.checkersplusplus.engine.Game(gameModel.get().getGameState());
-    	
-    	if (logicalGame.isMoveLegal(coordinates)) {
-    		logicalGame.doMove(coordinates);
-    		
-    		Color winner = logicalGame.getWinner();
-    		
-    		if (winner != null) {    			
-    			UUID winnerId = winner == Color.BLACK ? gameModel.get().getBlackId() : gameModel.get().getRedId();
-    			GameEventModel winnerEvent = new GameEventModel();
-    			winnerEvent.setActive(true);
-    			winnerEvent.setEvent(GameEvent.WIN.getMessage());
-    			winnerEvent.setEventRecipientAccountId(winnerId);
-    			winnerEvent.setGameId(gameId);
-    			gameEventRepository.save(winnerEvent);
-    			
-    			UUID loserId = winner == Color.RED ? gameModel.get().getBlackId() : gameModel.get().getRedId();
-    			GameEventModel loserEvent = new GameEventModel();
-    			loserEvent.setActive(true);
-    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + logicalGame.getCurrentMove() + "|" + convertMoveListToString(moves));
-    			loserEvent.setEventRecipientAccountId(loserId);
-    			loserEvent.setGameId(gameId);
-    			gameEventRepository.save(loserEvent);
-    			
-    			gameModel.get().setActive(false);
-    			gameModel.get().setInProgress(false);
-    			gameModel.get().setWinnerId(winnerId);
-    			logger.info(String.format("GameId: %s   WinnerId: %s", gameId, winnerId));
-    		}
-    		
-    		boolean isDraw = logicalGame.isDraw();
-    		
-    		if (isDraw) {
-    			GameEventModel winnerEvent = new GameEventModel();
-    			winnerEvent.setActive(true);
-    			winnerEvent.setEvent(GameEvent.DRAW.getMessage());
-    			winnerEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
-    			winnerEvent.setGameId(gameId);
-    			gameEventRepository.save(winnerEvent);
-    			
-    			GameEventModel loserEvent = new GameEventModel();
-    			loserEvent.setActive(true);
-    			loserEvent.setEvent(GameEvent.DRAW.getMessage());
-    			loserEvent.setEventRecipientAccountId(gameModel.get().getRedId());
-    			loserEvent.setGameId(gameId);
-    			gameEventRepository.save(loserEvent);
-    			
-    			gameModel.get().setActive(false);
-    			gameModel.get().setInProgress(false);
-    			gameModel.get().setWinnerId(TIE_GAME_ID);
-    			logger.info(String.format("GameId: %s   DRAW", gameId));
-    		}
-    		
-    		gameModel.get().setGameState(logicalGame.getGameState());
-    		gameModel.get().setLastModified(LocalDateTime.now());
-    		gameModel.get().setCurrentMoveNumber(logicalGame.getCurrentMove());
-    		gameRepository.save(gameModel.get());
-    		
-    		GameMoveModel gameMoveModel = new GameMoveModel();
-    		gameMoveModel.setAccountId(sessionModel.get().getAccountId());
-    		gameMoveModel.setGameId(gameId);
-    		gameMoveModel.setCreated(LocalDateTime.now());
-    		gameMoveModel.setMoveNumber(logicalGame.getCurrentMove());
-    		gameMoveModel.setMoveList(convertMoveListToString(moves));
-    		gameMoveRepository.save(gameMoveModel);
-    		
-    		LastMoveSentModel lastMoveSentModel = new LastMoveSentModel();
-    		lastMoveSentModel.setGameId(gameId);
-    		lastMoveSentModel.setAccountId(sessionModel.get().getAccountId());
-    		lastMoveSentModel.setLastMoveSent(logicalGame.getCurrentMove());
-    		lastMoveSentModel.setCreated(LocalDateTime.now());
-    		lastMoveSentRepository.save(lastMoveSentModel);
-    	} else {
-    		throw new InvalidMoveException();
-    	}
-    	
+    	    	
+    	makeLogicalMove(sessionModel.get().getAccountId(), gameId, coordinates, false);
+    	    	
     	logger.info(String.format("GameId: %s   SessionId: %s    Committed Move: %s", gameId.toString(), sessionId.toString(), convertMoveListToString(moves)));
     	return Game.fromModel(gameModel.get());
 	}
@@ -315,6 +380,31 @@ public class GameService {
 		beginEvent.setGameId(gameId);
 		gameEventRepository.save(beginEvent);
 	}
+	
+	public void botCreateGame(UUID accountId, boolean isBlack) {
+		GameModel gameModel = new GameModel();
+		gameModel.setActive(true);
+		gameModel.setInProgress(false);
+		gameModel.setCreated(LocalDate.now());
+		gameModel.setLastModified(LocalDateTime.now());
+		
+		Optional<RatingModel> rating = ratingRepository.findByAccountId(accountId);
+		
+		if (isBlack) {
+			gameModel.setBlackId(accountId);
+			gameModel.setBlackRating(rating.get().getRating());
+			gameModel.setCreatorRating(rating.get().getRating());
+		} else {
+			gameModel.setRedId(accountId);
+			gameModel.setRedRating(rating.get().getRating());
+			gameModel.setCreatorRating(rating.get().getRating());
+		}
+		
+		com.checkersplusplus.engine.Game game = new com.checkersplusplus.engine.Game();
+		gameModel.setGameState(game.getGameState());
+		gameModel.setCurrentMoveNumber(0);
+		gameRepository.save(gameModel);
+	}
 
 	public Game createGame(UUID sessionId, boolean isBlack) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
@@ -384,12 +474,19 @@ public class GameService {
 			throw new CheckersPlusPlusServerException("User not found for game.");
 		}
 		
-		GameEventModel forfeitEvent = new GameEventModel();
-		forfeitEvent.setActive(true);
-		forfeitEvent.setEvent(GameEvent.FORFEIT.getMessage());
-		forfeitEvent.setEventRecipientAccountId(opponentId);
-		forfeitEvent.setGameId(gameId);
-		gameEventRepository.save(forfeitEvent);
+		Optional<BotModel> bot = botRepository.findByBotAccountId(opponentId);
+		
+		if (bot.isEmpty()) {
+			GameEventModel forfeitEvent = new GameEventModel();
+			forfeitEvent.setActive(true);
+			forfeitEvent.setEvent(GameEvent.FORFEIT.getMessage());
+			forfeitEvent.setEventRecipientAccountId(opponentId);
+			forfeitEvent.setGameId(gameId);
+			gameEventRepository.save(forfeitEvent);
+		} else {
+			bot.get().setInUse(false);
+			botRepository.save(bot.get());
+		}
 		
 		gameModel.get().setWinnerId(opponentId);
 		gameModel.get().setActive(false);
@@ -423,6 +520,16 @@ public class GameService {
 		
 		for (Move move : moves) {
 			sb.append(String.format("c:%d,r:%d-c:%d,r:%d+", move.getStartCol(), move.getStartRow(), move.getEndCol(), move.getEndRow()));
+		}
+		
+		return sb.toString();
+	}
+	
+	private String convertCoordinatePairsToString(List<CoordinatePair> pairs) {
+		StringBuilder sb = new StringBuilder();
+		
+		for (CoordinatePair move : pairs) {
+			sb.append(String.format("c:%d,r:%d-c:%d,r:%d+", move.getStart().getCol(), move.getStart().getRow(), move.getEnd().getCol(), move.getEnd().getRow()));
 		}
 		
 		return sb.toString();
