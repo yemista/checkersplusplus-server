@@ -26,7 +26,7 @@ public class BotMoveService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
-	private static final long TEN_SECOND_MILLIS = 1000 * 10;
+	private static final long THREE_SECOND_MILLIS = 1000 * 3;
 	
 	@Autowired
 	private BotRepository botRepository;
@@ -37,7 +37,7 @@ public class BotMoveService {
 	@Autowired
 	private GameService gameService;
 	
-	@Scheduled(fixedDelay = TEN_SECOND_MILLIS)
+	@Scheduled(fixedDelay = THREE_SECOND_MILLIS)
 	@Transactional
 	public void doBotMove() {
 		List<BotModel> bots = botRepository.findByInUseTrue();

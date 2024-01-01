@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.model;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -23,6 +24,9 @@ public class BotModel {
 	
 	@Column(name = "in_use")
 	private boolean inUse;
+	
+	@Column(name = "last_modified")
+	private LocalDateTime lastModified;
 
 	public UUID getBotId() {
 		return botId;
@@ -47,4 +51,14 @@ public class BotModel {
 	public void setInUse(boolean inUse) {
 		this.inUse = inUse;
 	}
+
+	public LocalDateTime getLastModified() {
+		return lastModified;
+	}
+
+	public void setLastModified(LocalDateTime lastModified) {
+		this.lastModified = lastModified;
+	}
+	
+	
 }

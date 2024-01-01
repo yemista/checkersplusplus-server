@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.service.job;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -29,13 +30,14 @@ public class BotGameCreatorService {
 	@Transactional
 	@Scheduled(fixedDelay = TWO_MINUTE_MILLIS)
 	public void createBots() {
-		Optional<BotModel> bot = botRepository.findFirstByInUseFalse();
+		Optional<BotModel> bot = botRepository.findFirstByInUseFalseOrderByLastModifiedAsc();
 		
 		if (bot.isEmpty()) {
 			return;
 		}
 
 		bot.get().setInUse(true);
+		bot.get().setLastModified(LocalDateTime.now());
 		botRepository.save(bot.get());
 		boolean firstMove = Math.random() > Double.valueOf(0.5);
 		gameService.botCreateGame(bot.get().getBotAccountId(), firstMove);

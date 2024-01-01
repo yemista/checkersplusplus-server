@@ -12,7 +12,7 @@ public interface BotRepository extends JpaRepository<BotModel, UUID> {
 
 	public Optional<BotModel> findByBotAccountId(UUID botAccountId);
 	
-	public Optional<BotModel> findFirstByInUseFalse();
+	public Optional<BotModel> findFirstByInUseFalseOrderByLastModifiedAsc();
 	
 	public List<BotModel> findByInUseTrue();
 }
