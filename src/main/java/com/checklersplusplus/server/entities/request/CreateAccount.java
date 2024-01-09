@@ -15,7 +15,7 @@ public class CreateAccount implements Serializable {
 	private String email;
 	
 	@NotBlank(message = "Password is required.")
-	@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z]).{8,}$", message = "Password must be 8 characters long and combination of uppercase letters, lowercase letters, numbers.")  
+	@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z]).{8,}$", message = "Password must be 8 characters long and contain only uppercase and lowercase letters, and include a number.")  
 	private String password;
 	
 	@NotBlank(message = "Confirmation password is required.")

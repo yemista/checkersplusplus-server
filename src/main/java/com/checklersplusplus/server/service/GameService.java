@@ -143,7 +143,7 @@ public class GameService {
 	}
 	
 	@Transactional(propagation = Propagation.MANDATORY)
-	public void makeLogicalMove(UUID accountId, UUID gameId, List<CoordinatePair> coordinates, boolean isBot) throws InvalidMoveException {
+	public void makeLogicalMove(UUID accountId, UUID gameId, List<CoordinatePair> coordinates, boolean isBot) throws CheckersPlusPlusServerException {
 		Optional<GameModel> gameModel = gameRepository.getByGameId(gameId);
 		com.checkersplusplus.engine.Game logicalGame = new com.checkersplusplus.engine.Game(gameModel.get().getGameState());
 		
@@ -196,6 +196,7 @@ public class GameService {
     			gameModel.get().setInProgress(false);
     			gameModel.get().setWinnerId(winnerId);
     			logger.info(String.format("GameId: %s   WinnerId: %s", gameId, winnerId));
+				ratingService.updatePlayerRatings(gameId);
     		}
     		
     		boolean isDraw = logicalGame.isDraw();

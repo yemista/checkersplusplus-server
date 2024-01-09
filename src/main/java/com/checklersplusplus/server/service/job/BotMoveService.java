@@ -3,6 +3,7 @@ package com.checklersplusplus.server.service.job;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class BotMoveService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
-	private static final long THREE_SECOND_MILLIS = 1000 * 3;
+	private static final long TWO_SECOND_MILLIS = 1000 * 2;
 	
 	@Autowired
 	private BotRepository botRepository;
@@ -37,9 +38,18 @@ public class BotMoveService {
 	@Autowired
 	private GameService gameService;
 	
-	@Scheduled(fixedDelay = THREE_SECOND_MILLIS)
+	@Scheduled(fixedDelay = TWO_SECOND_MILLIS)
 	@Transactional
 	public void doBotMove() {
+		Random random = new Random();
+		int secondsToSleep = random.nextInt(0, 7);
+		
+		try {
+			Thread.sleep(1000 * secondsToSleep);
+		} catch (Exception e) {
+			logger.error("Error occured in BotMoveService while sleeping", e);
+		}
+		
 		List<BotModel> bots = botRepository.findByInUseTrue();
 		
 		for (BotModel bot : bots) {
@@ -66,8 +76,8 @@ public class BotMoveService {
 	}
 
 	private boolean gameIsTooOld(LocalDateTime lastModified) {
-		LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
-		return lastModified.isBefore(fiveMinutesAgo);
+		LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minusMinutes(15);
+		return lastModified.isBefore(fifteenMinutesAgo);
 	}
 
 	private boolean isBotsTurn(Color botColor, String gameState) {

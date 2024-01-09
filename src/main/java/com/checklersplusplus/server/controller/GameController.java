@@ -115,6 +115,10 @@ public class GameController {
 		   
 		   if (!VALID_SORTS.contains(sortBy)) {
 			   sortBy = "lastModified";
+		   } else if (sortBy.equals("created")) {
+			   sortBy = "lastModified";
+		   } else {
+			   sortBy = "creatorRating";
 		   }
 
 		   if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {
