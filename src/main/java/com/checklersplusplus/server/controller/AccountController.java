@@ -48,6 +48,7 @@ public class AccountController {
 	
 	@GetMapping("/version")
 	public ResponseEntity<String> getVersion() {
+		logger.info(String.format("Version request"));
 		return new ResponseEntity<>(VERSION_STRING, HttpStatus.OK);
 	}
 	
@@ -93,7 +94,7 @@ public class AccountController {
 			logger.error(ex.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Server error. Try again soon."), HttpStatus.SERVICE_UNAVAILABLE);
 		}
-		return new ResponseEntity<>(new CheckersPlusPlusResponse("Please check your email for the verification code. If you do not see it check your spam folder."), HttpStatus.OK);
+		return new ResponseEntity<>(new CheckersPlusPlusResponse("Please check your email for the verification code. If you do not see it check your spam folder. If you still do not see it, try to request a new one."), HttpStatus.OK);
 	}
 	
 	@PostMapping("/resetPassword")
