@@ -15,9 +15,9 @@ public class WebSocketConfig implements WebSocketConfigurer  {
 	@Autowired
 	private CheckersPlusPlusWebSocketHandler webSocketHandler;
 	
+	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		registry.addHandler(webSocketHandler, "/checkersplusplus/api/updates").setAllowedOrigins("*");
-		//      .addInterceptors(new HttpSessionHandshakeInterceptor());
 	}
 
 }

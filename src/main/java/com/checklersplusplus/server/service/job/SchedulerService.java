@@ -72,10 +72,13 @@ public class SchedulerService {
 				}
 				
 				UUID accountId = serverSession.get().getAccountId();
-				Optional<GameEventModel> gameEvent = gameEventRepository.findActiveEventForAccountId(accountId);
+				List<GameEventModel> gameEvent = gameEventRepository.findActiveEventForAccountId(accountId);
 								
-				if (gameEvent.isPresent()) {
-					forwardGameEvent(openWebSocket, gameEvent.get().getGameEventId());
+				if (gameEvent.size() > 0) {
+					for (GameEventModel gve : gameEvent) {
+						forwardGameEvent(openWebSocket, gve.getGameEventId());
+					}
+					
 					continue;
 				}
 				
@@ -180,7 +183,7 @@ public class SchedulerService {
 			gameEventRepository.save(gameEvent.get());
 		} catch (Exception e) {
 			logger.error(String.format("Failed to send event %s to accountId %s for gameId %s", 
-					gameEvent.get().getEvent(), gameEvent.get().getEventRecipientAccountId().toString(), gameEvent.get().getGameId().toString()), e);
+					gameEvent.get().getEvent(), gameEvent.get().getEventRecipientAccountId().toString(), gameEvent.get().getGameId().toString()));
 		}
 	}
 }

@@ -75,12 +75,14 @@ public class AccountService {
 		return new Account(accountModel.get().getAccountId(), accountModel.get().getUsername());
 	}
 
+	@Transactional
 	public NewAccount createAccount(CreateAccount createAccount) throws CheckersPlusPlusServerException, Exception {
 		AccountModel accountModel = new AccountModel();
 		accountModel.setUsername(createAccount.getUsername());
 		accountModel.setEmail(createAccount.getEmail());
 		accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword()));
 		accountModel.setCreated(LocalDateTime.now());
+		accountModel.setBanned(false);
 		accountRepository.save(accountModel);
 		
 		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
@@ -102,6 +104,7 @@ public class AccountService {
 		return newAccount;
 	}
 
+	@Transactional
 	public Session login(String username, String password) throws CheckersPlusPlusServerException {
 		Optional<AccountModel> account = accountRepository.findByUsernameAndPassword(username, CryptoUtil.encryptPassword(password));
 		
@@ -111,6 +114,10 @@ public class AccountService {
 		
 		if (account.get().getVerified() == null) {
 			throw new AccountNotVerifiedException();
+		}
+		
+		if (account.get().isBanned()) {
+			throw new CheckersPlusPlusServerException("This account has been banned. Please email admin@checkersplusplus.com to find out why.");
 		}
 		
 		sessionRepository.inactiveExistingSessions(account.get().getAccountId());
@@ -136,6 +143,7 @@ public class AccountService {
 		return session;
 	}
 	
+	@Transactional
 	public void resetPassword(String username, String verificationCode, String password) throws CheckersPlusPlusServerException {
 		Optional<AccountModel> account = accountRepository.getByUsername(username);
 		

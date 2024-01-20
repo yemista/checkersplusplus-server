@@ -33,6 +33,9 @@ public class AccountModel {
 	
 	@Column(name = "verified")
 	private LocalDateTime verified;
+	
+	@Column(name = "banned")
+	private boolean banned;
 
 	public AccountModel() {
 		
@@ -96,4 +99,13 @@ public class AccountModel {
 	public void setVerified(LocalDateTime verified) {
 		this.verified = verified;
 	}
+
+	public boolean isBanned() {
+		return banned;
+	}
+
+	public void setBanned(boolean banned) {
+		this.banned = banned;
+	}
+	
 }

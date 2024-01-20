@@ -54,6 +54,10 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 		String serverSession = message.getPayload();
 		
+		if (serverSession == null) {
+			return;
+		}
+		
 		try {
 			UUID serverSessionId = UUID.fromString(serverSession);
 			Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(serverSessionId);
@@ -81,7 +85,7 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 
 	@Override
 	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-		logger.debug(String.format("Error occured for web socket session: %s", session.getId()), exception);
+		logger.debug(String.format("Error occured for web socket session: %s", session.getId()));
         super.handleTransportError(session, exception);
 	}
 

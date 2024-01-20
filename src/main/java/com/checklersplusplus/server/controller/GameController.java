@@ -144,6 +144,7 @@ public class GameController {
 	@PostMapping("/{sessionId}/{gameId}/move")
 	public ResponseEntity<Game> move(@PathVariable("sessionId") UUID sessionId, @PathVariable("gameId") UUID gameId, @RequestBody List<Move> moves) {
 		try {
+			//logger.debug(String.format("Attempting move"));
 			List<String> moveList = moves.stream().map(Move::toString).collect(Collectors.toList()); 
 			Game updatedGame = gameService.move(sessionId, gameId, moves);
 			updatedGame.setMessage("Move successful.");

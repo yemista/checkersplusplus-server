@@ -37,7 +37,7 @@ public class OpenGameRepositoryTest {
 		createGameWithBlackRating(800);
 		createGameWithRedRating(700);
 		createGameWithBlackRating(600);
-		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrue(700, 850, PageRequest.of(0, 50));
+		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrueAndInProgressFalse(700, 850, PageRequest.of(0, 50));
 		assertThat(openGames.getContent().size()).isEqualTo(2);
 	}
 	
@@ -52,7 +52,7 @@ public class OpenGameRepositoryTest {
 		createGameWithRedRating(600);
 		createGameWithBlackRating(600);
 		
-		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrue(0, 750, pageRequest);
+		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrueAndInProgressFalse(0, 750, pageRequest);
 		assertThat(openGames.getContent().size()).isEqualTo(2);
 		
 		int rating1 = openGames.getContent().get(0).getBlackRating() == null ? openGames.getContent().get(0).getRedRating() :  openGames.getContent().get(0).getBlackRating();

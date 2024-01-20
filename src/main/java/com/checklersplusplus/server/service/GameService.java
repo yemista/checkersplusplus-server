@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,7 +98,7 @@ public class GameService {
 			pageRequest = PageRequest.of(page, pageSize);
 		}
 		
-		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrue(ratingLow, ratingHigh, pageRequest);
+		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrueAndInProgressFalse(ratingLow, ratingHigh, pageRequest);
 		List<Game> games = openGames.stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());
 		
 		for (Game game : games) {
@@ -268,6 +269,7 @@ public class GameService {
     	}
 	}
 	
+	@Transactional
 	public void botMove(UUID accountId, UUID gameId, List<com.checkersplusplus.engine.moves.Move> moves) throws CheckersPlusPlusServerException {
 		List<CoordinatePair> coordinates = moves.stream()
     			.map(move -> new CoordinatePair(new Coordinate(move.getStart().getCol(), move.getStart().getRow()), new Coordinate(move.getEnd().getCol(), move.getEnd().getRow())))
@@ -275,6 +277,7 @@ public class GameService {
 		makeLogicalMove(accountId, gameId, coordinates, true);
 	}
 	
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public Game move(UUID sessionId, UUID gameId, List<Move> moves) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -306,6 +309,7 @@ public class GameService {
     	return Game.fromModel(gameModel.get());
 	}
 
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void cancelGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -332,6 +336,7 @@ public class GameService {
 		logger.info(String.format("SessionId: %s   Cancelled game: %s", sessionId.toString(), gameId.toString()));
 	}
 
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public Game joinGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -360,11 +365,21 @@ public class GameService {
 		if (gameModel.get().getBlackId() == null) {
 			gameModel.get().setBlackId(sessionModel.get().getAccountId());
 			gameModel.get().setBlackRating(rating.get().getRating());
-			createBeginEvent(gameModel.get().getGameId(), gameModel.get().getRedId());
+			GameEventModel beginEvent = new GameEventModel();
+			beginEvent.setActive(true);
+			beginEvent.setEvent(GameEvent.BEGIN.getMessage());
+			beginEvent.setEventRecipientAccountId(gameModel.get().getRedId());
+			beginEvent.setGameId(gameId);
+			gameEventRepository.save(beginEvent);
 		} else {
 			gameModel.get().setRedId(sessionModel.get().getAccountId());
 			gameModel.get().setRedRating(rating.get().getRating());
-			createBeginEvent(gameModel.get().getGameId(), gameModel.get().getBlackId());
+			GameEventModel beginEvent = new GameEventModel();
+			beginEvent.setActive(true);
+			beginEvent.setEvent(GameEvent.BEGIN.getMessage());
+			beginEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
+			beginEvent.setGameId(gameId);
+			gameEventRepository.save(beginEvent);
 		}
 		
 		gameModel.get().setInProgress(true);
@@ -373,15 +388,7 @@ public class GameService {
 		return Game.fromModel(gameModel.get());
 	}
 	
-	private void createBeginEvent(UUID gameId, UUID opponentId) {
-		GameEventModel beginEvent = new GameEventModel();
-		beginEvent.setActive(true);
-		beginEvent.setEvent(GameEvent.BEGIN.getMessage());
-		beginEvent.setEventRecipientAccountId(opponentId);
-		beginEvent.setGameId(gameId);
-		gameEventRepository.save(beginEvent);
-	}
-	
+	@Transactional
 	public void botCreateGame(UUID accountId, boolean isBlack) {
 		GameModel gameModel = new GameModel();
 		gameModel.setActive(true);
@@ -407,6 +414,7 @@ public class GameService {
 		gameRepository.save(gameModel);
 	}
 
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public Game createGame(UUID sessionId, boolean isBlack) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -450,6 +458,7 @@ public class GameService {
 		return Game.fromModel(gameModel);
 	}
 	
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void forfeitGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		

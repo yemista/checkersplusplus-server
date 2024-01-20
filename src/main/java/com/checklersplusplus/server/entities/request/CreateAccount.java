@@ -22,6 +22,7 @@ public class CreateAccount implements Serializable {
 	private String confirmPassword;
 	
 	@Size(min = 3, max = 20, message = "Username must be from 3 to 20 characters.")
+	@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z_]).*$", message = "Username must only contain numbers, letters, and underscores.")
 	@NotBlank(message = "Username is required.")
 	private String username;
 	

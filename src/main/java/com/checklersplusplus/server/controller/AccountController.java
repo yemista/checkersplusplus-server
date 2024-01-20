@@ -135,8 +135,7 @@ public class AccountController {
 	public ResponseEntity<CheckersPlusPlusResponse> createAccount(@Valid @RequestBody CreateAccount createAccount) {
 		try {
 			if (isEmailInUse(createAccount.getEmail())) {
-				logger.debug("11");
-				return new ResponseEntity<>(new CheckersPlusPlusResponse("Email address is already in use."), HttpStatus.OK);
+				return new ResponseEntity<>(new CheckersPlusPlusResponse("Email address is already in use."), HttpStatus.BAD_REQUEST);
 			}
 
 			if (isUsernameInUse(createAccount.getUsername())) {
@@ -149,7 +148,7 @@ public class AccountController {
 
 			NewAccount newAccount = accountService.createAccount(createAccount);
 			logger.debug(String.format("Created new account %s", createAccount.getUsername()));
-			emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
+			//emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
 		} catch (CheckersPlusPlusServerException e) {
 			logger.info(e.getMessage(), e);
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to create account. Please try again."), HttpStatus.BAD_REQUEST);

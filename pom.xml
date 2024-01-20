@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.4</version>
+		<version>3.2.1</version>
 		<relativePath />
 	</parent>
 	<packaging>jar</packaging>
@@ -16,7 +16,7 @@
 	<name>checkersplusplus-server</name>
 	<description>Checkers++</description>
 	<properties>
-		<junit-jupiter.version>5.7.0</junit-jupiter.version>
+		<junit-jupiter.version>5.7.2</junit-jupiter.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputencoding>UTF-8</project.reporting.outputencoding>
 	</properties>
@@ -25,6 +25,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
+		<dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <scope>test</scope>
+    </dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
