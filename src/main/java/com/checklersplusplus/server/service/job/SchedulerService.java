@@ -39,7 +39,7 @@ public class SchedulerService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
-	private static final long ONE_SECOND_MILLIS = 1000;
+	private static final long THREE_SECOND_MILLIS = 3000;
 	
 	@Autowired
 	private OpenWebSocketRepository openWebSocketRepository;
@@ -59,7 +59,7 @@ public class SchedulerService {
 	@Autowired
 	private GameEventRepository gameEventRepository;
 	
-	@Scheduled(fixedDelay = ONE_SECOND_MILLIS)
+	@Scheduled(fixedDelay = THREE_SECOND_MILLIS)
 	public void updateClients() {
 		try {
 			List<OpenWebSocket> openWebSockets = getActiveOpenWebSockets();
@@ -169,6 +169,14 @@ public class SchedulerService {
 			return;
 		}
 		
+		Optional<OpenWebSocketModel> socketModel = openWebSocketRepository.findByWebSocketId(openWebSocket.getWebSocketSessionId());
+		
+		if (socketModel.isEmpty() || socketModel.get().isActive() == false) {
+			logger.debug("forwardGameEvent: Unexpected websocket disconnect for accountId %s gameId: %s", 
+					gameEvent.get().getEventRecipientAccountId().toString(), gameEvent.get().getGameId().toString());
+			return;
+		}
+		
 		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketSessionId());
 		
 		if (webSocket == null) {
@@ -183,7 +191,7 @@ public class SchedulerService {
 			gameEventRepository.save(gameEvent.get());
 		} catch (Exception e) {
 			logger.error(String.format("Failed to send event %s to accountId %s for gameId %s", 
-					gameEvent.get().getEvent(), gameEvent.get().getEventRecipientAccountId().toString(), gameEvent.get().getGameId().toString()));
+					gameEvent.get().getEvent(), gameEvent.get().getEventRecipientAccountId().toString(), gameEvent.get().getGameId().toString()), e);
 		}
 	}
 }
