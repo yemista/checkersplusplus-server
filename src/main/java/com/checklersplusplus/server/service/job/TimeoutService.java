@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -30,11 +31,12 @@ import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.service.RatingService;
 import com.checklersplusplus.server.websocket.WebSocketMap;
 
+@Profile("websocket")
 @Service
 @Transactional
 public class TimeoutService {
 
-	private static final int QUEUE_SIZE = 500;
+	private static final int QUEUE_SIZE = 200;
 	private static final int TEN_SECONDS_MILLIS = 10 * 1000;
 	
 	private static final Logger logger = LoggerFactory.getLogger(TimeoutService.class);
@@ -60,6 +62,8 @@ public class TimeoutService {
 	@Scheduled(fixedDelay = TEN_SECONDS_MILLIS)
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void checkForTimeouts() {
+		logger.debug("Checking for timeouts");
+		
 		try {
 			LocalDateTime now = LocalDateTime.now();
 			LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);

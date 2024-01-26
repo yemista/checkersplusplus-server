@@ -8,6 +8,7 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import com.checklersplusplus.server.model.BotModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.service.GameService;
 
+@Profile("server")
 @Service
 public class BotMoveService {
 
@@ -41,6 +43,8 @@ public class BotMoveService {
 	@Scheduled(fixedDelay = TWO_SECOND_MILLIS)
 	@Transactional
 	public void doBotMove() {
+		logger.debug("Bots are moving");
+		
 		Random random = new Random();
 		int secondsToSleep = random.nextInt(0, 7);
 		

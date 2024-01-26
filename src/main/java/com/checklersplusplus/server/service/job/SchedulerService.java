@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.websocket.WebSocketMap;
 import com.checklersplusplus.server.websocket.WebSocketServerId;
 
+@Profile("websocket")
 @Service
 public class SchedulerService {
 	

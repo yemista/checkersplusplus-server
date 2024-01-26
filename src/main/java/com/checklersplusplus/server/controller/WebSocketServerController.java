@@ -1,8 +1,12 @@
 package com.checklersplusplus.server.controller;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.checklersplusplus.server.service.job.ScheduledEmailQueue;
 import com.checklersplusplus.server.websocket.WebSocketMap;
 
 @RestController
@@ -26,20 +31,32 @@ public class WebSocketServerController {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketServerController.class);
 	
-	private static final List<String> WEBSOCKET_SERVERS = Arrays.asList("45.79.215.139", "66.228.57.67", "173.230.128.115", "45.79.217.34", "23.92.30.242", "74.207.231.176");
+	private static final List<String> WEBSOCKET_SERVERS = Arrays.asList("45.79.215.139", "66.228.57.67");//, "173.230.128.115", "45.79.217.34", "23.92.30.242", "74.207.231.176");
+	private static final Map<String, Integer> WEBSOCKET_FAILURE_COUNT = new HashMap<>();
+
+	private static final Integer FAILURE_THRESHOLD = 5;
+	static {
+		for (String serverIp : WEBSOCKET_SERVERS) {
+			WEBSOCKET_FAILURE_COUNT.put(serverIp, 0);
+		}
+	}
 	
 	@GetMapping("/health")
 	public ResponseEntity<String> getWebSocketServerHealth() {
 		StringBuilder response = new StringBuilder();
 		
 		for (String serverIp : WEBSOCKET_SERVERS) {
-			String numConnections = getNumberofConnectionsForWebSocketServer(serverIp);
-			
-			if (numConnections == null) {
-				numConnections = "DOWN";
+			if (isHostUp(serverIp)) {
+				String numConnections = getNumberofConnectionsForWebSocketServer(serverIp);
+				
+				if (numConnections == null) {
+					numConnections = "DOWN";
+				}
+				
+				response.append(String.format("%s: %s<br/>", serverIp, numConnections));
+			} else {
+				response.append(String.format("%s: %s<br/>", serverIp, "DOWN"));
 			}
-			
-			response.append(String.format("%s: %s<br/>", serverIp, numConnections));
 		}
 		
 		return new ResponseEntity<>(response.toString(), HttpStatus.OK);
@@ -51,9 +68,24 @@ public class WebSocketServerController {
 		String leastConnections = "";
 		
 		for (String serverIp : WEBSOCKET_SERVERS) {
+			if (!isHostUp(serverIp)) {
+				Integer failureCount = WEBSOCKET_FAILURE_COUNT.get(serverIp);
+				failureCount++;
+				
+				if (failureCount > FAILURE_THRESHOLD) {
+					ScheduledEmailQueue.getInstance().getEmailsToSend().add(String.format("The following server is unreachable: %s", serverIp));
+					failureCount = 0;
+				}
+				
+				WEBSOCKET_FAILURE_COUNT.put(serverIp, failureCount);
+				continue;
+			}
+			
 			String numConnections = getNumberofConnectionsForWebSocketServer(serverIp);
 			
 			if (numConnections != null) {
+				WEBSOCKET_FAILURE_COUNT.put(serverIp, 0);
+				
 				if (serverAddress == null) {
 					serverAddress = serverIp;
 					leastConnections = numConnections;
@@ -75,6 +107,20 @@ public class WebSocketServerController {
 	public ResponseEntity<String> getNumberOfConnections() {
 		int numConnections = WebSocketMap.getInstance().getMap().keySet().size();
 		return new ResponseEntity<>(String.valueOf(numConnections), HttpStatus.OK);
+	}
+	
+	private boolean isHostUp(String serverIp) { 
+		try {
+	        InetSocketAddress sa = new InetSocketAddress(serverIp, 8080);
+	        Socket ss = new Socket();
+	        ss.connect(sa, 250);
+	        ss.close();
+	        return true;
+	    } catch(Exception e) {
+	        
+	    }
+		
+	    return false;
 	}
 	
 	private String getNumberofConnectionsForWebSocketServer(String ip) {
