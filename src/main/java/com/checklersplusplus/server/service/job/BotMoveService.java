@@ -43,8 +43,6 @@ public class BotMoveService {
 	@Scheduled(fixedDelay = TWO_SECOND_MILLIS)
 	@Transactional
 	public void doBotMove() {
-		logger.debug("Bots are moving");
-		
 		Random random = new Random();
 		int secondsToSleep = random.nextInt(0, 7);
 		

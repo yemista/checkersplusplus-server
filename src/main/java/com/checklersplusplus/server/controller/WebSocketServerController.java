@@ -31,7 +31,8 @@ public class WebSocketServerController {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketServerController.class);
 	
-	private static final List<String> WEBSOCKET_SERVERS = Arrays.asList("45.79.215.139", "66.228.57.67");//, "173.230.128.115", "45.79.217.34", "23.92.30.242", "74.207.231.176");
+	private static final List<String> WEBSOCKET_SERVERS = Arrays.asList("server1.servers.checkersplusplus.com", "server2.servers.checkersplusplus.com");
+	//, "server3.servers.checkersplusplus.com", "server4.servers.checkersplusplus.com", "server5.servers.checkersplusplus.com", "server6.servers.checkersplusplus.com");
 	private static final Map<String, Integer> WEBSOCKET_FAILURE_COUNT = new HashMap<>();
 
 	private static final Integer FAILURE_THRESHOLD = 5;
@@ -111,7 +112,7 @@ public class WebSocketServerController {
 	
 	private boolean isHostUp(String serverIp) { 
 		try {
-	        InetSocketAddress sa = new InetSocketAddress(serverIp, 8080);
+	        InetSocketAddress sa = new InetSocketAddress(serverIp, 8081);
 	        Socket ss = new Socket();
 	        ss.connect(sa, 250);
 	        ss.close();
@@ -127,7 +128,7 @@ public class WebSocketServerController {
 		try {
 			RestTemplate restTemplate = new RestTemplate();
 	
-	        String uri = "http://" + ip + ":8080//checkersplusplus/api/websocketservers/connections";
+	        String uri = "http://" + ip + ":8081//checkersplusplus/api/websocketservers/connections";
 	
 	        HttpHeaders headers = new HttpHeaders();
 	        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
