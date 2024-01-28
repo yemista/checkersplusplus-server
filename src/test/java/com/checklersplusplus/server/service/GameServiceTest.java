@@ -95,7 +95,7 @@ public class GameServiceTest {
 
 	private UUID createTestAccount(String email, String username) throws Exception {
 		accountService.createAccount(new CreateAccount(email, TEST_PASSWORD, TEST_PASSWORD, username));
-		Optional<AccountModel> account = accountRepository.getByUsername(username);
+		Optional<AccountModel> account = accountRepository.getByUsernameIgnoreCase(username);
 		assertThat(account.isPresent()).isTrue();
 		UUID accountId = account.get().getAccountId();
 		account.get().setVerified(LocalDateTime.now());
@@ -121,7 +121,7 @@ public class GameServiceTest {
 	public void generateOpenGames() throws Exception {
 		for (int i = 0; i < 20; ++i) {
 			accountService.createAccount(new CreateAccount(TEST_EMAIL + i, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME + "1" + i));
-			Optional<AccountModel> account = accountRepository.getByUsername(TEST_USERNAME + "1" + i);
+			Optional<AccountModel> account = accountRepository.getByUsernameIgnoreCase(TEST_USERNAME + "1" + i);
 			assertThat(account.isPresent()).isTrue();
 			UUID accountId = account.get().getAccountId();
 			GameModel game = new GameModel();
@@ -660,7 +660,7 @@ public class GameServiceTest {
 	private UUID setupSecondUserAndSession() throws Exception {
 		String username = TEST_USERNAME + "M";
 		accountService.createAccount(new CreateAccount(TEST_EMAIL + "M", TEST_PASSWORD, TEST_PASSWORD, username));
-		Optional<AccountModel> account = accountRepository.getByUsername(username);
+		Optional<AccountModel> account = accountRepository.getByUsernameIgnoreCase(username);
 		assertThat(account.isPresent()).isTrue();
 		UUID secondAccountId = account.get().getAccountId();
 		account.get().setVerified(LocalDateTime.now());

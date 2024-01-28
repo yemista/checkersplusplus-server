@@ -220,7 +220,7 @@ public class AccountServiceTest {
 		verifyAccountRepository.save(verifyAccount.get());
 		String newPassword = "NewPassword1";
 		accountService.resetPassword(TEST_USERNAME, TEST_VERIFICATION_CODE, newPassword);
-		Optional<AccountModel> updatedAccount = accountRepository.getByUsername(TEST_USERNAME);
+		Optional<AccountModel> updatedAccount = accountRepository.getByUsernameIgnoreCase(TEST_USERNAME);
 		assertThat(updatedAccount.isPresent()).isTrue();
 		assertThat(updatedAccount.get().getPassword()).isEqualTo(CryptoUtil.encryptPassword(newPassword));
 	}

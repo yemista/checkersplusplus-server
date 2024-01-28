@@ -31,8 +31,8 @@ public class WebSocketServerController {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketServerController.class);
 	
-	private static final List<String> WEBSOCKET_SERVERS = Arrays.asList("server1.servers.checkersplusplus.com", "server2.servers.checkersplusplus.com");
-	//, "server3.servers.checkersplusplus.com", "server4.servers.checkersplusplus.com", "server5.servers.checkersplusplus.com", "server6.servers.checkersplusplus.com");
+	private static final List<String> WEBSOCKET_SERVERS = Arrays.asList("server1.servers.checkersplusplus.com", "server2.servers.checkersplusplus.com", 
+			"server3.servers.checkersplusplus.com", "server4.servers.checkersplusplus.com", "server5.servers.checkersplusplus.com", "server6.servers.checkersplusplus.com");
 	private static final Map<String, Integer> WEBSOCKET_FAILURE_COUNT = new HashMap<>();
 
 	private static final Integer FAILURE_THRESHOLD = 5;

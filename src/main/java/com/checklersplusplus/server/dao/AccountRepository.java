@@ -9,7 +9,7 @@ import com.checklersplusplus.server.model.AccountModel;
 
 public interface AccountRepository extends JpaRepository<AccountModel, UUID> {
 
-	public Optional<AccountModel> getByUsername(String username);
+	public Optional<AccountModel> getByUsernameIgnoreCase(String username);
 	
 	public Optional<AccountModel> getByEmail(String email);
 

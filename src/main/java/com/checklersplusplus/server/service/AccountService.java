@@ -56,7 +56,7 @@ public class AccountService {
 	private RatingRepository ratingRepository;
 	
 	public Account findByUsername(String username) {
-		Optional<AccountModel> accountModel = accountRepository.getByUsername(username);
+		Optional<AccountModel> accountModel = accountRepository.getByUsernameIgnoreCase(username);
 		
 		if (accountModel.isEmpty()) {
 			return null;
@@ -145,7 +145,7 @@ public class AccountService {
 	
 	@Transactional
 	public void resetPassword(String username, String verificationCode, String password) throws CheckersPlusPlusServerException {
-		Optional<AccountModel> account = accountRepository.getByUsername(username);
+		Optional<AccountModel> account = accountRepository.getByUsernameIgnoreCase(username);
 		
 		if (account.isEmpty()) {
 			throw new UsernameNotFoundException();

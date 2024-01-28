@@ -94,11 +94,11 @@ public class VerificationServiceTest {
 	public void canVerifyAccount() throws Exception {
 		AccountModel account = createAccount(new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME));
 		String verificationCode = verificationService.createVerificationCode(account.getAccountId());
-		Optional<AccountModel> unverifiedAccount = accountRepository.getByUsername(TEST_USERNAME);
+		Optional<AccountModel> unverifiedAccount = accountRepository.getByUsernameIgnoreCase(TEST_USERNAME);
 		assertThat(unverifiedAccount.isPresent()).isTrue();
 		assertThat(unverifiedAccount.get().getVerified()).isNull();
 		verificationService.verifyAccount(TEST_USERNAME, verificationCode);
-		Optional<AccountModel> updatedAccount = accountRepository.getByUsername(TEST_USERNAME);
+		Optional<AccountModel> updatedAccount = accountRepository.getByUsernameIgnoreCase(TEST_USERNAME);
 		assertThat(updatedAccount.isPresent()).isTrue();
 		assertThat(updatedAccount.get().getVerified()).isNotNull();
 	}

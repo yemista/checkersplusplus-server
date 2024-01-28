@@ -45,7 +45,7 @@ public class VerificationService {
 	
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void verifyAccount(String username, String verificationCode) throws Exception {
-		Optional<AccountModel> accountModelOptional = accountRepository.getByUsername(username);
+		Optional<AccountModel> accountModelOptional = accountRepository.getByUsernameIgnoreCase(username);
 		
 		if (accountModelOptional.isEmpty()) {
 			throw new UsernameNotFoundException();

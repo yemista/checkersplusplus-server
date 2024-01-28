@@ -33,7 +33,7 @@ public class AccountRepositoryTest {
 		account.setPassword("1234567890");
 		accountRepository.saveAndFlush(account);
 		assertThat(account.getAccountId()).isNotNull();
-		Optional<AccountModel> fetchedAccount = accountRepository.getByUsername("test");
+		Optional<AccountModel> fetchedAccount = accountRepository.getByUsernameIgnoreCase("test");
 		assertThat(fetchedAccount).isPresent();
 		assertThat(fetchedAccount.get().getAccountId()).isEqualTo(fetchedAccount.get().getAccountId());
 	}
