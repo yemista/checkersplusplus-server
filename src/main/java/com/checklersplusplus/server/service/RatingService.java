@@ -1,5 +1,8 @@
 package com.checklersplusplus.server.service;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,11 +42,11 @@ public class RatingService {
 		return new Rating(rating.get().getRating(), accountId);
 	}
 	
-	public void updatePlayerRatings(UUID gameId) throws CheckersPlusPlusServerException {
+	public Map<UUID, Integer> updatePlayerRatings(UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<GameModel> game = gameRepository.getByGameId(gameId);
 		
 		if (game.get().isFinalized()) {
-			return;
+			return Collections.emptyMap();
 		}
 		
 		if (game.get().getWinnerId() == null) {
@@ -74,6 +77,10 @@ public class RatingService {
 		ratingRepository.save(loserRating.get());
 		game.get().setFinalized(true);
 		gameRepository.save(game.get());
+		Map<UUID, Integer> results = new HashMap<>();
+		results.put(winnerAccountId, winnerAndLoserUpdatedRatings.getFirst());
+		results.put(loserAccountId, winnerAndLoserUpdatedRatings.getSecond());
+		return results;
 	}
 
 	private Pair<Integer, Integer> calculateNewPlayerRatings(RatingModel winnerRating, RatingModel loserRating) {

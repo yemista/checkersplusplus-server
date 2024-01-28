@@ -3,6 +3,7 @@ package com.checklersplusplus.server.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -156,23 +157,47 @@ public class GameService {
     		if (winner != null) {
     			UUID winnerId = winner == Color.BLACK ? gameModel.get().getBlackId() : gameModel.get().getRedId();
     			UUID loserId = winner == Color.RED ? gameModel.get().getBlackId() : gameModel.get().getRedId();
+    			gameModel.get().setActive(false);
+    			gameModel.get().setInProgress(false);
+    			gameModel.get().setWinnerId(winnerId);
+        		gameModel.get().setGameState(logicalGame.getGameState());
+        		gameModel.get().setLastModified(LocalDateTime.now());
+        		gameModel.get().setCurrentMoveNumber(logicalGame.getCurrentMove());
+        		gameRepository.save(gameModel.get());
+        		
+        		GameMoveModel gameMoveModel = new GameMoveModel();
+        		gameMoveModel.setAccountId(accountId);
+        		gameMoveModel.setGameId(gameId);
+        		gameMoveModel.setCreated(LocalDateTime.now());
+        		gameMoveModel.setMoveNumber(logicalGame.getCurrentMove());
+        		gameMoveModel.setMoveList(convertCoordinatePairsToString(coordinates));
+        		gameMoveRepository.save(gameMoveModel);
+        		
+        		LastMoveSentModel lastMoveSentModel = new LastMoveSentModel();
+        		lastMoveSentModel.setGameId(gameId);
+        		lastMoveSentModel.setAccountId(accountId);
+        		lastMoveSentModel.setLastMoveSent(logicalGame.getCurrentMove());
+        		lastMoveSentModel.setCreated(LocalDateTime.now());
+        		lastMoveSentRepository.save(lastMoveSentModel);
+    			Map<UUID, Integer> newRatings = ratingService.updatePlayerRatings(gameId);
     			
     			if (isBot) {
     				Optional<BotModel> bot = botRepository.findByBotAccountId(accountId);
     				bot.get().setInUse(false);
     				botRepository.save(bot.get());
     				
+    				// if bot is loser
     				if (!winnerId.equals(accountId)) {
     					GameEventModel winnerEvent = new GameEventModel();
     	    			winnerEvent.setActive(true);
-    	    			winnerEvent.setEvent(GameEvent.WIN.getMessage());
+    	    			winnerEvent.setEvent(GameEvent.WIN.getMessage() + "|" + newRatings.get(winnerId));
     	    			winnerEvent.setEventRecipientAccountId(winnerId);
     	    			winnerEvent.setGameId(gameId);
     	    			gameEventRepository.save(winnerEvent);
     				} else {
     					GameEventModel loserEvent = new GameEventModel();
     	    			loserEvent.setActive(true);
-    	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + logicalGame.getCurrentMove() + "|" + convertCoordinatePairsToString(coordinates));
+    	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + newRatings.get(loserId));
     	    			loserEvent.setEventRecipientAccountId(loserId);
     	    			loserEvent.setGameId(gameId);
     	    			gameEventRepository.save(loserEvent);
@@ -180,24 +205,21 @@ public class GameService {
     			} else {
     				GameEventModel winnerEvent = new GameEventModel();
 	    			winnerEvent.setActive(true);
-	    			winnerEvent.setEvent(GameEvent.WIN.getMessage());
+	    			winnerEvent.setEvent(GameEvent.WIN.getMessage() + "|" + newRatings.get(winnerId));
 	    			winnerEvent.setEventRecipientAccountId(winnerId);
 	    			winnerEvent.setGameId(gameId);
 	    			gameEventRepository.save(winnerEvent);
 	    			
 	    			GameEventModel loserEvent = new GameEventModel();
 	    			loserEvent.setActive(true);
-	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + logicalGame.getCurrentMove() + "|" + convertCoordinatePairsToString(coordinates));
+	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + newRatings.get(loserId));
 	    			loserEvent.setEventRecipientAccountId(loserId);
 	    			loserEvent.setGameId(gameId);
 	    			gameEventRepository.save(loserEvent);
     			}
     			
-    			gameModel.get().setActive(false);
-    			gameModel.get().setInProgress(false);
-    			gameModel.get().setWinnerId(winnerId);
     			logger.info(String.format("GameId: %s   WinnerId: %s", gameId, winnerId));
-				ratingService.updatePlayerRatings(gameId);
+    			return;
     		}
     		
     		boolean isDraw = logicalGame.isDraw();
