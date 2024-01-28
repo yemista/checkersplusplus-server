@@ -148,7 +148,7 @@ public class AccountController {
 
 			NewAccount newAccount = accountService.createAccount(createAccount);
 			logger.debug(String.format("Created new account %s", createAccount.getUsername()));
-			//emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
+			emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
 		} catch (CheckersPlusPlusServerException e) {
 			logger.info(e.getMessage(), e);
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to create account. Please try again."), HttpStatus.BAD_REQUEST);

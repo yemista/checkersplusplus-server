@@ -2,7 +2,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 DO $$
 DECLARE
-    bot_names TEXT[] := ARRAY['megaman', 'G_CASH_MONEY', 'Champ', 'champion', '77yeetyeet', 'southclamp', 'shadow_king', 'protoman'];
+    bot_names TEXT[] := ARRAY[
+    		'megaman', 'G_CASH_MONEY', 'Champ', 'champion', '77yeetyeet', 'southclamp', 'shadow_king', 'protoman', 'noodleman', 'gutsman',
+    		'cutman', 'akinono', 'marshmellow_fly', 'smellz', 'j_123', 'NE_6', 'num1', 'stenop', 'arrga', 'TB12' 
+    ];
 	bot_name TEXT;
 BEGIN
     FOREACH bot_name IN ARRAY bot_names LOOP

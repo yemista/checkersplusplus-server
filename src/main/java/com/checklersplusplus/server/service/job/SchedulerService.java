@@ -1,6 +1,5 @@
 package com.checklersplusplus.server.service.job;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -152,7 +151,7 @@ public class SchedulerService {
 		}
 		
 		LocalDateTime end = LocalDateTime.now();
-		System.out.println(String.format("Thread: %d forwardLatestMove: %d", Thread.currentThread().getId(), Duration.between(start, end).toMillis()));
+		//System.out.println(String.format("Thread: %d forwardLatestMove: %d", Thread.currentThread().getId(), Duration.between(start, end).toMillis()));
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
