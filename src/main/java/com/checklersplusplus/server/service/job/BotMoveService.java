@@ -44,7 +44,7 @@ public class BotMoveService {
 	@Transactional
 	public void doBotMove() {
 		Random random = new Random();
-		int secondsToSleep = random.nextInt(0, 7);
+		int secondsToSleep = random.nextInt(0, 3);
 		
 		try {
 			Thread.sleep(1000 * secondsToSleep);

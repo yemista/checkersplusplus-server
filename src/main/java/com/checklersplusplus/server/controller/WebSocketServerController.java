@@ -35,7 +35,7 @@ public class WebSocketServerController {
 			"server3.servers.checkersplusplus.com", "server4.servers.checkersplusplus.com", "server5.servers.checkersplusplus.com", "server6.servers.checkersplusplus.com");
 	private static final Map<String, Integer> WEBSOCKET_FAILURE_COUNT = new HashMap<>();
 
-	private static final Integer FAILURE_THRESHOLD = 5;
+	private static final Integer FAILURE_THRESHOLD = 10;
 	static {
 		for (String serverIp : WEBSOCKET_SERVERS) {
 			WEBSOCKET_FAILURE_COUNT.put(serverIp, 0);
