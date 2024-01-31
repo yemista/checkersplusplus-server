@@ -190,6 +190,7 @@ public class GameService {
     				if (!winnerId.equals(accountId)) {
     					GameEventModel winnerEvent = new GameEventModel();
     	    			winnerEvent.setActive(true);
+    	    			winnerEvent.setCreated(LocalDateTime.now());
     	    			winnerEvent.setEvent(GameEvent.WIN.getMessage() + "|" + newRatings.get(winnerId));
     	    			winnerEvent.setEventRecipientAccountId(winnerId);
     	    			winnerEvent.setGameId(gameId);
@@ -197,6 +198,7 @@ public class GameService {
     				} else {
     					GameEventModel loserEvent = new GameEventModel();
     	    			loserEvent.setActive(true);
+    	    			loserEvent.setCreated(LocalDateTime.now());
     	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + newRatings.get(loserId));
     	    			loserEvent.setEventRecipientAccountId(loserId);
     	    			loserEvent.setGameId(gameId);
@@ -205,6 +207,7 @@ public class GameService {
     			} else {
     				GameEventModel winnerEvent = new GameEventModel();
 	    			winnerEvent.setActive(true);
+	    			winnerEvent.setCreated(LocalDateTime.now());
 	    			winnerEvent.setEvent(GameEvent.WIN.getMessage() + "|" + newRatings.get(winnerId));
 	    			winnerEvent.setEventRecipientAccountId(winnerId);
 	    			winnerEvent.setGameId(gameId);
@@ -212,6 +215,7 @@ public class GameService {
 	    			
 	    			GameEventModel loserEvent = new GameEventModel();
 	    			loserEvent.setActive(true);
+	    			loserEvent.setCreated(LocalDateTime.now());
 	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + newRatings.get(loserId));
 	    			loserEvent.setEventRecipientAccountId(loserId);
 	    			loserEvent.setGameId(gameId);
@@ -233,6 +237,7 @@ public class GameService {
     				if (accountId.equals(gameModel.get().getBlackId())) {
     					GameEventModel redEvent = new GameEventModel();
     	    			redEvent.setActive(true);
+    	    			redEvent.setCreated(LocalDateTime.now());
     	    			redEvent.setEvent(GameEvent.DRAW.getMessage());
     	    			redEvent.setEventRecipientAccountId(gameModel.get().getRedId());
     	    			redEvent.setGameId(gameId);
@@ -240,6 +245,7 @@ public class GameService {
     				} else {
     					GameEventModel blackEvent = new GameEventModel();
     	    			blackEvent.setActive(true);
+    	    			blackEvent.setCreated(LocalDateTime.now());
     	    			blackEvent.setEvent(GameEvent.DRAW.getMessage());
     	    			blackEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
     	    			blackEvent.setGameId(gameId);
@@ -248,6 +254,7 @@ public class GameService {
     			} else {
 	    			GameEventModel blackEvent = new GameEventModel();
 	    			blackEvent.setActive(true);
+	    			blackEvent.setCreated(LocalDateTime.now());
 	    			blackEvent.setEvent(GameEvent.DRAW.getMessage());
 	    			blackEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
 	    			blackEvent.setGameId(gameId);
@@ -255,6 +262,7 @@ public class GameService {
 	    			
 	    			GameEventModel redEvent = new GameEventModel();
 	    			redEvent.setActive(true);
+	    			redEvent.setCreated(LocalDateTime.now());
 	    			redEvent.setEvent(GameEvent.DRAW.getMessage());
 	    			redEvent.setEventRecipientAccountId(gameModel.get().getRedId());
 	    			redEvent.setGameId(gameId);
@@ -389,6 +397,7 @@ public class GameService {
 			gameModel.get().setBlackRating(rating.get().getRating());
 			GameEventModel beginEvent = new GameEventModel();
 			beginEvent.setActive(true);
+			beginEvent.setCreated(LocalDateTime.now());
 			beginEvent.setEvent(GameEvent.BEGIN.getMessage());
 			beginEvent.setEventRecipientAccountId(gameModel.get().getRedId());
 			beginEvent.setGameId(gameId);
@@ -398,6 +407,7 @@ public class GameService {
 			gameModel.get().setRedRating(rating.get().getRating());
 			GameEventModel beginEvent = new GameEventModel();
 			beginEvent.setActive(true);
+			beginEvent.setCreated(LocalDateTime.now());
 			beginEvent.setEvent(GameEvent.BEGIN.getMessage());
 			beginEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
 			beginEvent.setGameId(gameId);
@@ -514,6 +524,7 @@ public class GameService {
 			forfeitEvent.setEvent(GameEvent.FORFEIT.getMessage());
 			forfeitEvent.setEventRecipientAccountId(opponentId);
 			forfeitEvent.setGameId(gameId);
+			forfeitEvent.setCreated(LocalDateTime.now());
 			gameEventRepository.save(forfeitEvent);
 		} else {
 			bot.get().setInUse(false);

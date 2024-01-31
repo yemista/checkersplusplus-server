@@ -73,7 +73,7 @@ public class SchedulerService {
 				}
 				
 				UUID accountId = serverSession.get().getAccountId();
-				List<GameEventModel> gameEvent = gameEventRepository.findActiveEventForAccountId(accountId);
+				List<GameEventModel> gameEvent = gameEventRepository.findByEventRecipientAccountIdAndActiveOrderByCreatedAsc(accountId, true);
 								
 				if (gameEvent.size() > 0) {
 					for (GameEventModel gve : gameEvent) {
@@ -98,7 +98,7 @@ public class SchedulerService {
 					}
 					
 					if (lastMoveSent.isEmpty() || game.get().getCurrentMoveNumber() - lastMoveSent.get().getLastMoveSent() == 1) {
-						forwardLatestMove(openWebSocket, gameId, accountId);
+						createLatestMoveEvent(gameId, accountId);
 					} else {
 						logger.error(String.format("Unexpected situation. Account id %s is more than one move behind", accountId.toString()));
 					}
@@ -117,15 +117,7 @@ public class SchedulerService {
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void forwardLatestMove(OpenWebSocket openWebSocket, UUID gameId, UUID accountId) {
-		logger.debug("Attempting to forward move to accountId: " + accountId.toString());
-		LocalDateTime start = LocalDateTime.now();
-		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.getWebSocketSessionId());
-		
-		if (webSocket == null) {
-			return;
-		}
-		
+	public void createLatestMoveEvent(UUID gameId, UUID accountId) {
 		Optional<LastMoveSentModel> lastMoveSent = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameId);
 		Optional<GameModel> game = gameRepository.findById(gameId);
 		
@@ -137,21 +129,21 @@ public class SchedulerService {
 		String move = "MOVE|" + latestMove.get().getMoveNumber() + "|" + latestMove.get().getMoveList();
 		logger.debug("Attempting to forward move: " + move);
 		
-		try {
-			webSocket.getFirst().sendMessage(new TextMessage(move));
-			LastMoveSentModel latestMoveSent = new LastMoveSentModel();
-			latestMoveSent.setGameId(gameId);
-			latestMoveSent.setAccountId(accountId);
-			latestMoveSent.setCreated(LocalDateTime.now());
-			latestMoveSent.setLastMoveSent(game.get().getCurrentMoveNumber());
-			lastMoveSentRepository.saveAndFlush(latestMoveSent);
-		} catch (Exception e) {
-			logger.error(String.format("Failed to send move number %d to accountId %s for gameId %s", 
-					game.get().getCurrentMoveNumber(), accountId.toString(), game.get().getGameId().toString()), e);
-		}
+		LastMoveSentModel latestMoveSent = new LastMoveSentModel();
+		latestMoveSent.setGameId(gameId);
+		latestMoveSent.setAccountId(accountId);
+		latestMoveSent.setCreated(LocalDateTime.now());
+		latestMoveSent.setLastMoveSent(game.get().getCurrentMoveNumber());
+		lastMoveSentRepository.saveAndFlush(latestMoveSent);
 		
-		LocalDateTime end = LocalDateTime.now();
-		//System.out.println(String.format("Thread: %d forwardLatestMove: %d", Thread.currentThread().getId(), Duration.between(start, end).toMillis()));
+		GameEventModel gameEvent = new GameEventModel();
+		gameEvent.setActive(true);
+		gameEvent.setCreated(LocalDateTime.now());
+		gameEvent.setEvent(move);
+		gameEvent.setEventRecipientAccountId(accountId);
+		gameEvent.setGameId(gameId);
+		gameEvent.setCreated(LocalDateTime.now());
+		gameEventRepository.save(gameEvent);
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -187,9 +179,7 @@ public class SchedulerService {
 		}
 		
 		try {
-			webSocket.getFirst().sendMessage(new TextMessage(gameEvent.get().getEvent()));
-			gameEvent.get().setActive(false);
-			gameEventRepository.save(gameEvent.get());
+			webSocket.getFirst().sendMessage(new TextMessage(gameEvent.get().getEvent() + "|" + gameEvent.get().getGameEventId()));
 		} catch (Exception e) {
 			logger.error(String.format("Failed to send event %s to accountId %s for gameId %s", 
 					gameEvent.get().getEvent(), gameEvent.get().getEventRecipientAccountId().toString(), gameEvent.get().getGameId().toString()), e);

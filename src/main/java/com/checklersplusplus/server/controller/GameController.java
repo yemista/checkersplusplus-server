@@ -21,12 +21,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.entities.request.CreateGame;
 import com.checklersplusplus.server.entities.request.Move;
 import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
 import com.checklersplusplus.server.entities.response.Game;
 import com.checklersplusplus.server.entities.response.GameHistory;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
+import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.service.GameHistoryService;
 import com.checklersplusplus.server.service.GameService;
 
@@ -51,6 +53,9 @@ public class GameController {
 	@Autowired
 	private GameHistoryService gameHistoryService;
 	
+	@Autowired
+	private GameEventRepository gameEventRepository;
+	
 	@GetMapping("/{gameId}")
 	public ResponseEntity<Game> getGameById(@PathVariable("gameId") UUID gameId) {
 	    Optional<Game> gameData = gameService.findByGameId(gameId);
@@ -62,6 +67,18 @@ public class GameController {
 	        logger.debug(String.format("Game not found: %s", gameId));
 	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	    }
+	}
+	
+	@GetMapping("/event/{eventId}")
+	public ResponseEntity<String> acknowledgeGameEvent(@PathVariable("eventId") UUID eventId) {
+	    Optional<GameEventModel> event = gameEventRepository.findById(eventId);
+	    
+	    if (event.isPresent()) {
+	    	event.get().setActive(false);
+	    	gameEventRepository.save(event.get());
+	    }
+	    
+	    return new ResponseEntity<>("OK", HttpStatus.OK);
 	}
 	
 	@GetMapping("/history/{sessionId}")

@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.model;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -28,13 +29,17 @@ public class GameEventModel {
 	
 	@Column(name = "game_id")
 	private UUID gameId;
+	
+	@Column(name = "created")
+	private LocalDateTime created;
 
-	public GameEventModel(UUID gameEventId, String event, boolean active, UUID eventRecipientAccountId, UUID gameId) {
+	public GameEventModel(UUID gameEventId, String event, boolean active, UUID eventRecipientAccountId, UUID gameId, LocalDateTime created) {
 		this.gameEventId = gameEventId;
 		this.event = event;
 		this.active = active;
 		this.eventRecipientAccountId = eventRecipientAccountId;
 		this.gameId = gameId;
+		this.created = created;
 	}
 
 	public GameEventModel() {
@@ -79,4 +84,13 @@ public class GameEventModel {
 	public void setGameId(UUID gameId) {
 		this.gameId = gameId;
 	}
+
+	public LocalDateTime getCreated() {
+		return created;
+	}
+
+	public void setCreated(LocalDateTime created) {
+		this.created = created;
+	}
+	
 }
