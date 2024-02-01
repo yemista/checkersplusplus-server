@@ -1,9 +1,19 @@
 package com.checklersplusplus.server.exception;
 
-public class InvalidMoveException extends CheckersPlusPlusServerException {
+import java.util.List;
 
-	public InvalidMoveException() {
+import com.checkersplusplus.engine.CoordinatePair;
+
+public class InvalidMoveException extends CheckersPlusPlusServerException {
+	private List<CoordinatePair> coordinates;
+	
+	public InvalidMoveException(List<CoordinatePair> coordinates) {
 		super("Invalid move.");
+		this.coordinates = coordinates;
+	}
+
+	public List<CoordinatePair> getCoordinates() {
+		return coordinates;
 	}
 
 }

@@ -76,9 +76,10 @@ public class GameController {
 	    if (event.isPresent()) {
 	    	event.get().setActive(false);
 	    	gameEventRepository.save(event.get());
+	    	return new ResponseEntity<>("OK", HttpStatus.OK);
 	    }
 	    
-	    return new ResponseEntity<>("OK", HttpStatus.OK);
+	    return new ResponseEntity<>("OK", HttpStatus.BAD_REQUEST);
 	}
 	
 	@GetMapping("/history/{sessionId}")
@@ -237,8 +238,8 @@ public class GameController {
 	@PostMapping("/{sessionId}/{gameId}/forfeit")
 	public ResponseEntity<CheckersPlusPlusResponse> forfeit(@PathVariable("sessionId") UUID sessionId, @PathVariable("gameId") UUID gameId) {
 		try {
-			gameService.forfeitGame(sessionId, gameId);
-			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse("Forfeited game.");
+			Integer rating = gameService.forfeitGame(sessionId, gameId);
+			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse("You resigned. Your new rating is " + rating);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch(CheckersPlusPlusServerException e) {
 			logger.info(e.getMessage());

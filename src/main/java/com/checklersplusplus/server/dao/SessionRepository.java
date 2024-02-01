@@ -29,4 +29,6 @@ public interface SessionRepository extends JpaRepository<SessionModel, UUID> {
 	@Modifying
 	@Query("UPDATE SessionModel SET active = false WHERE sessionId IN ?1")
 	public void invalidateSessionsBySessionIds(List<UUID> sessionModelsToInactivate);
+	
+	public Optional<SessionModel> findFirstBySessionId(UUID sessionId);
 }

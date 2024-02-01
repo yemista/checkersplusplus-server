@@ -16,20 +16,15 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
 
 import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameRepository;
-import com.checklersplusplus.server.dao.OpenWebSocketRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
-import com.checklersplusplus.server.model.OpenWebSocketModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.service.RatingService;
-import com.checklersplusplus.server.websocket.WebSocketMap;
 
 @Profile("websocket")
 @Service
@@ -53,20 +48,18 @@ public class TimeoutService {
 	@Autowired
 	private RatingService ratingService;
 	
-	@Autowired
-	private OpenWebSocketRepository openWebSocketRepository;
-	
 	@Value("${checkersplusplus.timeout.minutes}")
 	private Integer timeoutMinutes;
 	
 	@Scheduled(fixedDelay = TEN_SECONDS_MILLIS)
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void checkForTimeouts() {
-		logger.debug("Checking for timeouts");
-		
 		try {
+			//logger.debug("Checking for timeouts");
+			
 			LocalDateTime now = LocalDateTime.now();
 			LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);
+			
 			List<SessionModel> expiredSessions = sessionRepository.getActiveSessionsOlderThan(timeoutThreshold);
 			List<UUID> sessionModelsToInactivate = new ArrayList<>();
 			List<UUID> accountIdsToCheck = new ArrayList<>();
@@ -112,6 +105,7 @@ public class TimeoutService {
 				
 				GameEventModel gameEvent = new GameEventModel();
 				gameEvent.setActive(true);
+				gameEvent.setCreated(LocalDateTime.now());
 				gameEvent.setEvent(GameEvent.TIMEOUT.getMessage());
 				gameEvent.setEventRecipientAccountId(accountToSendEvent);
 				gameEvent.setGameId(game.getGameId());
@@ -122,10 +116,8 @@ public class TimeoutService {
 				GameModel game = forUpdate.getFirst();
 				UUID accountToSendEvent = forUpdate.getSecond();
 				
-				forwardTimeoutLossGameEvent(accountToSendEvent, game.getGameId());
-			}
-			
-			sessionRepository.invalidateSessionsBySessionIds(sessionModelsToInactivate);	
+				createTimeoutLossGameEvent(accountToSendEvent, game.getGameId());
+			}	
 			
 			for (Pair<GameModel, UUID> forUpdate : gamesToUpdate) {
 				GameModel game = forUpdate.getFirst();
@@ -136,7 +128,7 @@ public class TimeoutService {
 		}
 	}
 	
-	private void forwardTimeoutLossGameEvent(UUID accountId, UUID gameId) {
+	private void createTimeoutLossGameEvent(UUID accountId, UUID gameId) {
 		Optional<SessionModel> session = sessionRepository.getActiveByAccountId(accountId);
 		
 		if (session.isEmpty()) {
@@ -150,31 +142,9 @@ public class TimeoutService {
 		gameEvent.setActive(true);
 		gameEvent.setEvent(GameEvent.TIMEOUT_LOSS.getMessage());
 		gameEvent.setEventRecipientAccountId(accountId);
+		gameEvent.setCreated(LocalDateTime.now());
 		gameEvent.setGameId(gameId);
-		Optional<OpenWebSocketModel> openWebSocket = openWebSocketRepository.getActiveByServerSessionId(session.get().getSessionId());
-		
-		if (openWebSocket.isEmpty()) {
-			logger.debug(String.format("Forwarding timeout loss event: No active websocket for accountId %s gameId: %s", 
-					accountId.toString(), gameId.toString()));
-			return;
-		}
-		
-		Pair<WebSocketSession, UUID> webSocket = WebSocketMap.getInstance().getMap().get(openWebSocket.get().getWebSocketId());
-		
-		if (webSocket == null) {
-			logger.debug(String.format("Forwarding timeout loss event: Unexpected websocket close for accountId %s gameId: %s", 
-					accountId.toString(), gameId.toString()));
-			return;
-		}
-		
-		try {
-			webSocket.getFirst().sendMessage(new TextMessage(gameEvent.getEvent()));
-			gameEvent.setActive(false);
-			gameEventRepository.save(gameEvent);
-		} catch (Exception e) {
-			logger.error(String.format("Failed to send event %s to accountId %s for gameId %s", 
-					gameEvent.getEvent(), gameEvent.getEventRecipientAccountId().toString(), gameEvent.getGameId().toString()), e);
-		}
+		gameEventRepository.save(gameEvent);
 	}
 }
 

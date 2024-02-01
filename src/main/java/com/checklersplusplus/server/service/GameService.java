@@ -50,6 +50,7 @@ import com.checklersplusplus.server.model.GameMoveModel;
 import com.checklersplusplus.server.model.LastMoveSentModel;
 import com.checklersplusplus.server.model.RatingModel;
 import com.checklersplusplus.server.model.SessionModel;
+import com.checklersplusplus.server.util.MoveUtil;
 
 @Service
 @Transactional
@@ -295,7 +296,7 @@ public class GameService {
     		lastMoveSentModel.setCreated(LocalDateTime.now());
     		lastMoveSentRepository.save(lastMoveSentModel);
     	} else {
-    		throw new InvalidMoveException();
+    		throw new InvalidMoveException(coordinates);
     	}
 	}
 	
@@ -328,6 +329,9 @@ public class GameService {
 		if (userNotPlayingGame(sessionModel.get().getAccountId(), gameModel.get())) {
 			throw new GameNotFoundException();
 		}
+		
+		sessionModel.get().setLastModified(LocalDateTime.now());
+		sessionRepository.save(sessionModel.get());
 
     	List<CoordinatePair> coordinates = moves.stream()
     			.map(move -> new CoordinatePair(new Coordinate(move.getStartCol(), move.getStartRow()), new Coordinate(move.getEndCol(), move.getEndRow())))
@@ -402,6 +406,7 @@ public class GameService {
 			beginEvent.setEventRecipientAccountId(gameModel.get().getRedId());
 			beginEvent.setGameId(gameId);
 			gameEventRepository.save(beginEvent);
+			updateOpponentSession(gameModel.get().getRedId());
 		} else {
 			gameModel.get().setRedId(sessionModel.get().getAccountId());
 			gameModel.get().setRedRating(rating.get().getRating());
@@ -412,6 +417,7 @@ public class GameService {
 			beginEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
 			beginEvent.setGameId(gameId);
 			gameEventRepository.save(beginEvent);
+			updateOpponentSession(gameModel.get().getBlackId());
 		}
 		
 		gameModel.get().setInProgress(true);
@@ -420,6 +426,15 @@ public class GameService {
 		return Game.fromModel(gameModel.get());
 	}
 	
+	private void updateOpponentSession(UUID opponentId) {
+		Optional<SessionModel> session = sessionRepository.getActiveByAccountId(opponentId);
+		
+		if (session.isPresent()) {
+			session.get().setLastModified(LocalDateTime.now());
+			sessionRepository.save(session.get());
+		}
+	}
+
 	@Transactional
 	public void botCreateGame(UUID accountId, boolean isBlack) {
 		GameModel gameModel = new GameModel();
@@ -491,7 +506,7 @@ public class GameService {
 	}
 	
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public void forfeitGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
+	public Integer forfeitGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
 		if (sessionModel.isEmpty()) {
@@ -518,10 +533,17 @@ public class GameService {
 		
 		Optional<BotModel> bot = botRepository.findByBotAccountId(opponentId);
 		
+		gameModel.get().setWinnerId(opponentId);
+		gameModel.get().setActive(false);
+		gameModel.get().setInProgress(false);
+		gameRepository.save(gameModel.get());
+		
+		Map<UUID, Integer> newRatings = ratingService.updatePlayerRatings(gameId);
+		
 		if (bot.isEmpty()) {
 			GameEventModel forfeitEvent = new GameEventModel();
 			forfeitEvent.setActive(true);
-			forfeitEvent.setEvent(GameEvent.FORFEIT.getMessage());
+			forfeitEvent.setEvent(GameEvent.FORFEIT.getMessage() + "|" + newRatings.get(opponentId));
 			forfeitEvent.setEventRecipientAccountId(opponentId);
 			forfeitEvent.setGameId(gameId);
 			forfeitEvent.setCreated(LocalDateTime.now());
@@ -531,13 +553,8 @@ public class GameService {
 			botRepository.save(bot.get());
 		}
 		
-		gameModel.get().setWinnerId(opponentId);
-		gameModel.get().setActive(false);
-		gameModel.get().setInProgress(false);
-		gameRepository.save(gameModel.get());
-		
-		ratingService.updatePlayerRatings(gameId);
 		logger.info(String.format("SessionId: %s   Forfeited game: %s", sessionId.toString(), gameModel.get().getGameId().toString()));
+		return newRatings.get(accountId);
 	}
 
 	public Optional<Game> findByGameId(UUID gameId) {
@@ -569,12 +586,6 @@ public class GameService {
 	}
 	
 	private String convertCoordinatePairsToString(List<CoordinatePair> pairs) {
-		StringBuilder sb = new StringBuilder();
-		
-		for (CoordinatePair move : pairs) {
-			sb.append(String.format("c:%d,r:%d-c:%d,r:%d+", move.getStart().getCol(), move.getStart().getRow(), move.getEnd().getCol(), move.getEnd().getRow()));
-		}
-		
-		return sb.toString();
+		return MoveUtil.convertCoordinatePairsToString(pairs);
 	}
 }

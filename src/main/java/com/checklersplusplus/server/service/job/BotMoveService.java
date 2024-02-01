@@ -19,15 +19,17 @@ import com.checkersplusplus.engine.moves.Move;
 import com.checklersplusplus.server.dao.BotRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
+import com.checklersplusplus.server.exception.InvalidMoveException;
 import com.checklersplusplus.server.model.BotModel;
 import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.service.GameService;
+import com.checklersplusplus.server.util.MoveUtil;
 
 @Profile("server")
 @Service
 public class BotMoveService {
 
-	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
+	private static final Logger logger = LoggerFactory.getLogger(BotMoveService.class);
 
 	private static final long TWO_SECOND_MILLIS = 1000 * 2;
 	
@@ -71,6 +73,8 @@ public class BotMoveService {
 						botRepository.save(bot);
 					}
 				}
+			} catch (InvalidMoveException ex) {
+				logger.error("Error occured in BotMoveService: " + MoveUtil.convertCoordinatePairsToString(ex.getCoordinates()), ex);
 			} catch (CheckersPlusPlusServerException e) {
 				logger.error("Error occured in BotMoveService", e);
 			}

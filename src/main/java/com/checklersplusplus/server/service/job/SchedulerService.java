@@ -40,7 +40,7 @@ public class SchedulerService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
-	private static final long THREE_SECOND_MILLIS = 3000;
+	private static final long THREAD_WAIT = 1000 * 2;
 	
 	@Autowired
 	private OpenWebSocketRepository openWebSocketRepository;
@@ -60,13 +60,13 @@ public class SchedulerService {
 	@Autowired
 	private GameEventRepository gameEventRepository;
 	
-	@Scheduled(fixedDelay = THREE_SECOND_MILLIS)
+	@Scheduled(fixedDelay = THREAD_WAIT)
 	public void updateClients() {
 		try {
 			List<OpenWebSocket> openWebSockets = getActiveOpenWebSockets();
 			
 			for (OpenWebSocket openWebSocket : openWebSockets) {
-				Optional<SessionModel> serverSession = sessionRepository.getActiveBySessionId(openWebSocket.getSessionId());
+				Optional<SessionModel> serverSession = sessionRepository.findFirstBySessionId(openWebSocket.getSessionId());
 				
 				if (serverSession.isEmpty()) {
 					continue;

@@ -19,7 +19,7 @@ import com.checklersplusplus.server.service.GameService;
 @Service
 public class BotGameCreatorService {
 
-	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
+	private static final Logger logger = LoggerFactory.getLogger(BotGameCreatorService.class);
 
 	private static final long TWO_MINUTE_MILLIS = 1000 * 60 * 2;
 	
