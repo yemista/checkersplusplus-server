@@ -21,4 +21,7 @@ public interface GameRepository extends JpaRepository<GameModel, UUID> {
 	
 	@Query("SELECT g FROM GameModel g WHERE (g.redId IN ?1 OR g.blackId IN ?1) AND g.active=true AND g.inProgress=true") 
 	List<GameModel> getActiveGamesInProgressByAccountId(List<UUID> accountId);
+	
+	@Query("SELECT g FROM GameModel g WHERE g.redId IS NOT NULL AND g.blackId IS NOT NULL AND g.active=true AND g.inProgress=true AND g.winnerId IS NULL") 
+	List<GameModel> getRunningGames();
 }

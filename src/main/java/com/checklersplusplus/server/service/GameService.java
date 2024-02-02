@@ -408,6 +408,9 @@ public class GameService {
 			throw new CheckersPlusPlusServerException("Illegal state. Missing rating");
 		}
 		
+		sessionModel.get().setLastModified(LocalDateTime.now());
+		sessionRepository.save(sessionModel.get());
+		
 		if (gameModel.get().getBlackId() == null) {
 			gameModel.get().setBlackId(sessionModel.get().getAccountId());
 			gameModel.get().setBlackRating(rating.get().getRating());

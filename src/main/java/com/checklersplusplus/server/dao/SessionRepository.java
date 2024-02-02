@@ -25,10 +25,15 @@ public interface SessionRepository extends JpaRepository<SessionModel, UUID> {
 	
 	@Query("SELECT s FROM SessionModel s WHERE s.lastModified < ?1 AND active=true")
 	public List<SessionModel> getActiveSessionsOlderThan(LocalDateTime timestamp);
+	
+	@Query("SELECT s FROM SessionModel s WHERE s.lastModified < ?1 AND active=true AND accountId = ?2")
+	public Optional<SessionModel> getActiveSessionForAccountOlderThan(LocalDateTime timestamp, UUID accountId);
 
 	@Modifying
 	@Query("UPDATE SessionModel SET active = false WHERE sessionId IN ?1")
 	public void invalidateSessionsBySessionIds(List<UUID> sessionModelsToInactivate);
 	
 	public Optional<SessionModel> findFirstBySessionId(UUID sessionId);
+	
+	public Optional<SessionModel> findFirstByAccountIdAndLastModifiedGreaterThanOrderByLastModifiedDesc(UUID accountId, LocalDateTime timestamp);
 }

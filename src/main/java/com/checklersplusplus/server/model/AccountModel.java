@@ -36,6 +36,9 @@ public class AccountModel {
 	
 	@Column(name = "banned")
 	private boolean banned;
+	
+	@Column(name = "bot")
+	private boolean bot;
 
 	public AccountModel() {
 		
@@ -106,6 +109,14 @@ public class AccountModel {
 
 	public void setBanned(boolean banned) {
 		this.banned = banned;
+	}
+
+	public boolean isBot() {
+		return bot;
+	}
+
+	public void setBot(boolean bot) {
+		this.bot = bot;
 	}
 	
 }

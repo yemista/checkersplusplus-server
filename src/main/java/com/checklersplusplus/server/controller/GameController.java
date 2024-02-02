@@ -74,7 +74,7 @@ public class GameController {
 	public ResponseEntity<String> acknowledgeGameEvent(@PathVariable("eventId") UUID eventId) {
 	    Optional<GameEventModel> event = gameEventRepository.findById(eventId);
 	    
-	    if (event.isPresent()) {
+	    if (event.isPresent() && event.get().isActive()) {
 	    	event.get().setActive(false);
 	    	gameEventRepository.save(event.get());
 	    	return new ResponseEntity<>("OK", HttpStatus.OK);

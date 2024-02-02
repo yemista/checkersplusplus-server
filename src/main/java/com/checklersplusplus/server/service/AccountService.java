@@ -83,6 +83,7 @@ public class AccountService {
 		accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword()));
 		accountModel.setCreated(LocalDateTime.now());
 		accountModel.setBanned(false);
+		accountModel.setBot(false);
 		accountRepository.save(accountModel);
 		
 		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
