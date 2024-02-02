@@ -91,6 +91,14 @@ public class GameService {
 	@Autowired
 	private RatingService ratingService;
 	
+	public List<Game> getOpenGamesByUsername(String username, Integer page, Integer pageSize) {
+		PageRequest pageRequest = PageRequest.of(page, pageSize);
+		List<AccountModel> matchingUsers = accountRepository.findByUsernameContaining(username);
+		List<UUID> matchingUserIds = matchingUsers.stream().map(model -> model.getAccountId()).collect(Collectors.toList());
+		Page<GameModel> openGames = openGameRepository.findByUserId(matchingUserIds, pageRequest);
+		return lookupGames(openGames);
+	}
+	
 	public List<Game> getOpenGames(Integer ratingLow, Integer ratingHigh, String sortBy, String sortDirection, Integer page, Integer pageSize) {
 		PageRequest pageRequest = null;
 	
@@ -101,6 +109,10 @@ public class GameService {
 		}
 		
 		Page<GameModel> openGames = openGameRepository.findByCreatorRatingBetweenAndActiveTrueAndInProgressFalse(ratingLow, ratingHigh, pageRequest);
+		return lookupGames(openGames);
+	}
+	
+	private List<Game> lookupGames(Page<GameModel> openGames) {
 		List<Game> games = openGames.stream().map(gameModel -> Game.fromModel(gameModel)).collect(Collectors.toList());
 		
 		for (Game game : games) {
@@ -144,7 +156,7 @@ public class GameService {
 		
 		return games;
 	}
-	
+
 	@Transactional(propagation = Propagation.MANDATORY)
 	public void makeLogicalMove(UUID accountId, UUID gameId, List<CoordinatePair> coordinates, boolean isBot) throws CheckersPlusPlusServerException {
 		Optional<GameModel> gameModel = gameRepository.getByGameId(gameId);

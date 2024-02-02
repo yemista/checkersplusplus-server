@@ -28,6 +28,7 @@ import com.checklersplusplus.server.entities.response.CheckersPlusPlusResponse;
 import com.checklersplusplus.server.entities.response.Game;
 import com.checklersplusplus.server.entities.response.GameHistory;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
+import com.checklersplusplus.server.exception.InvalidMoveException;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.service.GameHistoryService;
 import com.checklersplusplus.server.service.GameService;
@@ -121,28 +122,8 @@ public class GameController {
 	@GetMapping("/open")
 	public ResponseEntity<List<Game>> getOpenGames(@RequestParam(required = false) Integer ratingLow, @RequestParam(required = false) Integer ratingHigh,
 			@RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDirection, 
-			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize) {
+			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize, @RequestParam(required = false) String username) {
 	   try {
-		   if (ratingLow == null || ratingLow <= 0) {
-			   ratingLow = 0;
-		   }
-		   
-		   if (ratingHigh == null || ratingHigh > 10000) {
-			   ratingHigh = 10000;
-		   }
-		   
-		   if (!VALID_SORTS.contains(sortBy)) {
-			   sortBy = "lastModified";
-		   } else if (sortBy.equals("created")) {
-			   sortBy = "lastModified";
-		   } else {
-			   sortBy = "creatorRating";
-		   }
-
-		   if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {
-			   sortDirection = DEFAULT_SORT_DIRECTION;
-		   }
-		   
 		   if (page == null) {
 			   page = 0;
 		   }
@@ -151,8 +132,33 @@ public class GameController {
 			   pageSize = DEFAULT_PAGE_SIZE;
 		   }
 		   
-		   List<Game> games = gameService.getOpenGames(ratingLow, ratingHigh, sortBy, sortDirection, page, pageSize);
-		   return new ResponseEntity<>(games, HttpStatus.OK);
+		   if (username != null && !username.isBlank()) {
+			   List<Game> games = gameService.getOpenGamesByUsername(username, page, pageSize);
+			   return new ResponseEntity<>(games, HttpStatus.OK);
+		   } else {
+			   if (ratingLow == null || ratingLow <= 0) {
+				   ratingLow = 0;
+			   }
+			   
+			   if (ratingHigh == null || ratingHigh > 10000) {
+				   ratingHigh = 10000;
+			   }
+			   
+			   if (!VALID_SORTS.contains(sortBy)) {
+				   sortBy = "lastModified";
+			   } else if (sortBy.equals("created")) {
+				   sortBy = "lastModified";
+			   } else {
+				   sortBy = "creatorRating";
+			   }
+	
+			   if (!VALID_SORT_DIRECTIONS.contains(sortDirection)) {
+				   sortDirection = DEFAULT_SORT_DIRECTION;
+			   }
+			   
+			   List<Game> games = gameService.getOpenGames(ratingLow, ratingHigh, sortBy, sortDirection, page, pageSize);
+			   return new ResponseEntity<>(games, HttpStatus.OK);
+		   }
 	    } catch(Exception ex) {
 	    	logger.error(ex.getMessage());
 			return new ResponseEntity<>(Collections.emptyList(), HttpStatus.SERVICE_UNAVAILABLE);
@@ -241,6 +247,10 @@ public class GameController {
 			Integer rating = gameService.forfeitGame(sessionId, gameId);
 			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse("You resigned. Your new rating is " + rating);
 			return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (InvalidMoveException y) {
+			logger.info(y.getMessage());
+			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse(y.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		} catch(CheckersPlusPlusServerException e) {
 			logger.info(e.getMessage());
 			CheckersPlusPlusResponse response = new CheckersPlusPlusResponse(e.getMessage());

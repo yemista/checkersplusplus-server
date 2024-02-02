@@ -1,5 +1,6 @@
 package com.checklersplusplus.server.dao;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +15,6 @@ public interface AccountRepository extends JpaRepository<AccountModel, UUID> {
 	public Optional<AccountModel> getByEmail(String email);
 
 	public Optional<AccountModel> findByUsernameAndPassword(String username, String password);
+
+	public List<AccountModel> findByUsernameContaining(String username);
 }
