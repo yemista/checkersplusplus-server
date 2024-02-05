@@ -64,8 +64,8 @@ public class BotMoveService {
 					Color botColor = bot.getBotAccountId().equals(game.get().getBlackId()) ? Color.BLACK : Color.RED;
 
 					if (isBotsTurn(botColor, game.get().getGameState())) {
-						List<Move> moves = TrainingOpponent.getBestMove(game.get().getGameState(), botColor);
-						//List<Move> moves = TrainingOpponent.getBestDeepMove(game.get().getGameState(), botColor, 3);
+						int botLevel = bot.getLevel() == null ? 1 : bot.getLevel();
+						List<Move> moves = TrainingOpponent.getBestDeepMove(game.get().getGameState(), botColor, botLevel);
 						
 						if (moves.isEmpty()) {
 							bot.setInUse(false);
@@ -84,7 +84,15 @@ public class BotMoveService {
 					botRepository.save(bot);
 				}
 			} catch (InvalidMoveException ex) {
-				logger.error("Error occured in BotMoveService: " + MoveUtil.convertCoordinatePairsToString(ex.getCoordinates()), ex);
+				logger.error("InvalidMoveException occured in BotMoveService: " + MoveUtil.convertCoordinatePairsToString(ex.getCoordinates()), ex);
+				bot.setInUse(false);
+				botRepository.save(bot);
+				
+				try {
+					gameService.forfeitGameInternal(bot.getBotAccountId(), game.get().getGameId());
+				} catch (CheckersPlusPlusServerException e) {
+					logger.error("Error occured in BotMoveService catch clause", e);
+				}
 			} catch (CheckersPlusPlusServerException e) {
 				logger.error("Error occured in BotMoveService", e);
 			}

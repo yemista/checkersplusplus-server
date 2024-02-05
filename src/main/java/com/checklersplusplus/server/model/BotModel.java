@@ -27,6 +27,9 @@ public class BotModel {
 	
 	@Column(name = "last_modified")
 	private LocalDateTime lastModified;
+	
+	@Column(name = "level")
+	private Integer level;
 
 	public UUID getBotId() {
 		return botId;
@@ -59,6 +62,12 @@ public class BotModel {
 	public void setLastModified(LocalDateTime lastModified) {
 		this.lastModified = lastModified;
 	}
-	
-	
+
+	public Integer getLevel() {
+		return level;
+	}
+
+	public void setLevel(Integer level) {
+		this.level = level;
+	}
 }

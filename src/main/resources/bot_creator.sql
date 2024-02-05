@@ -11,10 +11,24 @@ DECLARE
     		'roxy_relof', '46217', 'true_gummy', 'combo_panda', 'xxxxxxEEEEE', 'ryan', 'gus', 'mason', 'Marrio', 'bro' 
     ];
 	bot_name TEXT;
+	counter INTEGER := 0;
+	bot_level INTEGER := 1;
+	half_length INTEGER := array_length(bot_names, 1) / 2;
+	three_quarters_length INTEGER := array_length(bot_names, 1) * 3 / 4;
 BEGIN
     FOREACH bot_name IN ARRAY bot_names LOOP
+    	counter := counter + 1;
+    	
+    	IF counter > half_length THEN
+            bot_level := 2;
+        END IF;
+        
+        IF counter > three_quarters_length THEN
+            bot_level := 3;
+        END IF;
+        
         INSERT INTO account (account_id, created, verified, email, password, username, banned, bot) VALUES (uuid_generate_v4(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CONCAT(bot_name, '@bot.com'), '12345678', bot_name, false, true);
-        INSERT INTO bot (bot_id, bot_account_id, in_use, last_modified) VALUES (uuid_generate_v4(), (SELECT account_id FROM account WHERE username = bot_name), false, CURRENT_TIMESTAMP);
+        INSERT INTO bot (bot_id, bot_account_id, in_use, last_modified, level) VALUES (uuid_generate_v4(), (SELECT account_id FROM account WHERE username = bot_name), false, CURRENT_TIMESTAMP, bot_level);
         INSERT INTO rating (rating_id, account_id, rating) VALUES (uuid_generate_v4(), (SELECT account_id FROM account WHERE username = bot_name), 800);
     END LOOP;
 END $$;
