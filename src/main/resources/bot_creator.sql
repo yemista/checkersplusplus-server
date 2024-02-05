@@ -27,7 +27,7 @@ BEGIN
             bot_level := 3;
         END IF;
         
-        INSERT INTO account (account_id, created, verified, email, password, username, banned, bot) VALUES (uuid_generate_v4(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CONCAT(bot_name, '@bot.com'), '12345678', bot_name, false, true);
+        INSERT INTO account (account_id, created, verified, email, password, username, banned, bot, tutorial) VALUES (uuid_generate_v4(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CONCAT(bot_name, '@bot.com'), '12345678', bot_name, false, true, false);
         INSERT INTO bot (bot_id, bot_account_id, in_use, last_modified, level) VALUES (uuid_generate_v4(), (SELECT account_id FROM account WHERE username = bot_name), false, CURRENT_TIMESTAMP, bot_level);
         INSERT INTO rating (rating_id, account_id, rating) VALUES (uuid_generate_v4(), (SELECT account_id FROM account WHERE username = bot_name), 800);
     END LOOP;
