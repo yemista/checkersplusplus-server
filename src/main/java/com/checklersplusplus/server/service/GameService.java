@@ -163,6 +163,7 @@ public class GameService {
 		com.checkersplusplus.engine.Game logicalGame = new com.checkersplusplus.engine.Game(gameModel.get().getGameState());
 		
 		if (logicalGame.isMoveLegal(coordinates)) {
+			String boardStateBeforeMove = logicalGame.getBoard().getBoardState();
     		logicalGame.doMove(coordinates);
     		
     		Color winner = logicalGame.getWinner();
@@ -181,6 +182,7 @@ public class GameService {
         		GameMoveModel gameMoveModel = new GameMoveModel();
         		gameMoveModel.setAccountId(accountId);
         		gameMoveModel.setGameId(gameId);
+        		gameMoveModel.setBoardState(boardStateBeforeMove);
         		gameMoveModel.setCreated(LocalDateTime.now());
         		gameMoveModel.setMoveNumber(logicalGame.getCurrentMove());
         		gameMoveModel.setMoveList(convertCoordinatePairsToString(coordinates));
@@ -212,7 +214,7 @@ public class GameService {
     					GameEventModel loserEvent = new GameEventModel();
     	    			loserEvent.setActive(true);
     	    			loserEvent.setCreated(LocalDateTime.now());
-    	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + newRatings.get(loserId));
+    	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + newRatings.get(loserId) + "|" + logicalGame.getCurrentMove() + "|" + MoveUtil.convertCoordinatePairsToString(coordinates));
     	    			loserEvent.setEventRecipientAccountId(loserId);
     	    			loserEvent.setGameId(gameId);
     	    			gameEventRepository.save(loserEvent);
@@ -229,7 +231,7 @@ public class GameService {
 	    			GameEventModel loserEvent = new GameEventModel();
 	    			loserEvent.setActive(true);
 	    			loserEvent.setCreated(LocalDateTime.now());
-	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + newRatings.get(loserId));
+	    			loserEvent.setEvent(GameEvent.LOSE.getMessage() + "|" + newRatings.get(loserId) + "|" + logicalGame.getCurrentMove() + "|"  + MoveUtil.convertCoordinatePairsToString(coordinates));
 	    			loserEvent.setEventRecipientAccountId(loserId);
 	    			loserEvent.setGameId(gameId);
 	    			gameEventRepository.save(loserEvent);
@@ -251,7 +253,7 @@ public class GameService {
     					GameEventModel redEvent = new GameEventModel();
     	    			redEvent.setActive(true);
     	    			redEvent.setCreated(LocalDateTime.now());
-    	    			redEvent.setEvent(GameEvent.DRAW.getMessage());
+    	    			redEvent.setEvent(GameEvent.DRAW.getMessage() + "|" + logicalGame.getCurrentMove() + "|"  + MoveUtil.convertCoordinatePairsToString(coordinates));
     	    			redEvent.setEventRecipientAccountId(gameModel.get().getRedId());
     	    			redEvent.setGameId(gameId);
     	    			gameEventRepository.save(redEvent);
@@ -259,7 +261,7 @@ public class GameService {
     					GameEventModel blackEvent = new GameEventModel();
     	    			blackEvent.setActive(true);
     	    			blackEvent.setCreated(LocalDateTime.now());
-    	    			blackEvent.setEvent(GameEvent.DRAW.getMessage());
+    	    			blackEvent.setEvent(GameEvent.DRAW.getMessage() + "|" + logicalGame.getCurrentMove() + "|"  + MoveUtil.convertCoordinatePairsToString(coordinates));
     	    			blackEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
     	    			blackEvent.setGameId(gameId);
     	    			gameEventRepository.save(blackEvent);
@@ -268,7 +270,13 @@ public class GameService {
 	    			GameEventModel blackEvent = new GameEventModel();
 	    			blackEvent.setActive(true);
 	    			blackEvent.setCreated(LocalDateTime.now());
-	    			blackEvent.setEvent(GameEvent.DRAW.getMessage());
+	    			String drawMessageBlack = GameEvent.DRAW.getMessage();
+	    			
+	    			if (!gameModel.get().getBlackId().equals(accountId)) {
+	    				drawMessageBlack = drawMessageBlack + "|" + logicalGame.getCurrentMove() + "|"  + MoveUtil.convertCoordinatePairsToString(coordinates);
+	    			}
+	    			
+	    			blackEvent.setEvent(drawMessageBlack);
 	    			blackEvent.setEventRecipientAccountId(gameModel.get().getBlackId());
 	    			blackEvent.setGameId(gameId);
 	    			gameEventRepository.save(blackEvent);
@@ -276,7 +284,14 @@ public class GameService {
 	    			GameEventModel redEvent = new GameEventModel();
 	    			redEvent.setActive(true);
 	    			redEvent.setCreated(LocalDateTime.now());
-	    			redEvent.setEvent(GameEvent.DRAW.getMessage());
+	    			
+	    			String drawMessageRed = GameEvent.DRAW.getMessage();
+	    			
+	    			if (!gameModel.get().getRedId().equals(accountId)) {
+	    				drawMessageRed = drawMessageRed + "|" + logicalGame.getCurrentMove() + "|"  + MoveUtil.convertCoordinatePairsToString(coordinates);
+	    			}
+	    			
+	    			redEvent.setEvent(drawMessageRed);
 	    			redEvent.setEventRecipientAccountId(gameModel.get().getRedId());
 	    			redEvent.setGameId(gameId);
 	    			gameEventRepository.save(redEvent);
@@ -296,6 +311,7 @@ public class GameService {
     		GameMoveModel gameMoveModel = new GameMoveModel();
     		gameMoveModel.setAccountId(accountId);
     		gameMoveModel.setGameId(gameId);
+    		gameMoveModel.setBoardState(boardStateBeforeMove);
     		gameMoveModel.setCreated(LocalDateTime.now());
     		gameMoveModel.setMoveNumber(logicalGame.getCurrentMove());
     		gameMoveModel.setMoveList(convertCoordinatePairsToString(coordinates));
@@ -320,7 +336,7 @@ public class GameService {
 		makeLogicalMove(accountId, gameId, coordinates, true);
 	}
 	
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public Game move(UUID sessionId, UUID gameId, List<Move> moves) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -355,7 +371,7 @@ public class GameService {
     	return Game.fromModel(gameModel.get());
 	}
 
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void cancelGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -520,7 +536,7 @@ public class GameService {
 		return Game.fromModel(gameModel);
 	}
 	
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional
 	public Integer forfeitGame(UUID sessionId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<SessionModel> sessionModel = sessionRepository.getActiveBySessionId(sessionId);
 		
@@ -530,6 +546,11 @@ public class GameService {
 		
 		UUID accountId = sessionModel.get().getAccountId();
 		
+		return forfeitGameInternal(accountId, gameId);
+	}
+
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public Integer forfeitGameInternal(UUID accountId, UUID gameId) throws CheckersPlusPlusServerException {
 		Optional<GameModel> gameModel = gameRepository.findById(gameId);
 		
 		if (gameModel.isEmpty() || !gameModel.get().isActive() || !gameModel.get().isInProgress()) {
@@ -568,7 +589,6 @@ public class GameService {
 			botRepository.save(bot.get());
 		}
 		
-		logger.info(String.format("SessionId: %s   Forfeited game: %s", sessionId.toString(), gameModel.get().getGameId().toString()));
 		return newRatings.get(accountId);
 	}
 

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.entities.request.CreateGame;
 import com.checklersplusplus.server.entities.request.Move;
@@ -29,6 +30,7 @@ import com.checklersplusplus.server.entities.response.Game;
 import com.checklersplusplus.server.entities.response.GameHistory;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.exception.InvalidMoveException;
+import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.service.GameHistoryService;
 import com.checklersplusplus.server.service.GameService;
@@ -57,12 +59,30 @@ public class GameController {
 	@Autowired
 	private GameEventRepository gameEventRepository;
 	
+	@Autowired
+	private AccountRepository accountRepository;
+	
 	@GetMapping("/{gameId}")
 	public ResponseEntity<Game> getGameById(@PathVariable("gameId") UUID gameId) {
 	    Optional<Game> gameData = gameService.findByGameId(gameId);
 
 	    if (gameData.isPresent()) {
-	        //logger.debug(String.format("Found game: %s", gameData.get().getGameId().toString()));
+	        if (gameData.get().getBlackAccountId() != null) {
+	        	Optional<AccountModel> blackAccount = accountRepository.findById(gameData.get().getBlackAccountId());
+	        	
+	        	if (blackAccount.isPresent()) {
+	        		gameData.get().setBlackUsername(blackAccount.get().getUsername());
+	        	}
+	        }
+	    	
+	        if (gameData.get().getRedAccountId() != null) {
+	        	Optional<AccountModel> redAccount = accountRepository.findById(gameData.get().getRedAccountId());
+	        	
+	        	if (redAccount.isPresent()) {
+	        		gameData.get().setRedUsername(redAccount.get().getUsername());
+	        	}
+	        }
+	    	
 	        return new ResponseEntity<>(gameData.get(), HttpStatus.OK);
 	    } else {
 	        logger.debug(String.format("Game not found: %s", gameId));

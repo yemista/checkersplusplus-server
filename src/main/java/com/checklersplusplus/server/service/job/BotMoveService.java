@@ -60,18 +60,28 @@ public class BotMoveService {
 			Optional<GameModel> game = gameRepository.getActiveGameByAccountId(bot.getBotAccountId());
 			
 			try {
-				if (game.isPresent()) {
+				if (game.isPresent() && game.get().isInProgress()) {
 					Color botColor = bot.getBotAccountId().equals(game.get().getBlackId()) ? Color.BLACK : Color.RED;
 
 					if (isBotsTurn(botColor, game.get().getGameState())) {
 						List<Move> moves = TrainingOpponent.getBestMove(game.get().getGameState(), botColor);
-						gameService.botMove(bot.getBotAccountId(), game.get().getGameId(), moves);
-					} else if (!game.get().isInProgress() && gameIsTooOld(game.get().getLastModified())) {
-						game.get().setActive(false);
-						gameRepository.save(game.get());
-						bot.setInUse(false);
-						botRepository.save(bot);
+						//List<Move> moves = TrainingOpponent.getBestDeepMove(game.get().getGameState(), botColor, 3);
+						
+						if (moves.isEmpty()) {
+							bot.setInUse(false);
+							botRepository.save(bot);
+							gameService.forfeitGameInternal(bot.getBotAccountId(), game.get().getGameId());
+						} else {
+							gameService.botMove(bot.getBotAccountId(), game.get().getGameId(), moves);
+						}
 					}
+				}
+				
+				if (game.isPresent() && !game.get().isInProgress() && gameIsTooOld(game.get().getLastModified())) {
+					game.get().setActive(false);
+					gameRepository.save(game.get());
+					bot.setInUse(false);
+					botRepository.save(bot);
 				}
 			} catch (InvalidMoveException ex) {
 				logger.error("Error occured in BotMoveService: " + MoveUtil.convertCoordinatePairsToString(ex.getCoordinates()), ex);
@@ -82,7 +92,7 @@ public class BotMoveService {
 	}
 
 	private boolean gameIsTooOld(LocalDateTime lastModified) {
-		LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minusMinutes(10);
+		LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minusMinutes(6);
 		return lastModified.isBefore(fifteenMinutesAgo);
 	}
 

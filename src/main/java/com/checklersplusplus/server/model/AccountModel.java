@@ -39,6 +39,9 @@ public class AccountModel {
 	
 	@Column(name = "bot")
 	private boolean bot;
+	
+	@Column(name = "tutorial")
+	private boolean tutorial;
 
 	public AccountModel() {
 		
@@ -118,5 +121,12 @@ public class AccountModel {
 	public void setBot(boolean bot) {
 		this.bot = bot;
 	}
-	
+
+	public boolean isTutorial() {
+		return tutorial;
+	}
+
+	public void setTutorial(boolean tutorial) {
+		this.tutorial = tutorial;
+	}
 }

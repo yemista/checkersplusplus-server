@@ -32,6 +32,10 @@ public class GameMoveModel {
 	
 	@Column(name = "move_number")
 	private int moveNumber;
+	
+	// state before this move is applied
+	@Column(name = "board_state")
+	private String boardState;
 
 	public GameMoveModel(UUID gameMoveId, UUID accountId, UUID gameId, String moveList, LocalDateTime created,
 			int moveNumber) {
@@ -92,5 +96,13 @@ public class GameMoveModel {
 
 	public void setMoveNumber(int moveNumber) {
 		this.moveNumber = moveNumber;
+	}
+
+	public String getBoardState() {
+		return boardState;
+	}
+
+	public void setBoardState(String boardState) {
+		this.boardState = boardState;
 	}
 }

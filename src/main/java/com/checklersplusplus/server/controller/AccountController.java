@@ -1,5 +1,8 @@
 package com.checklersplusplus.server.controller;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,11 +10,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.entities.internal.NewAccount;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.request.Login;
@@ -24,6 +30,7 @@ import com.checklersplusplus.server.entities.response.Session;
 import com.checklersplusplus.server.exception.AccountNotVerifiedException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.exception.UsernameNotFoundException;
+import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.service.AccountService;
 import com.checklersplusplus.server.service.VerificationService;
 import com.checklersplusplus.server.service.mail.EmailService;
@@ -41,6 +48,9 @@ public class AccountController {
 	private AccountService accountService;
 	
 	@Autowired
+	private AccountRepository accountRepository;
+	
+	@Autowired
 	private EmailService emailService;
 	
 	@Autowired
@@ -50,6 +60,27 @@ public class AccountController {
 	public ResponseEntity<String> getVersion() {
 		logger.info(String.format("Version request"));
 		return new ResponseEntity<>(VERSION_STRING, HttpStatus.OK);
+	}
+	
+	@GetMapping("/username")
+	public ResponseEntity<String> getUsername(@RequestParam(required = false) String email) {
+		if (email != null && !email.isBlank()) {
+			Account account = accountService.findByEmail(email);
+			
+			if (account != null) {
+				emailService.sendSimpleMessage(email, "Checkers++ username request", "Your Checkers++ username is: " + account.getUsername());
+			}
+		}
+		
+		return new ResponseEntity<>("", HttpStatus.OK);
+	}
+	
+	@GetMapping("/tutorial/{accountId}")
+	public ResponseEntity<String> disableTutorial(@PathVariable("accountId") UUID accountId) {
+	    Optional<AccountModel> account = accountRepository.findById(accountId);
+	    account.get().setTutorial(false);
+	    accountRepository.save(account.get());
+	    return new ResponseEntity<>("OK", HttpStatus.OK);
 	}
 	
 	@PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)

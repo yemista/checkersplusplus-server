@@ -1,9 +1,11 @@
 package com.checklersplusplus.server.service.job;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -18,13 +20,17 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checklersplusplus.server.dao.AccountRepository;
+import com.checklersplusplus.server.dao.BotRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
+import com.checklersplusplus.server.dao.GameMoveRepository;
 import com.checklersplusplus.server.dao.GameRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.enums.GameEvent;
 import com.checklersplusplus.server.model.AccountModel;
+import com.checklersplusplus.server.model.BotModel;
 import com.checklersplusplus.server.model.GameEventModel;
 import com.checklersplusplus.server.model.GameModel;
+import com.checklersplusplus.server.model.GameMoveModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.service.RatingService;
 
@@ -33,7 +39,8 @@ import com.checklersplusplus.server.service.RatingService;
 @Transactional
 public class TimeoutService {
 
-	private static final int TEN_SECONDS_MILLIS = 10 * 1000;
+	private static final int ONE_SECONDS_MILLIS = 1 * 1000;
+	private static final int ONE_MINUTE_MILLIS = 60 * 1000;
 	
 	private static final Logger logger = LoggerFactory.getLogger(TimeoutService.class);
 
@@ -47,6 +54,12 @@ public class TimeoutService {
 	private GameRepository gameRepository;
 	
 	@Autowired
+	private BotRepository botRepository;
+	
+	@Autowired
+	private GameMoveRepository gameMoveRepository;
+	
+	@Autowired
 	private GameEventRepository gameEventRepository;
 	
 	@Autowired
@@ -55,138 +68,91 @@ public class TimeoutService {
 	@Value("${checkersplusplus.timeout.minutes}")
 	private Integer timeoutMinutes;
 	
-	@Scheduled(fixedDelay = TEN_SECONDS_MILLIS)
-	@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.REPEATABLE_READ)
-	public void checkForTimeouts() {
-		try {
-			logger.debug("Checking for timeouts");
+	@Value("${checkersplusplus.timeout.move.minutes}")
+	private Integer moveTimeoutMinutes;
+	
+	@Scheduled(fixedDelay = ONE_MINUTE_MILLIS)
+	@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
+	public void checkForSessionTimeouts() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);
+		List<SessionModel> expiredSessions = sessionRepository.findByActiveAndLastModifiedLessThan(true, timeoutThreshold);
+		Set<UUID> expiredSessionAccountIds = new HashSet<>();
+		expiredSessions.forEach(session -> expiredSessionAccountIds.add(session.getAccountId()));
+		
+		for (UUID accountId : expiredSessionAccountIds) {
+			Optional<GameModel> game = gameRepository.getActiveGameByAccountId(accountId);
 			
-			LocalDateTime now = LocalDateTime.now();
-			LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);
-			List<GameModel> deactivatedGames = new ArrayList<>();
+			if (game.isPresent()) {
+				continue;
+			}
+			
+			sessionRepository.inactiveExistingSessions(accountId);
+		}
+	}
+	
+	@Scheduled(fixedDelay = ONE_SECONDS_MILLIS)
+	@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
+	public void checkForMoveTimeouts() {
+		try {
 			List<GameModel> activeGames = gameRepository.getRunningGames();
 			
 			for (GameModel game : activeGames) {
+				if (!game.isInProgress()) {
+					continue;
+				}
+				
 				UUID blackId = game.getBlackId();
 				UUID redId = game.getRedId();
+				Optional<GameMoveModel> latestMove = gameMoveRepository.findFirstByGameIdOrderByMoveNumberDesc(game.getGameId());
 				
-				Optional<SessionModel> blackSession = sessionRepository.getActiveByAccountId(blackId);
-				Optional<AccountModel> blackAccount = accountRepository.findById(blackId);
-				
-				if (!blackAccount.get().isBot()) {
-					if (blackSession.isEmpty()) {
-						Optional<SessionModel> mostRecentSession = sessionRepository.findFirstByAccountIdAndLastModifiedGreaterThanOrderByLastModifiedDesc(blackId, timeoutThreshold);
+				if (latestMove.isPresent() && moveTooOld(latestMove.get().getCreated())) {
+					UUID nextToMove = latestMove.get().getMoveNumber() % 2 == 1 ? redId : blackId;
+					UUID opponent = nextToMove.equals(blackId) ? redId : blackId;
+					
+					Optional<SessionModel> nextToMoveSession = sessionRepository.getActiveByAccountId(nextToMove);
+					Optional<AccountModel> nextToMoveAccount = accountRepository.findById(nextToMove);
+					
+					if (nextToMoveAccount.isPresent()) {
+						game.setWinnerId(opponent);
+						game.setInProgress(false);
+						game.setActive(false);
+						gameRepository.save(game);
+						Map<UUID, Integer> newRatings = ratingService.updatePlayerRatings(game.getGameId());
 						
-						if (mostRecentSession.isEmpty()) {
-							game.setWinnerId(redId);
-							game.setInProgress(false);
-							game.setActive(false);
-							gameRepository.save(game);
-							deactivatedGames.add(game);
-							
-							GameEventModel gameEvent = new GameEventModel();
-							gameEvent.setActive(true);
-							gameEvent.setCreated(LocalDateTime.now());
-							gameEvent.setEvent(GameEvent.TIMEOUT.getMessage());
-							gameEvent.setEventRecipientAccountId(redId);
-							gameEvent.setGameId(game.getGameId());
-							gameEventRepository.save(gameEvent);
-							
-							continue;
-						}
-					} else {
-						Optional<SessionModel> expiredSession = sessionRepository.getActiveSessionForAccountOlderThan(timeoutThreshold, blackId);
+						GameEventModel gameEvent = new GameEventModel();
+						gameEvent.setActive(true);
+						gameEvent.setCreated(LocalDateTime.now());
+						gameEvent.setEvent(GameEvent.TIMEOUT.getMessage() + "|" + newRatings.get(opponent));
+						gameEvent.setEventRecipientAccountId(opponent);
+						gameEvent.setGameId(game.getGameId());
+						gameEventRepository.save(gameEvent);
 						
-						if (expiredSession.isPresent()) {
-							game.setWinnerId(redId);
-							game.setInProgress(false);
-							game.setActive(false);
-							gameRepository.save(game);
-							deactivatedGames.add(game);
-							
-							GameEventModel gameEvent = new GameEventModel();
-							gameEvent.setActive(true);
-							gameEvent.setCreated(LocalDateTime.now());
-							gameEvent.setEvent(GameEvent.TIMEOUT.getMessage());
-							gameEvent.setEventRecipientAccountId(redId);
-							gameEvent.setGameId(game.getGameId());
-							gameEventRepository.save(gameEvent);
-							
+						if (nextToMoveAccount.get().isBot()) {
+							Optional<BotModel> bot = botRepository.findById(nextToMove);
+							bot.get().setInUse(false);
+							botRepository.save(bot.get());
+						} else if (nextToMoveSession.isPresent()) {
 							GameEventModel lossEvent = new GameEventModel();
 							lossEvent.setActive(true);
 							lossEvent.setCreated(LocalDateTime.now());
-							lossEvent.setEvent(GameEvent.TIMEOUT_LOSS.getMessage());
-							lossEvent.setEventRecipientAccountId(blackId);
+							lossEvent.setEvent(GameEvent.TIMEOUT_LOSS.getMessage() + "|" + newRatings.get(nextToMove));
+							lossEvent.setEventRecipientAccountId(nextToMove);
 							lossEvent.setGameId(game.getGameId());
 							gameEventRepository.save(lossEvent);
-							
-							continue;
 						}
-					}
+					}					
 				}
-				
-				Optional<SessionModel> redSession = sessionRepository.getActiveByAccountId(redId);
-				Optional<AccountModel> redAccount = accountRepository.findById(redId);
-				
-				if (!redAccount.get().isBot()) {
-					if (redSession.isEmpty()) {
-						Optional<SessionModel> mostRecentSession = sessionRepository.findFirstByAccountIdAndLastModifiedGreaterThanOrderByLastModifiedDesc(redId, timeoutThreshold);
-						
-						if (mostRecentSession.isEmpty()) {
-							game.setWinnerId(blackId);
-							game.setInProgress(false);
-							game.setActive(false);
-							gameRepository.save(game);
-							deactivatedGames.add(game);
-							
-							GameEventModel gameEvent = new GameEventModel();
-							gameEvent.setActive(true);
-							gameEvent.setCreated(LocalDateTime.now());
-							gameEvent.setEvent(GameEvent.TIMEOUT.getMessage());
-							gameEvent.setEventRecipientAccountId(blackId);
-							gameEvent.setGameId(game.getGameId());
-							gameEventRepository.save(gameEvent);
-							
-							continue;
-						}
-					} else {
-						Optional<SessionModel> expiredSession = sessionRepository.getActiveSessionForAccountOlderThan(timeoutThreshold, redId);
-						
-						if (expiredSession.isPresent()) {
-							game.setWinnerId(blackId);
-							game.setInProgress(false);
-							game.setActive(false);
-							gameRepository.save(game);
-							deactivatedGames.add(game);
-							
-							GameEventModel gameEvent = new GameEventModel();
-							gameEvent.setActive(true);
-							gameEvent.setCreated(LocalDateTime.now());
-							gameEvent.setEvent(GameEvent.TIMEOUT.getMessage());
-							gameEvent.setEventRecipientAccountId(blackId);
-							gameEvent.setGameId(game.getGameId());
-							gameEventRepository.save(gameEvent);
-							
-							GameEventModel lossEvent = new GameEventModel();
-							lossEvent.setActive(true);
-							lossEvent.setCreated(LocalDateTime.now());
-							lossEvent.setEvent(GameEvent.TIMEOUT_LOSS.getMessage());
-							lossEvent.setEventRecipientAccountId(redId);
-							lossEvent.setGameId(game.getGameId());
-							gameEventRepository.save(lossEvent);
-							
-							continue;
-						}
-					}
-				}
-			}
-			
-			for (GameModel game : deactivatedGames) {
-				ratingService.updatePlayerRatings(game.getGameId());
 			}
 		} catch (Exception e) {
 			logger.error("Exception thrown in timeout service body", e);
 		}
+	}
+
+	private boolean moveTooOld(LocalDateTime created) {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime moveTimeoutThreshold = now.minusMinutes(moveTimeoutMinutes);
+		return created.isBefore(moveTimeoutThreshold);
 	}
 
 }

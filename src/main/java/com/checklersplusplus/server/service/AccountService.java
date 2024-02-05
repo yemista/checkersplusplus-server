@@ -84,6 +84,7 @@ public class AccountService {
 		accountModel.setCreated(LocalDateTime.now());
 		accountModel.setBanned(false);
 		accountModel.setBot(false);
+		accountModel.setTutorial(true);
 		accountRepository.save(accountModel);
 		
 		VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
@@ -110,7 +111,13 @@ public class AccountService {
 		Optional<AccountModel> account = accountRepository.findByUsernameAndPassword(username, CryptoUtil.encryptPassword(password));
 		
 		if (account.isEmpty()) {
-			throw new CheckersPlusPlusServerException(String.format("Failed to login. Account %s not found.", username));
+			Optional<AccountModel> accountByUsername = accountRepository.findByUsername(username);
+			
+			if (accountByUsername.isPresent()) {
+				throw new CheckersPlusPlusServerException(String.format("Failed to login. You did not enter the correct password."));
+			} else {
+				throw new CheckersPlusPlusServerException(String.format("Failed to login. Account %s not found.", username));
+			}
 		}
 		
 		if (account.get().getVerified() == null) {
@@ -130,6 +137,7 @@ public class AccountService {
 		Session session = new Session();
 		session.setSessionId(sessionModel.getSessionId());
 		session.setAccountId(account.get().getAccountId());
+		session.setTutorial(String.valueOf(account.get().isTutorial()));
 		
 		Optional<GameModel> currentGame = gameRepository.getActiveGameByAccountId(account.get().getAccountId());
 		

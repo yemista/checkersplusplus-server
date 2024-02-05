@@ -13,6 +13,8 @@ public interface AccountRepository extends JpaRepository<AccountModel, UUID> {
 	public Optional<AccountModel> getByUsernameIgnoreCase(String username);
 	
 	public Optional<AccountModel> getByEmail(String email);
+	
+	public Optional<AccountModel> findByUsername(String username);
 
 	public Optional<AccountModel> findByUsernameAndPassword(String username, String password);
 

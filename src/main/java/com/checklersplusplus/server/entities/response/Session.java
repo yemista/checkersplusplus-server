@@ -9,6 +9,7 @@ public class Session extends CheckersPlusPlusResponse implements Serializable {
 	private UUID sessionId;
 	private UUID gameId;
 	private UUID accountId;
+	private String tutorial;
 	
 	public Session() {
 	}
@@ -41,5 +42,13 @@ public class Session extends CheckersPlusPlusResponse implements Serializable {
 
 	public void setAccountId(UUID accountId) {
 		this.accountId = accountId;
+	}
+
+	public String getTutorial() {
+		return tutorial;
+	}
+
+	public void setTutorial(String tutorial) {
+		this.tutorial = tutorial;
 	}
 }

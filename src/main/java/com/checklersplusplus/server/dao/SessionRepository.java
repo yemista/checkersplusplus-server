@@ -36,4 +36,6 @@ public interface SessionRepository extends JpaRepository<SessionModel, UUID> {
 	public Optional<SessionModel> findFirstBySessionId(UUID sessionId);
 	
 	public Optional<SessionModel> findFirstByAccountIdAndLastModifiedGreaterThanOrderByLastModifiedDesc(UUID accountId, LocalDateTime timestamp);
+	
+	public List<SessionModel> findByActiveAndLastModifiedLessThan(boolean active, LocalDateTime timestamp);
 }
