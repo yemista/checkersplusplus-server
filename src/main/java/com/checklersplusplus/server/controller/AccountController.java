@@ -42,7 +42,7 @@ import jakarta.validation.Valid;
 public class AccountController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
-	private static final String VERSION_STRING = "1.0";
+	private static final String VERSION_STRING = "1.1";
 
 	@Autowired
 	private AccountService accountService;

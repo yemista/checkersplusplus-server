@@ -64,6 +64,8 @@ public class CheckersPlusPlusWebSocketHandler extends TextWebSocketHandler {
 			
 			if (sessionModel.isEmpty()) {
 				logger.error("Failed to handle websocket message for sessionId: %s", serverSession);
+				openWebSocketService.inactivateWebSocketSession(session.getId());
+				WebSocketMap.getInstance().getMap().remove(session.getId());
 				return;
 			}
 			

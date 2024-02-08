@@ -1,11 +1,9 @@
 package com.checklersplusplus.server.service.job;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -71,25 +69,25 @@ public class TimeoutService {
 	@Value("${checkersplusplus.timeout.move.minutes}")
 	private Integer moveTimeoutMinutes;
 	
-	@Scheduled(fixedDelay = ONE_MINUTE_MILLIS)
-	@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
-	public void checkForSessionTimeouts() {
-		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);
-		List<SessionModel> expiredSessions = sessionRepository.findByActiveAndLastModifiedLessThan(true, timeoutThreshold);
-		Set<UUID> expiredSessionAccountIds = new HashSet<>();
-		expiredSessions.forEach(session -> expiredSessionAccountIds.add(session.getAccountId()));
-		
-		for (UUID accountId : expiredSessionAccountIds) {
-			Optional<GameModel> game = gameRepository.getActiveGameByAccountId(accountId);
-			
-			if (game.isPresent()) {
-				continue;
-			}
-			
-			sessionRepository.inactiveExistingSessions(accountId);
-		}
-	}
+//	@Scheduled(fixedDelay = ONE_MINUTE_MILLIS)
+//	@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
+//	public void checkForSessionTimeouts() {
+//		LocalDateTime now = LocalDateTime.now();
+//		LocalDateTime timeoutThreshold = now.minusMinutes(timeoutMinutes);
+//		List<SessionModel> expiredSessions = sessionRepository.findByActiveAndLastModifiedLessThan(true, timeoutThreshold);
+//		Set<UUID> expiredSessionAccountIds = new HashSet<>();
+//		expiredSessions.forEach(session -> expiredSessionAccountIds.add(session.getAccountId()));
+//		
+//		for (UUID accountId : expiredSessionAccountIds) {
+//			Optional<GameModel> game = gameRepository.getActiveGameByAccountId(accountId);
+//			
+//			if (game.isPresent()) {
+//				continue;
+//			}
+//			
+//			sessionRepository.inactiveExistingSessions(accountId);
+//		}
+//	}
 	
 	@Scheduled(fixedDelay = ONE_SECONDS_MILLIS)
 	@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
