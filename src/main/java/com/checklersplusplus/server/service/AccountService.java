@@ -2,6 +2,7 @@ package com.checklersplusplus.server.service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.checklersplusplus.server.dao.AccountRepository;
 import com.checklersplusplus.server.dao.GameEventRepository;
 import com.checklersplusplus.server.dao.GameRepository;
+import com.checklersplusplus.server.dao.LastMoveSentRepository;
 import com.checklersplusplus.server.dao.RatingRepository;
 import com.checklersplusplus.server.dao.SessionRepository;
 import com.checklersplusplus.server.dao.VerifyAccountRepository;
@@ -25,6 +27,7 @@ import com.checklersplusplus.server.exception.InvalidVerificationCodeException;
 import com.checklersplusplus.server.exception.UsernameNotFoundException;
 import com.checklersplusplus.server.model.AccountModel;
 import com.checklersplusplus.server.model.GameModel;
+import com.checklersplusplus.server.model.LastMoveSentModel;
 import com.checklersplusplus.server.model.RatingModel;
 import com.checklersplusplus.server.model.SessionModel;
 import com.checklersplusplus.server.model.VerifyAccountModel;
@@ -48,6 +51,9 @@ public class AccountService {
 	
 	@Autowired
 	private GameRepository gameRepository;
+	
+	@Autowired
+	private LastMoveSentRepository lastMoveSentRepository;
 	
 	@Autowired
 	private GameEventRepository gameEventRepository;
@@ -143,6 +149,7 @@ public class AccountService {
 		
 		if (currentGame.isPresent()) {
 			session.setGameId(currentGame.get().getGameId());
+			addLastMoveSentIfNecessary(currentGame.get(), currentGame.get().getGameId(), account.get().getAccountId());
 		} else {
 			gameEventRepository.inactivateEventsForRecipient(account.get().getAccountId());
 		}
@@ -152,6 +159,20 @@ public class AccountService {
 		return session;
 	}
 	
+	private void addLastMoveSentIfNecessary(GameModel game, UUID gameId, UUID accountId) {
+		Optional<LastMoveSentModel> lastMove = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameId);
+		
+		if ((lastMove.isEmpty() && game.getCurrentMoveNumber() > 0)
+				|| (lastMove.isPresent() && lastMove.get().getLastMoveSent() != game.getCurrentMoveNumber())) {
+			LastMoveSentModel latestMove = new LastMoveSentModel();
+			latestMove.setAccountId(accountId);
+			latestMove.setCreated(LocalDateTime.now());
+			latestMove.setGameId(gameId);
+			latestMove.setLastMoveSent(game.getCurrentMoveNumber());
+			lastMoveSentRepository.save(latestMove);
+		}		
+	}
+
 	@Transactional
 	public void resetPassword(String username, String verificationCode, String password) throws CheckersPlusPlusServerException {
 		Optional<AccountModel> account = accountRepository.getByUsernameIgnoreCase(username);

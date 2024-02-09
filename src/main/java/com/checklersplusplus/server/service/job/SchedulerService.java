@@ -63,10 +63,11 @@ public class SchedulerService {
 	@Scheduled(fixedDelay = THREAD_WAIT)
 	public void updateClients() {
 		try {
+			logger.debug("Scheduler running");
 			List<OpenWebSocket> openWebSockets = getActiveOpenWebSockets();
 			
 			for (OpenWebSocket openWebSocket : openWebSockets) {
-				Optional<SessionModel> serverSession = sessionRepository.findFirstBySessionId(openWebSocket.getSessionId());
+				Optional<SessionModel> serverSession = sessionRepository.getActiveBySessionId(openWebSocket.getSessionId());
 				
 				if (serverSession.isEmpty()) {
 					continue;

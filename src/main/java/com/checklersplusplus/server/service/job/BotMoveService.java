@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkersplusplus.engine.ai.TrainingOpponent;
@@ -25,7 +26,7 @@ import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.service.GameService;
 import com.checklersplusplus.server.util.MoveUtil;
 
-@Profile("server")
+@Profile("bot")
 @Service
 public class BotMoveService {
 
@@ -43,7 +44,7 @@ public class BotMoveService {
 	private GameService gameService;
 	
 	@Scheduled(fixedDelay = TWO_SECOND_MILLIS)
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void doBotMove() {
 		Random random = new Random();
 		int secondsToSleep = random.nextInt(0, 3);
@@ -78,10 +79,9 @@ public class BotMoveService {
 				}
 				
 				if (game.isPresent() && !game.get().isInProgress() && gameIsTooOld(game.get().getLastModified())) {
-					game.get().setActive(false);
-					gameRepository.save(game.get());
 					bot.setInUse(false);
 					botRepository.save(bot);
+					gameRepository.delete(game.get());
 				}
 			} catch (InvalidMoveException ex) {
 				logger.error("InvalidMoveException occured in BotMoveService: " + MoveUtil.convertCoordinatePairsToString(ex.getCoordinates()), ex);
@@ -93,7 +93,7 @@ public class BotMoveService {
 				} catch (CheckersPlusPlusServerException e) {
 					logger.error("Error occured in BotMoveService catch clause", e);
 				}
-			} catch (CheckersPlusPlusServerException e) {
+			} catch (Exception e) {
 				logger.error("Error occured in BotMoveService", e);
 			}
 		}

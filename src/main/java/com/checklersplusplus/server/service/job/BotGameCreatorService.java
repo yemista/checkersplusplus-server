@@ -9,13 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checklersplusplus.server.dao.BotRepository;
 import com.checklersplusplus.server.model.BotModel;
 import com.checklersplusplus.server.service.GameService;
 
-@Profile("server")
+@Profile("bot")
 @Service
 public class BotGameCreatorService {
 
@@ -29,7 +30,7 @@ public class BotGameCreatorService {
 	@Autowired
 	private GameService gameService;
 	
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@Scheduled(fixedDelay = TWO_MINUTE_MILLIS)
 	public void createBots() {
 		Optional<BotModel> bot = botRepository.findFirstByInUseFalseOrderByLastModifiedAsc();
