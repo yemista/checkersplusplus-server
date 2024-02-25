@@ -1,0 +1,10 @@
+truncate table account;
+truncate table bot;
+truncate table game;
+truncate table game_event;
+truncate table game_move;
+truncate table last_move_sent;
+truncate table open_web_socket;
+truncate table rating;
+truncate table session;
+truncate table verify_account;

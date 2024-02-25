@@ -84,9 +84,9 @@ public class AccountService {
 	@Transactional
 	public NewAccount createAccount(CreateAccount createAccount) throws CheckersPlusPlusServerException, Exception {
 		AccountModel accountModel = new AccountModel();
-		accountModel.setUsername(createAccount.getUsername());
-		accountModel.setEmail(createAccount.getEmail());
-		accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword()));
+		accountModel.setUsername(createAccount.getUsername().trim());
+		accountModel.setEmail(createAccount.getEmail().trim());
+		accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword().trim()));
 		accountModel.setCreated(LocalDateTime.now());
 		accountModel.setBanned(false);
 		accountModel.setBot(false);
@@ -114,10 +114,10 @@ public class AccountService {
 
 	@Transactional
 	public Session login(String username, String password) throws CheckersPlusPlusServerException {
-		Optional<AccountModel> account = accountRepository.findByUsernameAndPassword(username, CryptoUtil.encryptPassword(password));
+		Optional<AccountModel> account = accountRepository.findByUsernameAndPassword(username.trim(), CryptoUtil.encryptPassword(password.trim()));
 		
 		if (account.isEmpty()) {
-			Optional<AccountModel> accountByUsername = accountRepository.findByUsername(username);
+			Optional<AccountModel> accountByUsername = accountRepository.findByUsername(username.trim());
 			
 			if (accountByUsername.isPresent()) {
 				throw new CheckersPlusPlusServerException(String.format("Failed to login. You did not enter the correct password."));
@@ -175,7 +175,7 @@ public class AccountService {
 
 	@Transactional
 	public void resetPassword(String username, String verificationCode, String password) throws CheckersPlusPlusServerException {
-		Optional<AccountModel> account = accountRepository.getByUsernameIgnoreCase(username);
+		Optional<AccountModel> account = accountRepository.getByUsernameIgnoreCase(username.trim());
 		
 		if (account.isEmpty()) {
 			throw new UsernameNotFoundException();
