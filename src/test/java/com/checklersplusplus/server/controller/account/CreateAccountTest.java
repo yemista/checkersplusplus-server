@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -32,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = AccountController.class)
+@AutoConfigureTestDatabase
 public class CreateAccountTest {
 
 	private static final String TEST_EMAIL = "test@test.com";
@@ -56,7 +58,7 @@ public class CreateAccountTest {
 	@Test
 	public void canCreateAccount() throws Exception {
 		CreateAccount createAccount = new CreateAccount(TEST_EMAIL, TEST_PASSWORD, TEST_PASSWORD, TEST_USERNAME);
-		Mockito.when(accountService.createAccount(any())).thenReturn(new NewAccount(UUID.randomUUID(), "123456"));
+		Mockito.when(accountService.createAccount(any(), true)).thenReturn(new NewAccount(UUID.randomUUID(), "123456"));
 		ResultActions resultActions = mockMvc.perform(post("/checkersplusplus/api/account/create").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createAccount)))
 							.andExpect(status().isOk())

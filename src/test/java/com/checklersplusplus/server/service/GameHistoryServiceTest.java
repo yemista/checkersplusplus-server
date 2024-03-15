@@ -123,7 +123,7 @@ public class GameHistoryServiceTest {
 	}
 	
 	private AccountModel createAccount(CreateAccount createAccount) throws Exception {
-		accountService.createAccount(createAccount);
+		accountService.createAccount(createAccount, true);
 		Optional<AccountModel> accountModel = accountRepository.getByEmail(createAccount.getEmail());
 		assertTrue(accountModel.isPresent());
 		accountsToDelete.add(accountModel.get());

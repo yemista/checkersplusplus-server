@@ -100,7 +100,7 @@ public class BotMoveService {
 	}
 
 	private boolean gameIsTooOld(LocalDateTime lastModified) {
-		LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minusMinutes(6);
+		LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minusMinutes(15);
 		return lastModified.isBefore(fifteenMinutesAgo);
 	}
 

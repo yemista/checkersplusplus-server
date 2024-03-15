@@ -22,6 +22,7 @@ import com.checklersplusplus.server.entities.internal.NewAccount;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.request.Login;
 import com.checklersplusplus.server.entities.request.ResetPassword;
+import com.checklersplusplus.server.entities.request.SsoLogin;
 import com.checklersplusplus.server.entities.request.Username;
 import com.checklersplusplus.server.entities.request.VerifyAccount;
 import com.checklersplusplus.server.entities.response.Account;
@@ -90,17 +91,36 @@ public class AccountController {
 			logger.info(String.format("Successful login by %s", login.getUsername()));
 			return new ResponseEntity<>(session, HttpStatus.OK);
 		} catch (AccountNotVerifiedException a) {
-			logger.info(a.getMessage());
+			logger.error(a.getMessage());
 			Session session = new Session();
 			session.setMessage(a.getMessage());
 			return new ResponseEntity<>(session, HttpStatus.FORBIDDEN);
 		} catch (CheckersPlusPlusServerException e) {
-			logger.info(e.getMessage());
+			logger.error(e.getMessage());
 			Session session = new Session();
 			session.setMessage(e.getMessage());
 			return new ResponseEntity<>(session, HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
 			logger.error(ex.getMessage());
+			Session session = new Session();
+			session.setMessage("Server error. Try again soon.");
+			return new ResponseEntity<>(session, HttpStatus.SERVICE_UNAVAILABLE);
+		}
+	}
+	
+	@PostMapping(value = "/sso", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Session> loginSso(@Valid @RequestBody SsoLogin login) {
+		try {
+			Session session = accountService.ssoLogin(login.getSsoEmail());
+			logger.info(String.format("Successful SSO login by %s", login.getSsoEmail()));
+			return new ResponseEntity<>(session, HttpStatus.OK);
+		} catch (CheckersPlusPlusServerException e) {
+			logger.error(e.getMessage());
+			Session session = new Session();
+			session.setMessage(e.getMessage());
+			return new ResponseEntity<>(session, HttpStatus.BAD_REQUEST);
+		} catch(Exception ex) {
+			logger.error(ex.getMessage(), ex);
 			Session session = new Session();
 			session.setMessage("Server error. Try again soon.");
 			return new ResponseEntity<>(session, HttpStatus.SERVICE_UNAVAILABLE);
@@ -119,7 +139,7 @@ public class AccountController {
 			String verificationCode = verificationService.createVerificationCode(account.getAccountId());
 			emailService.emailVerificationCode(account.getAccountId(), verificationCode);
 		} catch(CheckersPlusPlusServerException e) {
-			logger.info(e.getMessage());
+			logger.error(e.getMessage());
 			return new ResponseEntity<>(new CheckersPlusPlusResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
 			logger.error(ex.getMessage());
@@ -176,12 +196,16 @@ public class AccountController {
 			if (!isPasswordsMatch(createAccount.getPassword(), createAccount.getConfirmPassword())) {
 				return new ResponseEntity<>(new CheckersPlusPlusResponse("Password and confirmation password do not match."), HttpStatus.BAD_REQUEST);
 			}
+			
+			if (invalidCharacters(createAccount.getUsername())) {
+				return new ResponseEntity<>(new CheckersPlusPlusResponse("Username must only contain numbers, letters, and underscores."), HttpStatus.BAD_REQUEST);
+			}
 
-			NewAccount newAccount = accountService.createAccount(createAccount);
+			NewAccount newAccount = accountService.createAccount(createAccount, true);
 			logger.debug(String.format("Created new account %s", createAccount.getUsername()));
 			emailService.emailVerificationCode(newAccount.getAccountId(), newAccount.getVerificationCode());
 		} catch (CheckersPlusPlusServerException e) {
-			logger.info(e.getMessage(), e);
+			logger.error(e.getMessage(), e);
 			return new ResponseEntity<>(new CheckersPlusPlusResponse("Failed to create account. Please try again."), HttpStatus.BAD_REQUEST);
 		} catch(Exception ex) {
 			logger.error(ex.getMessage(), ex);
@@ -189,6 +213,36 @@ public class AccountController {
 		}
 		
 		return new ResponseEntity<>(new CheckersPlusPlusResponse("Account created successfully. Please check your email for the verification code. If you do not see it check your spam folder."), HttpStatus.OK);
+	}
+
+	private boolean invalidCharacters(String username) {
+//		if (username.length() < 3 || username.length() > 20) {
+//			return true;
+//		}
+//		
+//		for (int i = 0; i < username.length(); ++i) {
+//			char ch = username.charAt(i);
+//			
+//			if (ch == 95) {
+//				continue;
+//			}
+//			
+//			if (ch >= 48 && ch <= 57) {
+//				continue;
+//			}
+//			
+//			if (ch >= 65 && ch <= 90) {
+//				continue;
+//			}
+//			
+//			if (ch >= 97 && ch <= 122) {
+//				continue;
+//			}
+//			
+//			return true;
+//		}
+		
+		return false;
 	}
 
 	private boolean isPasswordsMatch(String password, String confirmPassword) {

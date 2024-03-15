@@ -42,6 +42,10 @@ public class BotGameCreatorService {
 		bot.get().setInUse(true);
 		bot.get().setLastModified(LocalDateTime.now());
 		botRepository.save(bot.get());
+		
+		boolean joinExisting = Math.random() > Double.valueOf(0.5);
+		
+		
 		boolean firstMove = Math.random() > Double.valueOf(0.5);
 		gameService.botCreateGame(bot.get().getBotAccountId(), firstMove);
 		logger.debug(String.format("BOT IN USE: %s", bot.get().getBotAccountId().toString()));

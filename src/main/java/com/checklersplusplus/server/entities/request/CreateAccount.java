@@ -5,7 +5,6 @@ import java.io.Serializable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class CreateAccount implements Serializable {
@@ -15,14 +14,12 @@ public class CreateAccount implements Serializable {
 	private String email;
 	
 	@NotBlank(message = "Password is required.")
-	@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z]).{8,}$", message = "Password must be 8 characters long and contain only uppercase and lowercase letters, and include a number.")  
 	private String password;
 	
 	@NotBlank(message = "Confirmation password is required.")
 	private String confirmPassword;
 	
-	@Size(min = 3, max = 20, message = "Username must be from 3 to 20 characters.")
-	@Pattern(regexp = "^(?=.*[0-9a-zA-Z_]).*$", message = "Username must only contain numbers, letters, and underscores.")
+	@Size(min = 3, max = 30, message = "Username must be from 3 to 30 characters.")
 	@NotBlank(message = "Username is required.")
 	private String username;
 	

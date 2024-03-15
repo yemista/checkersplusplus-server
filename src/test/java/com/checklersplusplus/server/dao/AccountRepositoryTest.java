@@ -63,5 +63,44 @@ public class AccountRepositoryTest {
 		assertThat(fetchedAccount).isPresent();
 		assertThat(fetchedAccount.get().getAccountId()).isEqualTo(fetchedAccount.get().getAccountId());
 	}
+	
+	@Test
+	public void testInvalidCharacters() {
+		assertThat(invalidCharacters("")).isTrue();
+		assertThat(invalidCharacters("abc 123")).isTrue();
+		assertThat(invalidCharacters("abc[]123")).isTrue();
+		assertThat(invalidCharacters("abc_123")).isFalse();
+		assertThat(invalidCharacters("ABC_123")).isFalse();
+	}
+	
+	private boolean invalidCharacters(String username) {
+		if (username.length() < 3 || username.length() > 20) {
+			return true;
+		}
+		
+		for (int i = 0; i < username.length(); ++i) {
+			char ch = username.charAt(i);
+			
+			if (ch == 95) {
+				continue;
+			}
+			
+			if (ch >= 48 && ch <= 57) {
+				continue;
+			}
+			
+			if (ch >= 65 && ch <= 90) {
+				continue;
+			}
+			
+			if (ch >= 97 && ch <= 122) {
+				continue;
+			}
+			
+			return true;
+		}
+		
+		return false;
+	}
 }
 

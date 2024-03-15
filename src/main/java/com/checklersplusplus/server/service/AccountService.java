@@ -82,7 +82,7 @@ public class AccountService {
 	}
 
 	@Transactional
-	public NewAccount createAccount(CreateAccount createAccount) throws CheckersPlusPlusServerException, Exception {
+	public NewAccount createAccount(CreateAccount createAccount, boolean needsVerification) throws CheckersPlusPlusServerException, Exception {
 		AccountModel accountModel = new AccountModel();
 		accountModel.setUsername(createAccount.getUsername().trim());
 		accountModel.setEmail(createAccount.getEmail().trim());
@@ -98,7 +98,7 @@ public class AccountService {
 		verifyAccountModel.setCreated(LocalDateTime.now());
 		String verificationCode = VerificationCodeUtil.generateVerificationCode();
 		verifyAccountModel.setVerificationCode(verificationCode);
-		verifyAccountModel.setActive(true);
+		verifyAccountModel.setActive(needsVerification);
 		verifyAccountRepository.save(verifyAccountModel);
 		NewAccount newAccount = new NewAccount(accountModel.getAccountId(), verificationCode);
 
@@ -159,6 +159,96 @@ public class AccountService {
 		return session;
 	}
 	
+	@Transactional
+	public Session ssoLogin(String email) throws Exception {
+		Optional<AccountModel> account = accountRepository.getByEmail(email.trim());
+		UUID accountId = null;
+		boolean tutorial = false;
+		Session session = new Session();
+				
+		if (account.isEmpty()) {
+			String username = email.substring(0, email.indexOf('@'));
+			account = accountRepository.getByUsernameIgnoreCase(username);
+			int counter = 1;
+			String finalUsername = username;
+			
+			while (account.isPresent()) {
+				finalUsername = username + counter;
+				account = accountRepository.getByUsernameIgnoreCase(finalUsername);
+				counter++;
+			}
+			
+			
+			CreateAccount createAccount = new CreateAccount();
+			createAccount.setEmail(email);
+			createAccount.setPassword(CryptoUtil.encryptPassword("DEFAULT_PASSWORD"));
+			createAccount.setUsername(finalUsername);
+			
+			AccountModel accountModel = new AccountModel();
+			accountModel.setUsername(createAccount.getUsername().trim());
+			accountModel.setEmail(createAccount.getEmail().trim());
+			accountModel.setPassword(CryptoUtil.encryptPassword(createAccount.getPassword().trim()));
+			accountModel.setCreated(LocalDateTime.now());
+			accountModel.setBanned(false);
+			accountModel.setBot(false);
+			accountModel.setTutorial(true);
+			accountRepository.saveAndFlush(accountModel);
+			
+			VerifyAccountModel verifyAccountModel = new VerifyAccountModel();
+			verifyAccountModel.setAccountId(accountModel.getAccountId());
+			verifyAccountModel.setCreated(LocalDateTime.now());
+			String verificationCode = VerificationCodeUtil.generateVerificationCode();
+			verifyAccountModel.setVerificationCode(verificationCode);
+			verifyAccountModel.setActive(false);
+			verifyAccountRepository.saveAndFlush(verifyAccountModel);
+			NewAccount newAccount = new NewAccount(accountModel.getAccountId(), verificationCode);
+
+			RatingModel ratingModel = new RatingModel();
+			ratingModel.setAccountId(accountModel.getAccountId());
+			ratingModel.setRating(800);
+			ratingRepository.saveAndFlush(ratingModel);
+			
+			accountId = newAccount.getAccountId();
+			tutorial = true;
+		} else {
+			accountId = account.get().getAccountId();
+			tutorial = account.get().isTutorial();
+			
+			if (account.get().isBanned()) {
+				throw new CheckersPlusPlusServerException("This account has been banned. Please email admin@checkersplusplus.com to find out why.");
+			}
+			
+			sessionRepository.inactiveExistingSessions(accountId);
+			Optional<GameModel> currentGame = gameRepository.getActiveGameByAccountId(account.get().getAccountId());
+			
+			if (currentGame.isPresent()) {
+				session.setGameId(currentGame.get().getGameId());
+				addLastMoveSentIfNecessary(currentGame.get(), currentGame.get().getGameId(), account.get().getAccountId());
+			} else {
+				gameEventRepository.inactivateEventsForRecipient(account.get().getAccountId());
+			}
+		}
+		try {
+			SessionModel sessionModel = new SessionModel();
+			sessionModel.setLastModified(LocalDateTime.now());
+			sessionModel.setAccountId(accountId);
+			sessionModel.setActive(true);
+		
+		
+			sessionRepository.saveAndFlush(sessionModel);
+		
+			session.setSessionId(sessionModel.getSessionId());
+			session.setAccountId(accountId);
+			session.setTutorial(String.valueOf(tutorial));
+		} catch (Throwable e) {
+			logger.error(e.toString());
+		}
+
+		session.setMessage("Login successful.");
+		logger.info(String.format("SSO Login successful for accountId: %s", accountId.toString()));
+		return session;
+	}
+
 	private void addLastMoveSentIfNecessary(GameModel game, UUID gameId, UUID accountId) {
 		Optional<LastMoveSentModel> lastMove = lastMoveSentRepository.findFirstByAccountIdAndGameIdOrderByLastMoveSentDesc(accountId, gameId);
 		
