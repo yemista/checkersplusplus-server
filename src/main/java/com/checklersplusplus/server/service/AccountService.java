@@ -167,7 +167,7 @@ public class AccountService {
 		Session session = new Session();
 				
 		if (account.isEmpty()) {
-			String username = email.substring(0, email.indexOf('@'));
+			String username = email;
 			account = accountRepository.getByUsernameIgnoreCase(username);
 			int counter = 1;
 			String finalUsername = username;
@@ -180,7 +180,7 @@ public class AccountService {
 			
 			
 			CreateAccount createAccount = new CreateAccount();
-			createAccount.setEmail(email);
+			createAccount.setEmail(finalUsername + "-sso");
 			createAccount.setPassword(CryptoUtil.encryptPassword("DEFAULT_PASSWORD"));
 			createAccount.setUsername(finalUsername);
 			
