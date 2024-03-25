@@ -21,7 +21,6 @@ import com.checklersplusplus.server.entities.internal.NewAccount;
 import com.checklersplusplus.server.entities.request.CreateAccount;
 import com.checklersplusplus.server.entities.response.Account;
 import com.checklersplusplus.server.entities.response.Session;
-import com.checklersplusplus.server.exception.AccountNotVerifiedException;
 import com.checklersplusplus.server.exception.CheckersPlusPlusServerException;
 import com.checklersplusplus.server.exception.InvalidVerificationCodeException;
 import com.checklersplusplus.server.exception.UsernameNotFoundException;
@@ -126,9 +125,9 @@ public class AccountService {
 			}
 		}
 		
-		if (account.get().getVerified() == null) {
-			throw new AccountNotVerifiedException();
-		}
+//		if (account.get().getVerified() == null) {
+//			throw new AccountNotVerifiedException();
+//		}
 		
 		if (account.get().isBanned()) {
 			throw new CheckersPlusPlusServerException("This account has been banned. Please email admin@checkersplusplus.com to find out why.");
@@ -161,7 +160,7 @@ public class AccountService {
 	
 	@Transactional
 	public Session ssoLogin(String email) throws Exception {
-		Optional<AccountModel> account = accountRepository.getByEmail(email.trim());
+		Optional<AccountModel> account = accountRepository.getByUsernameIgnoreCase(email.trim());
 		UUID accountId = null;
 		boolean tutorial = false;
 		Session session = new Session();

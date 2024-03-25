@@ -452,6 +452,7 @@ public class GameService {
 		}
 		
 		gameModel.get().setInProgress(true);
+		gameModel.get().setLastModified(LocalDateTime.now());
 		gameRepository.save(gameModel.get());
 		logger.info(String.format("SessionId: %s   Joined game: %s", sessionId.toString(), gameId.toString()));
 		return Game.fromModel(gameModel.get());

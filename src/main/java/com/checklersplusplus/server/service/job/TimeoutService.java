@@ -115,6 +115,8 @@ public class TimeoutService {
 						game.setWinnerId(opponent);
 						game.setInProgress(false);
 						game.setActive(false);
+						game.setFinalized(true);
+						game.setLastModified(LocalDateTime.now());
 						gameRepository.save(game);
 						Map<UUID, Integer> newRatings = ratingService.updatePlayerRatings(game.getGameId());
 						
@@ -140,11 +142,36 @@ public class TimeoutService {
 							gameEventRepository.save(lossEvent);
 						}
 					}					
+				} else {
+					// No move has been made yet
+					if (gameTooOld(game.getLastModified())) {
+						UUID opponent = redId;
+						
+						game.setWinnerId(opponent);
+						game.setInProgress(false);
+						game.setActive(false);
+						game.setFinalized(true);
+						game.setLastModified(LocalDateTime.now());
+						gameRepository.save(game);
+						Map<UUID, Integer> newRatings = ratingService.updatePlayerRatings(game.getGameId());
+						
+						GameEventModel gameEvent = new GameEventModel();
+						gameEvent.setActive(true);
+						gameEvent.setCreated(LocalDateTime.now());
+						gameEvent.setEvent(GameEvent.TIMEOUT.getMessage() + "|" + newRatings.get(opponent));
+						gameEvent.setEventRecipientAccountId(opponent);
+						gameEvent.setGameId(game.getGameId());
+						gameEventRepository.save(gameEvent);
+					}			
 				}
 			}
 		} catch (Exception e) {
 			logger.error("Exception thrown in timeout service body", e);
 		}
+	}
+
+	private boolean gameTooOld(LocalDateTime lastModified) {
+		return moveTooOld(lastModified);
 	}
 
 	private boolean moveTooOld(LocalDateTime created) {

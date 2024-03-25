@@ -40,7 +40,7 @@ public class SchedulerService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
-	private static final long THREAD_WAIT = 1000 * 2;
+	private static final long THREAD_WAIT = 1000 * 3;
 	
 	@Autowired
 	private OpenWebSocketRepository openWebSocketRepository;
