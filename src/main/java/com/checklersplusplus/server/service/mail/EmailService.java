@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,10 @@ public class EmailService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 	
-	private static final String ADMIN_EMAIL = "admin@checkersplusplus.com";
+	// Envelope sender. Must be an address verified with the mail provider, or the relay
+	// rejects the message and signups silently stop working.
+	@Value("${checkersplusplus.mail.from:admin@checkersplusplus.com}")
+	private String fromAddress;
 	
 	private static final String VERIFICATION_SUBJECT = "Checkers++ account verification code";
 	private static final String VERIFICATION_TEXT = "Here is your Checkers++ verification code: %s";
@@ -39,13 +43,13 @@ public class EmailService {
 				logger.error(String.format("Failed to send verification code to %s", account.get().getEmail()), e);
 			}
 		} else {
-			logger.error(String.format("Account not found. Could not send verification code to %s", account.get().getEmail()));
+			logger.error(String.format("Account %s not found. Could not send verification code.", accountId));
 		}
 	}
 	
 	public void sendSimpleMessage(String to, String subject, String text) {
 		SimpleMailMessage message = new SimpleMailMessage();
-		message.setFrom(ADMIN_EMAIL);
+		message.setFrom(fromAddress);
 		message.setTo(to);
 		message.setSubject(subject);
 		message.setText(text);
