@@ -8,22 +8,18 @@ import jakarta.validation.constraints.Positive;
 
 public class Move implements Serializable {
 	
-	@Positive(message = "Invalid coordinate for start column.")
 	@Max(value = 7, message = "Invalid coordinate for start column.")
 	@Min(value = 0, message = "Invalid coordinate for start column.")
 	private int startCol;
 	
-	@Positive(message = "Invalid coordinate for start row.")
 	@Max(value = 7, message = "Invalid coordinate for start row.")
 	@Min(value = 0, message = "Invalid coordinate for start row.")
 	private int startRow;
 	
-	@Positive(message = "Invalid coordinate for start column.")
 	@Max(value = 7, message = "Invalid coordinate for end column.")
 	@Min(value = 0, message = "Invalid coordinate for end column.")
 	private int endCol;
 	
-	@Positive(message = "Invalid coordinate for end row.")
 	@Max(value = 7, message = "Invalid coordinate for end row.")
 	@Min(value = 0, message = "Invalid coordinate for end row.")
 	private int endRow;

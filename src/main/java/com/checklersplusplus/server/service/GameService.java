@@ -58,8 +58,10 @@ public class GameService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(GameService.class);
 	
-	// This is just some dummy value to indicate the game finished in a draw. 
-	private static final UUID TIE_GAME_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+	// This is just some dummy value to indicate the game finished in a draw.
+	// Shared with the Game response so the result it derives cannot drift from what is
+	// actually written to winner_id here.
+	private static final UUID TIE_GAME_ID = Game.DRAW_WINNER_ID;
 
 	@Autowired
 	private OpenGameRepository openGameRepository;
