@@ -16,6 +16,10 @@ import com.checklersplusplus.server.dao.BotRepository;
 import com.checklersplusplus.server.model.BotModel;
 import com.checklersplusplus.server.service.GameService;
 
+/**
+ * Singleton job, paired with {@link BotMoveService} under the same "bot" profile.
+ * Two instances would hand the same free bot to two different games.
+ */
 @Profile("bot")
 @Service
 public class BotGameCreatorService {

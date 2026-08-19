@@ -26,6 +26,11 @@ import com.checklersplusplus.server.model.GameModel;
 import com.checklersplusplus.server.service.GameService;
 import com.checklersplusplus.server.util.MoveUtil;
 
+/**
+ * Singleton job. It claims bots that are in use and moves for them with no
+ * partitioning, so two instances would try to move the same bot in the same game.
+ * Activate the "bot" profile on exactly one node.
+ */
 @Profile("bot")
 @Service
 public class BotMoveService {

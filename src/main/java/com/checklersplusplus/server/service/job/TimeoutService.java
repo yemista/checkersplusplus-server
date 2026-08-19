@@ -51,8 +51,12 @@ import com.checklersplusplus.server.service.RatingService;
  *     That gives a last-seen timestamp without needing a new column.
  *
  * Set the disconnect deadline to 0 to switch the second rule off entirely.
+ *
+ * This is a singleton job: it sweeps every running game with no partitioning, so two
+ * instances would race to end the same game and could apply a rating change twice.
+ * Activate the "timeout" profile on exactly one node.
  */
-@Profile("websocket")
+@Profile("timeout")
 @Service
 @Transactional
 public class TimeoutService {

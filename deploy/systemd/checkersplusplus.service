@@ -1,0 +1,46 @@
+[Unit]
+Description=Checkers++ server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cpp
+Group=cpp
+
+# Secrets and connection settings. Never inline them here -- systemd unit files are
+# world readable by default, EnvironmentFile is not.
+EnvironmentFile=/etc/checkersplusplus/env
+
+# Per-node profiles. Override this line with a drop-in rather than editing the unit:
+#     systemctl edit checkersplusplus
+#
+#   api-1   Environment=SPRING_PROFILES_ACTIVE=
+#   api-2   Environment=SPRING_PROFILES_ACTIVE=
+#   ws-1    Environment=SPRING_PROFILES_ACTIVE=websocket,timeout,server
+#   ws-2    Environment=SPRING_PROFILES_ACTIVE=websocket,bot
+#
+# timeout, bot and server are each singletons. Two nodes running the same one will
+# race: duplicated rating changes, two moves for one bot, or double-sent email.
+Environment=SPRING_PROFILES_ACTIVE=
+
+WorkingDirectory=/opt/checkersplusplus
+ExecStart=/usr/bin/java -XX:MaxRAMPercentage=75 -jar /opt/checkersplusplus/app.jar
+
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+TimeoutStopSec=30
+
+# Hardening. The app only needs to write its log directory.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/checkersplusplus
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
